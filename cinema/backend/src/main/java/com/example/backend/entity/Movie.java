@@ -35,7 +35,7 @@ public class Movie {
     private Integer duration;
 
     // Ảnh poster có thể là URL hoặc chuỗi Base64 cực kỳ dài
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "VARCHAR(MAX)")
     private String poster;
 
     @Column(length = 200)
