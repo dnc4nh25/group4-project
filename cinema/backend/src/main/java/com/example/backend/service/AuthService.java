@@ -36,10 +36,11 @@ public class AuthService {
             throw new RuntimeException("Tài khoản của bạn đang chờ duyệt. Vui lòng liên hệ admin để được kích hoạt.");
         }
 
-        // 4. Tạo JWT Token
-        String token = jwtUtils.generateToken(user.getUsername(), user.getRole().name());
+        // 4. Tạo JWT Token (Role viết thường để khớp FE)
+        String roleStr = user.getRole().name().toLowerCase();
+        String token = jwtUtils.generateToken(user.getUsername(), roleStr);
 
         // 5. Trả về AuthResponse
-        return new AuthResponse(token, user.getUsername(), user.getRole().name(), user.getFullName());
+        return new AuthResponse(token, user.getUsername(), roleStr, user.getFullName());
     }
 }
