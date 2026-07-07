@@ -4,70 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ef35e707-f0e8-4d25-a03f-6bd8e1be83ec" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/phim/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/ROOM_DROPDOWN_SIMPLIFY.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/ROOM_DROPDOWN_UPDATE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/TEST_FEEDBACK_FLOW.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/TRAILER_FEATURE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/database.json" beforeDir="false" afterPath="$PROJECT_DIR$/phim/database.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/phim/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/AdminRoute.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/AdminRoute.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/Footer.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/Footer.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/Footer.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/Footer.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/HeroBannerV2.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/HeroBannerV2.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/LoadingSkeleton.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/LoadingSkeleton.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/MovieCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/MovieCard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/NavBar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/NavBar.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/PrivateRoute.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/PrivateRoute.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/ReviewSection.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/ReviewSection.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/ReviewSection.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/ReviewSection.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/SeatMap.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/SeatMap.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/TrailerModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/TrailerModal.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/components/VoucherCard.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/components/VoucherCard.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/contexts/AuthContext.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/contexts/AuthContext.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/main.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/main.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/BookingPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/BookingPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/ContactPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/ContactPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/HelpCenterPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/HelpCenterPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/HomePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/HomePage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/LoginPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/LoginPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/MovieDetailPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/MovieDetailPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/MovieListPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/MovieListPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/MyBookingsPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/MyBookingsPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/MyBookingsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/MyBookingsPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/OffersPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/OffersPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/PaymentPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/PaymentPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/PaymentPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/PaymentPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/PrivacyPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/PrivacyPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/ProfilePage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/ProfilePage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/ProfilePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/ProfilePage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/RegisterPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/RegisterPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/StaticPages.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/StaticPages.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/TermsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/TermsPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminBookingsPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminBookingsPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminBookingsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminBookingsPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminCommon.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminCommon.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminDashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminDashboard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminFeedbacksPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminFeedbacksPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminFeedbacksPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminFeedbacksPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminFooterPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminFooterPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminMoviesPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminMoviesPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminMoviesPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminMoviesPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminMoviesPageFixed.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminMoviesPageFixed.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminProfessional.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminProfessional.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminReviewsPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminReviewsPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminReviewsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminReviewsPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminRoomStatsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminRoomStatsPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminShowtimesEnhanced.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminShowtimesEnhanced.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminShowtimesPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminShowtimesPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminShowtimesPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminShowtimesPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminSupportPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminSupportPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminUsersPage.css" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminUsersPage.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminUsersPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminUsersPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/phim/src/pages/admin/AdminVouchersPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/phim/src/pages/admin/AdminVouchersPage.jsx" afterDir="false" />
+    <list default="true" id="ef35e707-f0e8-4d25-a03f-6bd8e1be83ec" name="Changes" comment="fix datatype">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,8 +15,25 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/phim" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$/.." value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;dnc4nh25&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/dnc4nh25/group4-project&quot;,
+    &quot;accountId&quot;: &quot;2c331652-9418-4f10-9ee9-01c083df0fae&quot;
+  }
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -84,9 +41,9 @@
       </MavenGeneralSettings>
     </option>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 1
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
   <component name="ProjectId" id="3G7QTSY0mCZEBfjHv19LUsm522V" />
   <component name="ProjectViewState">
     <option name="showLibraryContents" value="true" />
@@ -95,13 +52,28 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Spring Boot.BackendApplication.executor": "Run",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "ducanh",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/Dowloads/cinema/cinema"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="cinema" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="cinema" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -117,6 +89,27 @@
       <option name="presentableId" value="Default" />
       <updated>1783320137985</updated>
     </task>
+    <task id="LOCAL-00001" summary="fix datatype">
+      <option name="closed" value="true" />
+      <created>1783324811220</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1783324811220</updated>
+    </task>
+    <task id="LOCAL-00002" summary="fix datatype">
+      <option name="closed" value="true" />
+      <created>1783324872503</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1783324872503</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix datatype" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix datatype" />
   </component>
 </project>
