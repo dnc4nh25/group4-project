@@ -1,0 +1,56 @@
+﻿.admin-feedbacks-page .admin-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-body) !important;
+}
+
+.admin-feedbacks-page .admin-card .card-body {
+  background: transparent !important;
+}
+
+.admin-feedbacks-page .admin-table {
+  margin-bottom: 0;
+  border-color: var(--border) !important;
+}
+
+.admin-feedbacks-page .admin-table thead th {
+  background: var(--bg-surface) !important;
+  border-color: var(--border) !important;
+}
+
+.admin-feedbacks-page .admin-table tbody tr,
+.admin-feedbacks-page .admin-table tbody td {
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .admin-feedbacks-page .admin-table .text-muted {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme='light'] .admin-feedbacks-page .admin-card {
+  background: #ffffff !important;
+  border-color: #d5deea !important;
+}
+
+:root[data-theme='light'] .admin-feedbacks-page .admin-table {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .admin-feedbacks-page .admin-table thead th {
+  background: #f8fafc !important;
+  color: #7c2d12 !important;
+  border-color: #d5deea !important;
+}
+
+:root[data-theme='light'] .admin-feedbacks-page .admin-table tbody tr:nth-child(odd) {
+  background: #ffffff !important;
+}
+
+:root[data-theme='light'] .admin-feedbacks-page .admin-table tbody tr:nth-child(even) {
+  background: #f8fafc !important;
+}
+
+:root[data-theme='light'] .admin-feedbacks-page .admin-table tbody td {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}

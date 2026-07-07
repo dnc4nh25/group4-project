@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinemaXP - Banner Mới</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0d0d0d;
+            color: #d4d4d4;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* CinemaXP Hero Banner (New Design) */
+        .cinemaXP-hero-banner {
+            position: relative;
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 40%, #312E81 70%, #0F172A 100%);
+            overflow: hidden;
+            padding: 4rem 0;
+        }
+
+        .hero-background-effects {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .hero-gradient-overlay {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 20% 30%, rgba(245, 166, 35, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 70%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.03) 50%, transparent 70%);
+            opacity: 0.9;
+        }
+
+        .hero-light-effects {
+            position: absolute;
+            inset: 0;
+        }
+
+        .light-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: cinemaFloat 8s ease-in-out infinite;
+        }
+
+        .light-orb-1 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(245, 166, 35, 0.2) 0%, rgba(245, 166, 35, 0.05) 50%, transparent 80%);
+            top: 5%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .light-orb-2 {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(124, 58, 237, 0.03) 50%, transparent 80%);
+            bottom: 15%;
+            left: 5%;
+            animation-delay: 3s;
+        }
+
+        .light-orb-3 {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.02) 50%, transparent 80%);
+            top: 40%;
+            left: 60%;
+            animation-delay: 6s;
+        }
+
+        .hero-sparkles {
+            position: absolute;
+            inset: 0;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #F59E0B;
+            border-radius: 50%;
+            animation: sparkleAnimation 3s ease-in-out infinite;
+        }
+
+        .sparkle-1 {
+            top: 15%;
+            right: 20%;
+            animation-delay: 0s;
+        }
+
+        .sparkle-2 {
+            top: 60%;
+            left: 15%;
+            animation-delay: 1s;
+        }
+
+        .sparkle-3 {
+            bottom: 25%;
+            right: 30%;
+            animation-delay: 2s;
+        }
+
+        .sparkle-4 {
+            top: 30%;
+            right: 60%;
+            animation-delay: 1.5s;
+        }
+
+        .hero-main-container {
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-content-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-text-content {
+            width: 100%;
+        }
+
+        .hero-main-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.8rem, 7vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            margin-bottom: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .heading-line-1 {
+            color: #ffffff;
+            text-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+            animation: heroFadeInUp 1.2s ease 0.3s both;
+            letter-spacing: -0.02em;
+        }
+
+        .heading-line-2 {
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 30%, #EF4444 70%, #DC2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: heroFadeInUp 1.2s ease 0.6s both, heroGlow 4s ease-in-out infinite;
+            position: relative;
+            letter-spacing: -0.02em;
+        }
+
+        .heading-line-2::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 30%, #EF4444 70%, #DC2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: blur(12px);
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        .hero-description-text {
+            font-size: clamp(1.05rem, 2.8vw, 1.3rem);
+            color: #E5E7EB;
+            line-height: 1.75;
+            margin-bottom: 3rem;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.4);
+            animation: heroFadeInUp 1.2s ease 0.9s both;
+            font-weight: 400;
+        }
+
+        .hero-cta-buttons {
+            display: flex;
+            gap: 1.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: heroFadeInUp 1.2s ease 1.2s both;
+        }
+
+        .btn-cinema-primary {
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EA580C 100%);
+            border: none;
+            color: #000000;
+            font-weight: 700;
+            font-size: 1.15rem;
+            padding: 1rem 2.5rem;
+            border-radius: 14px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+            text-transform: none;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-cinema-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.7s ease;
+        }
+
+        .btn-cinema-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-cinema-primary:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(245, 158, 11, 0.6);
+            background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #F97316 100%);
+            color: #000000;
+        }
+
+        .btn-cinema-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 1.15rem;
+            padding: 1rem 2.5rem;
+            border-radius: 14px;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-cinema-secondary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(245, 166, 35, 0.1), rgba(245, 166, 35, 0.05));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .btn-cinema-secondary:hover::before {
+            opacity: 1;
+        }
+
+        .btn-cinema-secondary:hover {
+            border-color: #F59E0B;
+            color: #F59E0B;
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(245, 158, 11, 0.25);
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .cinemaXP-hero-banner::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            right: 12%;
+            width: 5px;
+            height: 5px;
+            background: #F59E0B;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 15px #F59E0B,
+                0 0 25px #F59E0B,
+                0 0 35px #F59E0B;
+            animation: mainSparkle 2.5s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .cinemaXP-hero-banner {
+                min-height: 420px;
+                padding: 3rem 0;
+            }
+            
+            .hero-main-heading {
+                margin-bottom: 1.5rem;
+            }
+            
+            .hero-description-text {
+                margin-bottom: 2.5rem;
+                font-size: 1.05rem;
+            }
+            
+            .hero-cta-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 1.2rem;
+            }
+            
+            .btn-cinema-primary,
+            .btn-cinema-secondary {
+                width: 100%;
+                max-width: 300px;
+                font-size: 1.05rem;
+                padding: 0.9rem 2rem;
+            }
+        }
+
+        @keyframes mainSparkle {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.7);
+            }
+        }
+
+        @keyframes sparkleAnimation {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+                box-shadow: 0 0 5px #F59E0B;
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+                box-shadow: 0 0 15px #F59E0B, 0 0 25px #F59E0B;
+            }
+        }
+
+        @keyframes heroFadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes heroGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4));
+            }
+            50% {
+                filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.7));
+            }
+        }
+
+        @keyframes cinemaFloat {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-25px) translateX(15px) rotate(1deg);
+            }
+            50% {
+                transform: translateY(-10px) translateX(-10px) rotate(-0.5deg);
+            }
+            75% {
+                transform: translateY(15px) translateX(20px) rotate(0.5deg);
+            }
+        }
+
+        /* Demo section */
+        .demo-section {
+            padding: 3rem 0;
+            text-align: center;
+            background: #1a1a2e;
+        }
+
+        .demo-title {
+            color: #f0f0f0;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .demo-description {
+            color: #a8a8b8;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .feature-item {
+            background: rgba(245, 166, 35, 0.05);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .feature-title {
+            color: #F59E0B;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            color: #d4d4d4;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- CinemaXP Hero Banner -->
+    <section class="cinemaXP-hero-banner">
+        <div class="hero-background-effects">
+            <div class="hero-gradient-overlay"></div>
+            <div class="hero-light-effects">
+                <div class="light-orb light-orb-1"></div>
+                <div class="light-orb light-orb-2"></div>
+                <div class="light-orb light-orb-3"></div>
+            </div>
+            <div class="hero-sparkles">
+                <div class="sparkle sparkle-1"></div>
+                <div class="sparkle sparkle-2"></div>
+                <div class="sparkle sparkle-3"></div>
+                <div class="sparkle sparkle-4"></div>
+            </div>
+        </div>
+        <div class="container hero-main-container">
+            <div class="hero-content-wrapper">
+                <div class="hero-text-content">
+                    <h1 class="hero-main-heading">
+                        <span class="heading-line-1">Trải Nghiệm Điện Ảnh</span>
+                        <span class="heading-line-2">Tuyệt Đỉnh</span>
+                    </h1>
+                    <p class="hero-description-text">
+                        Đặt vé phim online nhanh chóng, tiện lợi. Hàng nghìn suất chiếu mỗi ngày, 
+                        chất lượng hình ảnh và âm thanh đỉnh cao.
+                    </p>
+                    <div class="hero-cta-buttons">
+                        <a href="#" class="btn-cinema-primary">
+                            🎥 Xem phim ngay
+                        </a>
+                        <a href="#" class="btn-cinema-secondary">
+                            📝 Đăng ký miễn phí
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section">
+        <div class="container">
+            <h2 class="demo-title">🎬 Banner CinemaXP Hoàn Toàn Mới</h2>
+            <p class="demo-description">
+                Banner được thiết kế lại hoàn toàn với gradient điện ảnh đa tầng, hiệu ứng ánh sáng động, 
+                typography hiện đại và trải nghiệm người dùng tối ưu. Hoàn toàn responsive và tương thích mọi thiết bị.
+            </p>
+            
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-title">🎨 Gradient Điện Ảnh</div>
+                    <div class="feature-desc">Nền gradient 4 tầng từ #0F172A → #1E1B4B → #312E81 tạo chiều sâu</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">✨ Hiệu Ứng Ánh Sáng</div>
+                    <div class="feature-desc">3 light orbs + 4 sparkles với animation float tự nhiên</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">🔥 Typography Gradient</div>
+                    <div class="feature-desc">"Tuyệt Đỉnh" với gradient vàng-cam-đỏ và hiệu ứng glow</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">🎯 CTA Buttons</div>
+                    <div class="feature-desc">2 nút với hiệu ứng hover, transform và shine animation</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">📱 Responsive Design</div>
+                    <div class="feature-desc">Tối ưu cho desktop, tablet và mobile với breakpoints</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-title">⚡ Performance</div>
+                    <div class="feature-desc">CSS animations với GPU acceleration và cubic-bezier</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,125 @@
+﻿.voucher-mini-card {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.voucher-mini-card.available:hover {
+  border-color: #ff6b35;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.voucher-mini-card.selected {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.voucher-mini-card.unavailable {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.voucher-mini-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.voucher-mini-discount {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #ff6b35;
+}
+
+.voucher-mini-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #f7931e;
+  background: rgba(255, 107, 53, 0.1);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.voucher-mini-body {
+  text-align: center;
+}
+
+.voucher-mini-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.voucher-mini-code {
+  font-size: 0.7rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: #6c757d;
+  background: rgba(108, 117, 125, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.voucher-mini-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.selected-voucher-card {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+}
+
+.payment-summary {
+  background: rgba(248, 249, 250, 0.5);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.payment-summary .d-flex {
+  font-size: 0.9rem;
+}
+
+.payment-summary hr {
+  margin: 12px 0;
+  border-color: #dee2e6;
+}
+
+@media (max-width: 768px) {
+  .voucher-mini-card {
+    padding: 10px;
+  }
+  
+  .voucher-mini-discount {
+    font-size: 1rem;
+  }
+  
+  .voucher-mini-title {
+    font-size: 0.75rem;
+  }
+  
+  .voucher-mini-code {
+    font-size: 0.65rem;
+  }
+}
