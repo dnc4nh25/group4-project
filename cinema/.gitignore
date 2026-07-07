@@ -50,3 +50,8 @@ build/
 *.swp
 *~.nib
 local.properties
+# Spring Boot
+HELP.md
+
+# Maven Wrapper (giữ lại nếu muốn cả nhóm dùng cùng Maven Wrapper)
+!.mvn/wrapper/maven-wrapper.jar
