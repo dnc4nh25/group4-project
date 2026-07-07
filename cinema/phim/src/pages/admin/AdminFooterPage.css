@@ -1,0 +1,112 @@
+.admin-footer-page {
+  color: var(--text-light);
+}
+
+:root[data-theme='dark'] .admin-footer-page {
+  background: var(--bg-dark) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .admin-page-title,
+:root[data-theme='dark'] .admin-footer-page h5,
+:root[data-theme='dark'] .admin-footer-page h6,
+:root[data-theme='dark'] .admin-footer-page .form-label {
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .admin-card,
+:root[data-theme='dark'] .admin-footer-page .card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .card-header {
+  background: var(--bg-surface) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .form-control,
+:root[data-theme='dark'] .admin-footer-page .form-select {
+  background: var(--bg-surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .form-control::placeholder {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .form-control:focus,
+:root[data-theme='dark'] .admin-footer-page .form-select:focus {
+  background: var(--bg-surface) !important;
+  color: var(--text-light) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 0.2rem rgba(245, 166, 35, 0.2) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .nav-tabs {
+  border-bottom-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .nav-tabs .nav-link {
+  color: var(--text-muted) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+:root[data-theme='dark'] .admin-footer-page .nav-tabs .nav-link.active {
+  color: var(--text-light) !important;
+  background: var(--bg-surface) !important;
+  border-color: var(--border) var(--border) transparent var(--border) !important;
+}
+
+:root[data-theme='light'] .admin-footer-page {
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f6fc 100%) !important;
+  color: var(--text-body) !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .admin-page-title,
+:root[data-theme='light'] .admin-footer-page h5,
+:root[data-theme='light'] .admin-footer-page h6,
+:root[data-theme='light'] .admin-footer-page .form-label {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .admin-card,
+:root[data-theme='light'] .admin-footer-page .card {
+  background: #ffffff !important;
+  border: 1px solid #d8e0ee !important;
+  color: #334155 !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08) !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .card-header {
+  background: #f8fafc !important;
+  border-color: #d8e0ee !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .form-control,
+:root[data-theme='light'] .admin-footer-page .form-select {
+  background: #f8fafc !important;
+  border: 1px solid #d8e0ee !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .form-control::placeholder {
+  color: #64748b !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .nav-tabs {
+  border-bottom-color: #d8e0ee !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .nav-tabs .nav-link {
+  color: #475569 !important;
+  border-color: transparent !important;
+}
+
+:root[data-theme='light'] .admin-footer-page .nav-tabs .nav-link.active {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-color: #d8e0ee #d8e0ee transparent #d8e0ee !important;
+}

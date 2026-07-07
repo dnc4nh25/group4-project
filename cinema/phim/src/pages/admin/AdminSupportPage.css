@@ -1,0 +1,91 @@
+.admin-support-page {
+  color: var(--text-light);
+}
+
+:root[data-theme='dark'] .admin-support-page {
+  background: var(--bg-dark);
+}
+
+:root[data-theme='dark'] .admin-support-page .admin-page-title,
+:root[data-theme='dark'] .admin-support-page h5,
+:root[data-theme='dark'] .admin-support-page h6,
+:root[data-theme='dark'] .admin-support-page .form-label {
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .text-muted {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .admin-card,
+:root[data-theme='dark'] .admin-support-page .card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .card-header,
+:root[data-theme='dark'] .admin-support-page .card-footer {
+  background: var(--bg-surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .form-control,
+:root[data-theme='dark'] .admin-support-page .form-select {
+  background: var(--bg-surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .form-control::placeholder {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .form-control:focus,
+:root[data-theme='dark'] .admin-support-page .form-select:focus {
+  background: var(--bg-surface) !important;
+  color: var(--text-light) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 0.2rem rgba(245, 166, 35, 0.2) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .nav-tabs {
+  border-bottom-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .nav-tabs .nav-link {
+  color: var(--text-muted) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .nav-tabs .nav-link.active {
+  color: var(--text-light) !important;
+  background: var(--bg-surface) !important;
+  border-color: var(--border) var(--border) transparent var(--border) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .accordion-item {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .accordion-button {
+  background: var(--bg-surface) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .accordion-button:not(.collapsed) {
+  background: rgba(245, 166, 35, 0.15) !important;
+  color: var(--text-light) !important;
+}
+
+:root[data-theme='dark'] .admin-support-page .accordion-button::after {
+  filter: invert(1);
+}
+
+:root[data-theme='dark'] .admin-support-page .accordion-body {
+  background: var(--bg-card) !important;
+  color: var(--text-light) !important;
+}

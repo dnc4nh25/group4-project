@@ -1,0 +1,10 @@
+.admin-hide-btn {
+  border-radius: 6px !important;
+  font-size: 0.8rem !important;
+  padding: 0.25rem 0.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.admin-hide-btn:hover {
+  transform: translateY(-1px) !important;
+}
