@@ -37,8 +37,8 @@ export default function AdminShowtimesPage() {
     setLoading(true)
     try {
       const [stRes, mvRes] = await Promise.all([
-        axios.get('http://localhost:3001/showtimes'),
-        axios.get('http://localhost:3001/movies')
+        axios.get('http://localhost:8080/api/showtimes'),
+        axios.get('http://localhost:8080/api/movies')
       ])
       setShowtimes(stRes.data)
       setMovies(mvRes.data)
@@ -224,9 +224,9 @@ export default function AdminShowtimesPage() {
         price: Number(form.price)
       }
       if (editingId) {
-        await axios.put(`http://localhost:3001/showtimes/${editingId}`, payload)
+        await axios.put(`http://localhost:8080/api/showtimes/${editingId}`, payload)
       } else {
-        await axios.post('http://localhost:3001/showtimes', payload)
+        await axios.post('http://localhost:8080/api/showtimes', payload)
       }
       setShowModal(false); load()
     } catch (err) { 
@@ -239,7 +239,7 @@ export default function AdminShowtimesPage() {
   const handleDeleteClick = (id) => { setDeletingId(id); setShowDeleteConfirm(true) }
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3001/showtimes/${deletingId}`)
+      await axios.delete(`http://localhost:8080/api/showtimes/${deletingId}`)
       setShowDeleteConfirm(false); load()
     } catch { setError('Xóa thất bại.') }
   }
@@ -248,7 +248,7 @@ export default function AdminShowtimesPage() {
     const newDate = prompt('Nhập ngày mới (YYYY-MM-DD):', showtime.date)
     if (!newDate) return
     try {
-      await axios.post('http://localhost:3001/showtimes', {
+      await axios.post('http://localhost:8080/api/showtimes', {
         ...showtime,
         date: newDate,
         bookedSeats: 0,

@@ -6,9 +6,9 @@ export class VoucherValidator {
   // Check if user can use a specific voucher
   static async canUserUseVoucher(userId, voucherCode) {
     try {
-      // Get voucher details
-      const voucherRes = await axios.get(`http://localhost:3001/vouchers?code=${voucherCode}`)
-      const voucher = voucherRes.data[0]
+      // Get voucher details by code
+      const voucherRes = await axios.get(`http://localhost:8080/api/vouchers/code/${voucherCode}`)
+      const voucher = voucherRes.data
       
       if (!voucher || !voucher.isActive) {
         return { valid: false, reason: 'Voucher không tồn tại hoặc đã hết hạn' }
@@ -25,28 +25,28 @@ export class VoucherValidator {
       }
 
       // Get user info
-      const userRes = await axios.get(`http://localhost:3001/users/${userId}`)
+      const userRes = await axios.get(`http://localhost:8080/api/users/${userId}`)
       const user = userRes.data
       
       if (!user) {
         return { valid: false, reason: 'Người dùng không tồn tại' }
       }
 
-      // Check user-specific restrictions
-      const userRestrictions = voucher.userRestrictions || {}
-      
-      // Check if user has already used this voucher (Global rule for all vouchers)
-      const usageRes = await axios.get(`http://localhost:3001/voucherUsage?userId=${userId}&voucherCode=${voucherCode}`)
-      if (usageRes.data.length > 0) {
-        return { valid: false, reason: 'Bạn đã sử dụng voucher này rồi' }
+      // Check if user has already used this voucher (oneTimePerUser)
+      if (voucher.oneTimePerUser) {
+        const bookingsRes = await axios.get(`http://localhost:8080/api/bookings/user/${userId}`)
+        const hasUsedVoucher = bookingsRes.data.some(b => b.voucherCode === voucherCode)
+        if (hasUsedVoucher) {
+          return { valid: false, reason: 'Bạn đã sử dụng voucher này rồi' }
+        }
       }
 
-      // Check new user restrictions (WELCOME20)
-      if (userRestrictions.newUsersOnly) {
-        const registrationDate = new Date(user.createdAt || user.registrationDate || '2026-01-01')
+      // Check new user restrictions
+      if (voucher.newUsersOnly) {
+        const registrationDate = new Date(user.createdAt || '2026-01-01')
         const daysSinceRegistration = Math.floor((new Date() - registrationDate) / (1000 * 60 * 60 * 24))
         
-        const maxDays = userRestrictions.daysAfterRegistration || 7;
+        const maxDays = voucher.daysAfterRegistration || 7;
         if (daysSinceRegistration > maxDays) {
           return { 
             valid: false, 
@@ -55,9 +55,8 @@ export class VoucherValidator {
         }
       }
 
-      // Check time restrictions (WEEKEND50)
-      const timeRestrictions = voucher.timeRestrictions || {}
-      if (timeRestrictions.weekendOnly) {
+      // Check weekend only restriction
+      if (voucher.weekendOnly) {
         const today = new Date()
         const dayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -73,41 +72,26 @@ export class VoucherValidator {
     }
   }
 
-  // Record voucher usage
+  // Record voucher usage (handled automatically when booking is created)
   static async recordVoucherUsage(userId, voucherCode, bookingId) {
-    try {
-      const usageRecord = {
-        id: Date.now().toString(),
-        userId,
-        voucherCode,
-        bookingId,
-        usedAt: new Date().toISOString()
-      }
-
-      await axios.post('http://localhost:3001/voucherUsage', usageRecord)
-      
-      // Update voucher used count
-      const voucherRes = await axios.get(`http://localhost:3001/vouchers?code=${voucherCode}`)
-      const voucher = voucherRes.data[0]
-      
-      if (voucher) {
-        await axios.patch(`http://localhost:3001/vouchers/${voucher.id}`, {
-          usedCount: (voucher.usedCount || 0) + 1
-        })
-      }
-
-      return { success: true }
-    } catch (error) {
-      console.error('Error recording voucher usage:', error)
-      return { success: false, error: error.message }
-    }
+    // Voucher usage is now tracked through bookings table
+    // No need for separate voucherUsage table
+    return { success: true }
   }
 
   // Get user's voucher usage history
   static async getUserVoucherHistory(userId) {
     try {
-      const res = await axios.get(`http://localhost:3001/voucherUsage?userId=${userId}`)
-      return res.data
+      const bookingsRes = await axios.get(`http://localhost:8080/api/bookings/user/${userId}`)
+      return bookingsRes.data
+        .filter(b => b.voucherCode)
+        .map(b => ({
+          id: b.id,
+          userId: b.userId,
+          voucherCode: b.voucherCode,
+          bookingId: b.id,
+          usedAt: b.createdAt
+        }))
     } catch (error) {
       console.error('Error getting voucher history:', error)
       return []
@@ -117,7 +101,7 @@ export class VoucherValidator {
   // Get available vouchers for a user
   static async getAvailableVouchersForUser(userId) {
     try {
-      const vouchersRes = await axios.get('http://localhost:3001/vouchers')
+      const vouchersRes = await axios.get('http://localhost:8080/api/vouchers')
       const allVouchers = vouchersRes.data.filter(v => v.isActive && new Date(v.validTo) >= new Date())
       
       const availableVouchers = []
@@ -151,14 +135,16 @@ export class VoucherValidator {
   static getVoucherDisplayInfo(voucher) {
     const restrictions = []
     
-    // Global restriction for all vouchers
-    restrictions.push('Mỗi tài khoản 1 lần')
+    // Check oneTimePerUser
+    if (voucher.oneTimePerUser) {
+      restrictions.push('Mỗi tài khoản 1 lần')
+    }
 
-    if (voucher.userRestrictions?.newUsersOnly) {
-      restrictions.push(`Chỉ dành cho thành viên mới (trong vòng ${voucher.userRestrictions.daysAfterRegistration || 7} ngày)`)
+    if (voucher.newUsersOnly) {
+      restrictions.push(`Chỉ dành cho thành viên mới (trong vòng ${voucher.daysAfterRegistration || 7} ngày)`)
     }
     
-    if (voucher.timeRestrictions?.weekendOnly) {
+    if (voucher.weekendOnly) {
       restrictions.push('Chỉ áp dụng cuối tuần (T7-CN)')
     }
     

@@ -1,23 +1,39 @@
 ﻿import { Link } from 'react-router-dom'
 import { Container, Button, Row, Col, Badge } from 'react-bootstrap'
 import { useState, useEffect } from 'react'
-import { useFetch } from '../hooks/useFetch'
 import MovieCard from '../components/MovieCard'
 import { useAuth } from '../contexts/AuthContext'
 import { MovieGridSkeleton } from '../components/LoadingSkeleton'
 import { VoucherValidator } from '../utils/voucherValidation'
-import axios from 'axios'
+import { movieApi, voucherApi } from '../services/api'
 import '../components/HeroBannerV2.css'
 import '../components/VoucherCard.css'
 
 export default function HomePage() {
   const { currentUser } = useAuth()
-  const { data: movies, loading } = useFetch('http://localhost:3001/movies')
+  const [movies, setMovies] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const [currentSlide, setCurrentSlide] = useState(0)
   
   const [vouchers, setVouchers] = useState([])
   const [vouchersLoading, setVouchersLoading] = useState(true)
+
+  // Load movies
+  useEffect(() => {
+    const loadMovies = async () => {
+      try {
+        const res = await movieApi.getAll()
+        setMovies(res.data)
+      } catch (err) {
+        console.error('Lỗi tải phim:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadMovies()
+  }, [])
 
   const hotMovies = movies 
     ? [...movies].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)).slice(0, 5) 
@@ -36,9 +52,8 @@ export default function HomePage() {
   useEffect(() => {
     const loadVouchers = async () => {
       try {
-        const res = await axios.get('http://localhost:3001/vouchers')
-        const activeVouchers = res.data.filter(v => v.isActive && new Date(v.validTo) >= new Date())
-        setVouchers(activeVouchers.slice(0, 4)) // Chỉ lấy 4 voucher đầu tiên
+        const res = await voucherApi.getActive()
+        setVouchers(res.data.slice(0, 4)) // Chỉ lấy 4 voucher đầu tiên
       } catch (err) {
         console.error('Lỗi tải voucher:', err)
       } finally {

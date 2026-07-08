@@ -20,7 +20,7 @@ export default function OffersPage() {
           const userVouchers = await VoucherValidator.getAvailableVouchersForUser(currentUser.id)
           setVouchers(userVouchers.map(v => VoucherValidator.getVoucherDisplayInfo(v)))
         } else {
-          const res = await axios.get('http://localhost:3001/vouchers')
+          const res = await axios.get('http://localhost:8080/api/vouchers')
           const activeVouchers = res.data.filter(v => {
             const isActive = v.isActive
             const validTo = new Date(v.validTo)

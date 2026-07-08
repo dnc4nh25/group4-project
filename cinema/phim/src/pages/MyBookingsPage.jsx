@@ -18,7 +18,7 @@ export default function MyBookingsPage() {
   const loadBookings = async () => {
     setLoading(true)
     try {
-      const res = await axios.get('http://localhost:3001/bookings')
+      const res = await axios.get('http://localhost:8080/api/bookings')
       const allBookings = res.data
       const myBookings = allBookings.filter(
         b => String(b.userId) === String(currentUser.id)
@@ -28,8 +28,8 @@ export default function MyBookingsPage() {
 
       const enriched = await Promise.all(myBookings.map(async (b) => {
         try {
-          const stRes = await axios.get(`http://localhost:3001/showtimes/${b.showtimeId}`)
-          const mvRes = await axios.get(`http://localhost:3001/movies/${stRes.data.movieId}`)
+          const stRes = await axios.get(`http://localhost:8080/api/showtimes/${b.showtimeId}`)
+          const mvRes = await axios.get(`http://localhost:8080/api/movies/${stRes.data.movieId}`)
           return { ...b, showtime: stRes.data, movie: mvRes.data }
         } catch {
           return { ...b, showtime: null, movie: null }
@@ -59,24 +59,24 @@ export default function MyBookingsPage() {
     try {
       const booking = bookings.find(b => b.id === deletingId)
 
-      await axios.put(`http://localhost:3001/bookings/${deletingId}`, {
-        ...booking,
-        status: 'cancelled',
-        cancelledAt: new Date().toISOString()
+      await axios.patch(`http://localhost:8080/api/bookings/${deletingId}`, {
+        status: 'CANCELLED'
       })
 
       if (booking?.showtimeId) {
-        const seatNumsToRestore = booking.seatNums || []
+        const seatNumsToRestore = typeof booking.seatNums === 'string' 
+          ? JSON.parse(booking.seatNums) 
+          : (booking.seatNums || [])
         
-        const showtimeRes = await axios.get(`http://localhost:3001/showtimes/${booking.showtimeId}`)
+        const showtimeRes = await axios.get(`http://localhost:8080/api/showtimes/${booking.showtimeId}`)
         const currentShowtime = showtimeRes.data
         
-        const currentBooked = currentShowtime.bookedSeatNums || []
+        const currentBookedStr = currentShowtime.bookedSeatNums || '[]'
+        const currentBooked = JSON.parse(currentBookedStr)
         const newBookedSeatNums = currentBooked.filter(s => !seatNumsToRestore.includes(s))
         
-        await axios.patch(`http://localhost:3001/showtimes/${booking.showtimeId}`, {
-          bookedSeats: newBookedSeatNums.length,
-          bookedSeatNums: newBookedSeatNums
+        await axios.patch(`http://localhost:8080/api/showtimes/${booking.showtimeId}`, {
+          bookedSeatNums: JSON.stringify(newBookedSeatNums)
         })
       }
 

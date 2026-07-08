@@ -3,7 +3,7 @@ import { Container, Table, Button, Modal, Form, Alert, Spinner, Badge, Row, Col,
 import axios from 'axios'
 import './AdminCommon.css'
 
-const API = 'http://localhost:3001'
+const API = 'http://localhost:8080/api'
 
 const EMPTY_FORM = {
   code: '',

@@ -22,7 +22,7 @@ export default function BookingPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const stRes = await axios.get(`http://localhost:3001/showtimes/${showtimeId}`)
+        const stRes = await axios.get(`http://localhost:8080/api/showtimes/${showtimeId}`)
         const showtimeData = stRes.data
 
         const showtimeDateTime = new Date(`${showtimeData.date}T${showtimeData.time}`)
@@ -36,7 +36,7 @@ export default function BookingPage() {
         }
 
         setShowtime(showtimeData)
-        const mvRes = await axios.get(`http://localhost:3001/movies/${showtimeData.movieId}`)
+        const mvRes = await axios.get(`http://localhost:8080/api/movies/${showtimeData.movieId}`)
         setMovie(mvRes.data)
       } catch {
         setError('Không tìm thấy suất chiếu.')
@@ -53,7 +53,13 @@ export default function BookingPage() {
     )
   }
 
-  const bookedCount = showtime ? (showtime.bookedSeatNums?.length ?? showtime.bookedSeats) : 0
+  const parsedBookedSeats = showtime?.bookedSeatNums 
+    ? (typeof showtime.bookedSeatNums === 'string' 
+        ? JSON.parse(showtime.bookedSeatNums) 
+        : showtime.bookedSeatNums)
+    : []
+  
+  const bookedCount = showtime ? parsedBookedSeats.length : 0
   const available = showtime ? showtime.totalSeats - bookedCount : 0
   const totalPrice = selectedSeats.length * (showtime?.price || 0)
 
@@ -174,7 +180,7 @@ export default function BookingPage() {
                 </p>
                 <SeatMap
                   totalSeats={showtime?.totalSeats || 0}
-                  bookedSeatNums={showtime?.bookedSeatNums || []}
+                  bookedSeatNums={parsedBookedSeats}
                   selectedSeats={selectedSeats}
                   onToggleSeat={handleToggleSeat}
                   maxSelect={available}

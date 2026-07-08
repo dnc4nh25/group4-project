@@ -16,10 +16,14 @@ export default function AdminFeedbacksPage() {
     setLoading(true)
     try {
       const [feedbacksRes, usersRes] = await Promise.all([
-        axios.get('http://localhost:3001/contactMessages?_sort=-createdAt'),
-        axios.get('http://localhost:3001/users')
+        axios.get('http://localhost:8080/api/contact-messages'),
+        axios.get('http://localhost:8080/api/users')
       ])
-      setFeedbacks(feedbacksRes.data)
+      // Sort on client side since backend doesn't support _sort
+      const sortedFeedbacks = feedbacksRes.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      )
+      setFeedbacks(sortedFeedbacks)
       setUsers(usersRes.data)
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -52,7 +56,7 @@ export default function AdminFeedbacksPage() {
     }
     setIsSubmitting(true)
     try {
-      await axios.patch(`http://localhost:3001/contactMessages/${selectedFeedback.id}`, {
+      await axios.patch(`http://localhost:8080/api/contact-messages/${selectedFeedback.id}`, {
         status: 'replied',
         adminReply: replyContent,
         repliedAt: new Date().toISOString()
