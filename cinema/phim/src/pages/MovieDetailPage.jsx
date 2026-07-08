@@ -12,7 +12,7 @@ export default function MovieDetailPage() {
   const { id } = useParams()
   const { currentUser } = useAuth()
   const navigate = useNavigate()
-  const { data: movie, loading: loadingMovie, error } = useFetch(`http://localhost:3001/movies/${id}`)
+  const { data: movie, loading: loadingMovie, error } = useFetch(`http://localhost:8080/api/movies/${id}`)
 
   const [showtimes, setShowtimes] = useState([])
   const [loadingShowtimes, setLoadingShowtimes] = useState(true)
@@ -20,7 +20,7 @@ export default function MovieDetailPage() {
   const [showTrailerModal, setShowTrailerModal] = useState(false)
   useEffect(() => {
     console.log('Fetching showtimes for movie:', id)
-    axios.get('http://localhost:3001/showtimes')
+    axios.get('http://localhost:8080/api/showtimes')
       .then(res => {
         console.log('All showtimes:', res.data)
         const filtered = res.data.filter(st => String(st.movieId) === String(id))

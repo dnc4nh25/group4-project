@@ -129,31 +129,30 @@ export default function PaymentPage() {
       const discount = calculateDiscount(selectedVoucher, subtotal, seatCount)
       const finalTotal = subtotal - discount
       
-      const bookingRes = await axios.post('http://localhost:3001/bookings', {
+      const bookingRes = await axios.post('http://localhost:8080/api/bookings', {
         userId: currentUser.id,
-        showtimeId: String(showtimeId),
-        seats: seatCount,
-        seatNums: selectedSeats,
+        showtimeId: showtimeId,
+        seatNums: JSON.stringify(selectedSeats), // Convert to JSON string
         totalPrice: finalTotal,
         originalPrice: subtotal,
         discount: discount,
         voucherCode: selectedVoucher?.code || null,
-        createdAt: new Date().toISOString(),
-        status: 'confirmed'
+        status: 'CONFIRMED'
       })
 
-      const currentBooked = showtime.bookedSeatNums || []
+      // Update showtime booked seats
+      const currentBookedStr = showtime.bookedSeatNums || '[]'
+      const currentBooked = JSON.parse(currentBookedStr)
       const newBookedSeatNums = [...currentBooked, ...selectedSeats]
-      await axios.patch(`http://localhost:3001/showtimes/${showtimeId}`, {
-        bookedSeats: newBookedSeatNums.length,
-        bookedSeatNums: newBookedSeatNums
+      
+      await axios.patch(`http://localhost:8080/api/showtimes/${showtimeId}`, {
+        bookedSeatNums: JSON.stringify(newBookedSeatNums)
       })
 
       if (selectedVoucher) {
         console.log('Updating voucher usage:', selectedVoucher.code, 'from', selectedVoucher.usedCount, 'to', selectedVoucher.usedCount + 1)
         
-        await axios.patch(`http://localhost:3001/vouchers/${selectedVoucher.id}`, {
-          ...selectedVoucher,
+        await axios.patch(`http://localhost:8080/api/vouchers/${selectedVoucher.id}`, {
           usedCount: (selectedVoucher.usedCount || 0) + 1
         })
         

@@ -4,7 +4,7 @@ import axios from 'axios'
 import './AdminCommon.css'
 import './AdminReviewsPage.css'
 
-const API = 'http://localhost:3001'
+const API = 'http://localhost:8080/api'
 
 function StarDisplay({ value }) {
   return (

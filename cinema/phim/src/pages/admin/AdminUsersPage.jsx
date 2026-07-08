@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await axios.get('http://localhost:3001/users')
+      const res = await axios.get('http://localhost:8080/api/users')
       setUsers(res.data)
     } catch { setError('Lỗi tải dữ liệu') }
     finally { setLoading(false) }
@@ -163,39 +163,58 @@ export default function AdminUsersPage() {
       }
       
       if (editingId) {
-        const check = await axios.get('http://localhost:3001/users')
-        
+        // Update existing user
         if (form.email) {
-          const emailExists = check.data.some(u => u.email === form.email && u.id !== editingId)
-          if (emailExists) {
-            setError('Email đã được sử dụng bởi tài khoản khác.'); setSaving(false); return
+          try {
+            const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
+            if (emailCheck.data && emailCheck.data.id !== editingId) {
+              setError('Email đã được sử dụng bởi tài khoản khác.'); setSaving(false); return
+            }
+          } catch (err) {
+            if (err.response?.status !== 404) throw err
           }
         }
         
         if (form.phone) {
-          const phoneExists = check.data.some(u => u.phone === form.phone && u.id !== editingId)
-          if (phoneExists) {
-            setError('Số điện thoại đã được sử dụng bởi tài khoản khác.'); setSaving(false); return
+          try {
+            const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
+            if (phoneCheck.data && phoneCheck.data.id !== editingId) {
+              setError('Số điện thoại đã được sử dụng bởi tài khoản khác.'); setSaving(false); return
+            }
+          } catch (err) {
+            if (err.response?.status !== 404) throw err
           }
         }
         
-        await axios.put(`http://localhost:3001/users/${editingId}`, form)
+        await axios.put(`http://localhost:8080/api/users/${editingId}`, form)
       } else {
-        const check = await axios.get('http://localhost:3001/users')
-        if (check.data.some(u => u.username.toLowerCase() === form.username.trim().toLowerCase())) {
+        // Create new user
+        try {
+          await axios.get(`http://localhost:8080/api/users/username/${form.username.trim()}`)
           setError('❌ Tên đăng nhập đã tồn tại.'); setSaving(false); return
-        }
-        await axios.post('http://localhost:3001/users', payload)
-        
-        if (form.email && check.data.some(u => u.email === form.email)) {
-          setError('Email đã được sử dụng.'); setSaving(false); return
+        } catch (err) {
+          if (err.response?.status !== 404) throw err
         }
         
-        if (form.phone && check.data.some(u => u.phone === form.phone)) {
-          setError('Số điện thoại đã được sử dụng.'); setSaving(false); return
+        if (form.email) {
+          try {
+            await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
+            setError('Email đã được sử dụng.'); setSaving(false); return
+          } catch (err) {
+            if (err.response?.status !== 404) throw err
+          }
         }
         
-        await axios.post('http://localhost:3001/users', form)
+        if (form.phone) {
+          try {
+            await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
+            setError('Số điện thoại đã được sử dụng.'); setSaving(false); return
+          } catch (err) {
+            if (err.response?.status !== 404) throw err
+          }
+        }
+        
+        await axios.post('http://localhost:8080/api/users', payload)
       }
       setShowModal(false); load()
     } catch (err) { 
@@ -208,7 +227,7 @@ export default function AdminUsersPage() {
   const handleDeleteClick = (id) => { setDeletingId(id); setShowDelete(true) }
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3001/users/${deletingId}`)
+      await axios.delete(`http://localhost:8080/api/users/${deletingId}`)
       setShowDelete(false); load()
     } catch { setError('Xóa thất bại.') }
   }
@@ -218,14 +237,14 @@ export default function AdminUsersPage() {
     setLoadingDetail(true)
     setShowUserDetail(true)
     try {
-      const bookingsRes = await axios.get('http://localhost:3001/bookings')
+      const bookingsRes = await axios.get('http://localhost:8080/api/bookings')
       const userBookingsData = bookingsRes.data.filter(b => b.userId === user.id)
       
       const enriched = await Promise.all(userBookingsData.map(async (b) => {
-        const stRes = await axios.get(`http://localhost:3001/showtimes/${b.showtimeId}`).catch(() => ({ data: null }))
+        const stRes = await axios.get(`http://localhost:8080/api/showtimes/${b.showtimeId}`).catch(() => ({ data: null }))
         let movie = null
         if (stRes.data?.movieId) {
-          const mvRes = await axios.get(`http://localhost:3001/movies/${stRes.data.movieId}`).catch(() => ({ data: null }))
+          const mvRes = await axios.get(`http://localhost:8080/api/movies/${stRes.data.movieId}`).catch(() => ({ data: null }))
           movie = mvRes.data
         }
         return { ...b, showtime: stRes.data, movie }

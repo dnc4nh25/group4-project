@@ -53,7 +53,7 @@ export default function AdminFooterPage() {
 
   const loadFooterData = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/footerSettings/1')
+      const response = await axios.get('http://localhost:8080/api/footer-settings/1')
       setFooterData(response.data)
       console.log('Footer data loaded:', response.data)
     } catch (error) {
@@ -69,7 +69,7 @@ export default function AdminFooterPage() {
         updatedAt: new Date().toISOString()
       }
       
-      await axios.put('http://localhost:3001/footerSettings/1', updatedData)
+      await axios.put('http://localhost:8080/api/footer-settings/1', updatedData)
       setFooterData(updatedData)
       
       localStorage.setItem('footerUpdated', Date.now().toString())
