@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Navbar, Nav, Container, Button, NavDropdown } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
 import { useEffect, useState } from 'react'
@@ -55,7 +55,6 @@ export default function NavBar({ theme, onToggleTheme }) {
           style={{ animationDelay: '0.1s' }}
         >
           CinemaXP
-          {isAdmin && <span className="admin-badge-label ms-2">ADMIN</span>}
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="main-nav" className="navbar-toggler-custom" />
