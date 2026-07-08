@@ -23,8 +23,8 @@ export default function AdminRoomStatsPage() {
       setLoading(true)
       try {
         const [stRes, mvRes] = await Promise.all([
-          axios.get('http://localhost:3001/showtimes'),
-          axios.get('http://localhost:3001/movies')
+          axios.get('http://localhost:8080/api/showtimes'),
+          axios.get('http://localhost:8080/api/movies')
         ])
         setShowtimes(stRes.data)
         setMovies(mvRes.data)

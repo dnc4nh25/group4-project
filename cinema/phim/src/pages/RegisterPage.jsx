@@ -61,28 +61,41 @@ export default function RegisterPage() {
     
     setLoading(true)
     try {
-      const check = await axios.get(`http://localhost:3001/users?username=${form.username}`)
-      if (check.data.length > 0) {
+      // Check username exists
+      try {
+        await axios.get(`http://localhost:8080/api/users/username/${form.username}`)
         setError('Tên đăng nhập đã tồn tại.')
         setLoading(false)
         return
+      } catch (err) {
+        if (err.response?.status !== 404) throw err
       }
       
-      const emailCheck = await axios.get(`http://localhost:3001/users?email=${form.email}`)
-      if (emailCheck.data.length > 0) {
-        setError('Email đã được sử dụng.')
-        setLoading(false)
-        return
+      // Check email exists
+      if (form.email) {
+        try {
+          await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
+          setError('Email đã được sử dụng.')
+          setLoading(false)
+          return
+        } catch (err) {
+          if (err.response?.status !== 404) throw err
+        }
       }
       
-      const phoneCheck = await axios.get(`http://localhost:3001/users?phone=${form.phone}`)
-      if (phoneCheck.data.length > 0) {
-        setError('Số điện thoại đã được sử dụng.')
-        setLoading(false)
-        return
+      // Check phone exists
+      if (form.phone) {
+        try {
+          await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
+          setError('Số điện thoại đã được sử dụng.')
+          setLoading(false)
+          return
+        } catch (err) {
+          if (err.response?.status !== 404) throw err
+        }
       }
       
-      const res = await axios.post('http://localhost:3001/users', {
+      const res = await axios.post('http://localhost:8080/api/users', {
         username: form.username,
         password: form.password,
         fullName: form.fullName,

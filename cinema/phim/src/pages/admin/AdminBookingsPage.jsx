@@ -26,10 +26,10 @@ export default function AdminBookingsPage() {
     setLoading(true)
     try {
       const [bookingsRes, usersRes, moviesRes, showtimesRes] = await Promise.all([
-        axios.get('http://localhost:3001/bookings'),
-        axios.get('http://localhost:3001/users'),
-        axios.get('http://localhost:3001/movies'),
-        axios.get('http://localhost:3001/showtimes')
+        axios.get('http://localhost:8080/api/bookings'),
+        axios.get('http://localhost:8080/api/users'),
+        axios.get('http://localhost:8080/api/movies'),
+        axios.get('http://localhost:8080/api/showtimes')
       ])
       
       setBookings(bookingsRes.data)
@@ -164,7 +164,7 @@ export default function AdminBookingsPage() {
     try {
       const booking = bookings.find(b => b.id === deletingId)
       
-      await axios.put(`http://localhost:3001/bookings/${deletingId}`, {
+      await axios.put(`http://localhost:8080/api/bookings/${deletingId}`, {
         ...booking,
         status: 'cancelled',
         cancelledAt: new Date().toISOString()
@@ -176,7 +176,7 @@ export default function AdminBookingsPage() {
           const seatNumsToRestore = booking.seatNums || []
           const currentBooked = showtime.bookedSeatNums || []
           const newBookedSeatNums = currentBooked.filter(s => !seatNumsToRestore.includes(s))
-          await axios.patch(`http://localhost:3001/showtimes/${booking.showtimeId}`, {
+          await axios.patch(`http://localhost:8080/api/showtimes/${booking.showtimeId}`, {
             bookedSeats: newBookedSeatNums.length,
             bookedSeatNums: newBookedSeatNums
           })

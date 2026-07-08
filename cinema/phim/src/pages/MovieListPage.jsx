@@ -24,7 +24,7 @@ const SORT_OPTIONS = [
 ]
 
 export default function MovieListPage() {
-  const { data: movies, loading, error } = useFetch('http://localhost:3001/movies')
+  const { data: movies, loading, error } = useFetch('http://localhost:8080/api/movies')
   const [search, setSearch] = useState('')
   const [searchFocus, setSearchFocus] = useState(false)
   const [genre, setGenre] = useState('all')

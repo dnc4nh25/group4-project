@@ -91,27 +91,35 @@ export default function ProfilePage() {
 
     setLoading(true)
     try {
-      const usersCheck = await axios.get('http://localhost:3001/users')
-      const emailExists = usersCheck.data.some(u => 
-        u.email === form.email && u.id !== currentUser.id
-      )
-      if (emailExists) {
-        setError('Email đã được sử dụng bởi tài khoản khác.')
-        setLoading(false)
-        return
+      // Check email exists (excluding current user)
+      if (form.email && form.email !== currentUser.email) {
+        try {
+          const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
+          if (emailCheck.data && emailCheck.data.id !== currentUser.id) {
+            setError('Email đã được sử dụng bởi tài khoản khác.')
+            setLoading(false)
+            return
+          }
+        } catch (err) {
+          if (err.response?.status !== 404) throw err
+        }
       }
 
-      const phoneExists = usersCheck.data.some(u => 
-        u.phone === form.phone && u.id !== currentUser.id
-      )
-      if (phoneExists) {
-        setError('Số điện thoại đã được sử dụng bởi tài khoản khác.')
-        setLoading(false)
-        return
+      // Check phone exists (excluding current user)
+      if (form.phone && form.phone !== currentUser.phone) {
+        try {
+          const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
+          if (phoneCheck.data && phoneCheck.data.id !== currentUser.id) {
+            setError('Số điện thoại đã được sử dụng bởi tài khoản khác.')
+            setLoading(false)
+            return
+          }
+        } catch (err) {
+          if (err.response?.status !== 404) throw err
+        }
       }
 
       const updateData = {
-        ...currentUser,
         fullName: form.fullName,
         email: form.email,
         phone: form.phone
@@ -121,7 +129,7 @@ export default function ProfilePage() {
         updateData.password = form.newPassword
       }
 
-      const response = await axios.put(`http://localhost:3001/users/${currentUser.id}`, updateData)
+      const response = await axios.put(`http://localhost:8080/api/users/${currentUser.id}`, updateData)
       
       login(response.data)
       

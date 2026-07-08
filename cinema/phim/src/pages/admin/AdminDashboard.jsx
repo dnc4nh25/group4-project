@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function AdminDashboard() {
   const [dateFilter, setDateFilter] = useState(14)
-  const { data: bookings } = useFetch('http://localhost:3001/bookings')
+  const { data: bookings } = useFetch('http://localhost:8080/api/bookings')
 
   const totalRevenue = useMemo(
     () => bookings?.reduce((s, b) => s + (b.totalPrice || 0), 0) || 0,
@@ -60,8 +60,8 @@ export default function AdminDashboard() {
       .map(([date, revenue]) => ({ date, 'Doanh thu': revenue }))
   }, [bookings, dateFilter])
 
-  const { data: movies } = useFetch('http://localhost:3001/movies')
-  const { data: showtimes } = useFetch('http://localhost:3001/showtimes')
+  const { data: movies } = useFetch('http://localhost:8080/api/movies')
+  const { data: showtimes } = useFetch('http://localhost:8080/api/showtimes')
 
   const movieData = useMemo(() => {
     if (!bookings || !showtimes || !movies) return []

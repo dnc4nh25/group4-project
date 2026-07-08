@@ -4,7 +4,7 @@ import axios from 'axios'
 import './AdminMoviesPage.css'
 import './AdminCommon.css'
 
-const API = 'http://localhost:3001'
+const API = 'http://localhost:8080/api'
 
 const EMPTY_FORM = {
   title: '', genres: ['Hành động'], rating: '', duration: '', description: '',
@@ -47,7 +47,12 @@ export default function AdminMoviesPage() {
     setLoading(true)
     try {
       const res = await axios.get(`${API}/movies`)
-      setMovies(res.data)
+      // Parse genres from JSON string to array
+      const moviesWithParsedGenres = res.data.map(movie => ({
+        ...movie,
+        genres: typeof movie.genres === 'string' ? JSON.parse(movie.genres) : (movie.genres || [])
+      }))
+      setMovies(moviesWithParsedGenres)
     } catch { setError('Lỗi tải dữ liệu') }
     finally { setLoading(false) }
   }
