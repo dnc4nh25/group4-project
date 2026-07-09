@@ -81,16 +81,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="page-wrapper admin-dashboard-page">
-      <div className="page-header-banner py-4">
-        <Container>
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-              <h1 className="fw-bold mb-1">⚙️ Admin Dashboard</h1>
-              <p className="text-muted mb-0">Tổng quan doanh thu và thống kê CinemaXP</p>
-            </div>
-          </div>
-        </Container>
-      </div>
+     
 
       <Container className="py-4">
         <Row className="g-4 mb-4 justify-content-center">
