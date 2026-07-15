@@ -4,6 +4,7 @@ import com.example.backend.dto.VoucherDto;
 import com.example.backend.entity.Voucher;
 import com.example.backend.repository.VoucherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/vouchers")
+@RequestMapping(value = "/api/vouchers", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
 @CrossOrigin(origins = "*")
 public class VoucherController {
 

@@ -32,7 +32,7 @@ public class Booking {
 
 
     // Danh sách mã ghế: ["A1","A2"...] lưu dạng JSON string
-    @Column(name = "seat_nums", columnDefinition = "TEXT")
+    @Column(name = "seat_nums", columnDefinition = "NVARCHAR(MAX)")
     private String seatNums;
 
     // Tổng tiền sau giảm giá
@@ -48,7 +48,7 @@ public class Booking {
     private Long discount = 0L;
 
     // Mã voucher đã dùng (nếu có)
-    @Column(name = "voucher_code", length = 50)
+    @Column(name = "voucher_code", length = 50, columnDefinition = "NVARCHAR(50)")
     private String voucherCode;
 
     @Enumerated(EnumType.STRING)

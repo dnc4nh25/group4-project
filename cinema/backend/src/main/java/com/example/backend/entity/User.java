@@ -20,19 +20,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 50, columnDefinition = "NVARCHAR(50)")
     private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "full_name", length = 100)
+    @Column(name = "full_name", length = 100, columnDefinition = "NVARCHAR(100)")
     private String fullName;
 
-    @Column(unique = true, length = 100)
+    @Column(unique = true, length = 100, columnDefinition = "NVARCHAR(100)")
     private String email;
 
-    @Column(length = 20)
+    @Column(length = 20, columnDefinition = "NVARCHAR(20)")
     private String phone;
 
     @Enumerated(EnumType.STRING)

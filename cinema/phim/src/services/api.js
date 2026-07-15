@@ -4,10 +4,13 @@ import axios from 'axios';
 const API_BASE_URL = 'http://localhost:8080/api';
 
 // Create axios instance with default config
+// charset=UTF-8 duoc them vao ca Content-Type va Accept de dam bao
+// request va response deu dung dung encoding tieng Viet.
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json;charset=UTF-8',
+    'Accept': 'application/json;charset=UTF-8',
   },
 });
 

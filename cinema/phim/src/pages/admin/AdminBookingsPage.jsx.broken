@@ -548,17 +548,7 @@ export default function AdminBookingsPage() {
       if (booking?.showtimeId) {
         const showtime = showtimes.find(s => String(s.id) === String(booking.showtimeId))
         if (showtime) {
-          // Parse seatNums nếu là string JSON
-          let seatNumsToRestore = booking.seatNums || []
-          if (typeof booking.seatNums === 'string') {
-            try {
-              seatNumsToRestore = JSON.parse(booking.seatNums)
-            } catch (e) {
-              console.error('Error parsing seatNums:', e)
-              seatNumsToRestore = []
-            }
-          }
-          
+          const seatNumsToRestore = booking.seatNums || []
           const currentBooked = showtime.bookedSeatNums || []
           const newBookedSeatNums = currentBooked.filter(s => !seatNumsToRestore.includes(s))
           await axios.patch(`http://localhost:8080/api/showtimes/${booking.showtimeId}`, {
@@ -601,24 +591,7 @@ export default function AdminBookingsPage() {
   }
 
   const formatSeats = (seatNums, seats) => {
-    if (!seatNums) return `[${seats} ghế]`
-    
-    // Nếu seatNums là string JSON, parse thành array
-    let seatArray = seatNums
-    if (typeof seatNums === 'string') {
-      try {
-        seatArray = JSON.parse(seatNums)
-      } catch (e) {
-        console.error('Error parsing seatNums:', e)
-        return `[${seats} ghế]`
-      }
-    }
-    
-    // Kiểm tra xem seatArray có phải là array và có phần tử không
-    if (Array.isArray(seatArray) && seatArray.length > 0) {
-      return seatArray.sort().map(s => `[${s}]`).join('')
-    }
-    
+    if (seatNums && seatNums.length > 0) return seatNums.sort().map(s => `[${s}]`).join('')
     return `[${seats} ghế]`
   }
 
