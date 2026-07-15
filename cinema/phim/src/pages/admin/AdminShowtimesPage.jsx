@@ -5,7 +5,7 @@ import './AdminShowtimesPage.css'
 import './AdminCommon.css'
 import './AdminShowtimesEnhanced.css'
 
-const EMPTY_FORM = { movieId: '', date: '', time: '', room: '', totalSeats: 100, bookedSeats: 0, price: 80000 }
+const EMPTY_FORM = { movieId: '', date: '', time: '', room: '', totalSeats: 100, price: 80000 }
 
 const AVAILABLE_ROOMS = [
   { value: 'Phòng 1', label: 'Phòng 1', seats: 100 },
@@ -103,11 +103,21 @@ export default function AdminShowtimesPage() {
   }, [filteredShowtimes])
 
   const handleOpenAdd = () => {
-    setForm({ ...EMPTY_FORM, movieId: movies[0]?.id || '' })
+    setForm({ ...EMPTY_FORM, movieId: movies[0]?.id || '', bookedSeatNums: [] })
     setEditingId(null); setError(''); setShowModal(true)
   }
   const handleOpenEdit = (st) => {
-    setForm({ ...st }); setEditingId(st.id); setError(''); setShowModal(true)
+    setForm({ 
+      movieId: st.movieId,
+      date: st.date,
+      time: st.time,
+      room: st.room,
+      totalSeats: st.totalSeats,
+      bookedSeats: st.bookedSeats,
+      price: st.price,
+      bookedSeatNums: st.bookedSeatNums || []
+    })
+    setEditingId(st.id); setError(''); setShowModal(true)
   }
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -173,7 +183,6 @@ export default function AdminShowtimesPage() {
     }
     
     const totalSeats = Number(form.totalSeats)
-    const bookedSeats = Number(form.bookedSeats)
     
     if (isNaN(totalSeats) || totalSeats <= 0) {
       setError('❌ Tổng số ghế phải là số dương.'); return
@@ -183,12 +192,17 @@ export default function AdminShowtimesPage() {
       setError('❌ Tổng số ghế không được quá 500.'); return
     }
     
-    if (isNaN(bookedSeats) || bookedSeats < 0) {
-      setError('❌ Số ghế đã đặt không được âm.'); return
-    }
-    
-    if (bookedSeats > totalSeats) {
-      setError('❌ Số ghế đã đặt không được lớn hơn tổng số ghế.'); return
+    // Only validate bookedSeats if editing (not when adding new)
+    if (editingId) {
+      const bookedSeats = Number(form.bookedSeats)
+      
+      if (isNaN(bookedSeats) || bookedSeats < 0) {
+        setError('❌ Số ghế đã đặt không được âm.'); return
+      }
+      
+      if (bookedSeats > totalSeats) {
+        setError('❌ Số ghế đã đặt không được lớn hơn tổng số ghế.'); return
+      }
     }
     
     const price = Number(form.price)
@@ -216,14 +230,15 @@ export default function AdminShowtimesPage() {
     setSaving(true)
     try {
       const payload = {
-        ...form,
-        room: form.room.trim(),
         movieId: form.movieId,
+        date: form.date,
+        time: form.time,
+        room: form.room.trim(),
         totalSeats: Number(form.totalSeats),
-        bookedSeats: Number(form.bookedSeats),
         price: Number(form.price),
-        bookedSeatNums: form.bookedSeatNums || []  // Send as array, backend will handle JSON conversion
+        bookedSeatNums: form.bookedSeatNums || []
       }
+      
       if (editingId) {
         await axios.put(`http://localhost:8080/api/showtimes/${editingId}`, payload)
       } else {
@@ -250,10 +265,13 @@ export default function AdminShowtimesPage() {
     if (!newDate) return
     try {
       await axios.post('http://localhost:8080/api/showtimes', {
-        ...showtime,
+        movieId: showtime.movieId,
         date: newDate,
-        bookedSeats: 0,
-        id: undefined
+        time: showtime.time,
+        room: showtime.room,
+        totalSeats: showtime.totalSeats,
+        price: showtime.price,
+        bookedSeatNums: []
       })
       load()
     } catch { setError('Sao chép thất bại.') }
@@ -594,15 +612,29 @@ export default function AdminShowtimesPage() {
               </Form.Text>
             </Form.Group>
             <div className="row g-3 mb-3">
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <Form.Label>Tổng ghế</Form.Label>
                 <Form.Control name="totalSeats" type="number" value={form.totalSeats} onChange={handleChange} />
               </div>
-              <div className="col-md-4">
-                <Form.Label>Đã đặt</Form.Label>
-                <Form.Control name="bookedSeats" type="number" value={form.bookedSeats} onChange={handleChange} />
-              </div>
-              <div className="col-md-4">
+              {editingId && (
+                <div className="col-md-6">
+                  <Form.Label>Đã đặt</Form.Label>
+                  <Form.Control 
+                    name="bookedSeats" 
+                    type="number" 
+                    value={form.bookedSeats || 0} 
+                    onChange={handleChange}
+                    readOnly
+                    className="bg-secondary bg-opacity-25"
+                  />
+                  <Form.Text className="text-muted">
+                    Chỉ xem, được tính tự động từ đặt vé
+                  </Form.Text>
+                </div>
+              )}
+            </div>
+            <div className="row g-3 mb-3">
+              <div className="col-md-12">
                 <Form.Label>Giá vé (đ)</Form.Label>
                 <Form.Control name="price" type="number" value={form.price} onChange={handleChange} />
               </div>
