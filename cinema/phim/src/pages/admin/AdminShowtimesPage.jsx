@@ -221,7 +221,8 @@ export default function AdminShowtimesPage() {
         movieId: form.movieId,
         totalSeats: Number(form.totalSeats),
         bookedSeats: Number(form.bookedSeats),
-        price: Number(form.price)
+        price: Number(form.price),
+        bookedSeatNums: form.bookedSeatNums || []  // Send as array, backend will handle JSON conversion
       }
       if (editingId) {
         await axios.put(`http://localhost:8080/api/showtimes/${editingId}`, payload)
