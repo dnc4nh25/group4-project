@@ -47,12 +47,8 @@ export default function AdminMoviesPage() {
     setLoading(true)
     try {
       const res = await axios.get(`${API}/movies`)
-      // Parse genres from JSON string to array
-      const moviesWithParsedGenres = res.data.map(movie => ({
-        ...movie,
-        genres: typeof movie.genres === 'string' ? JSON.parse(movie.genres) : (movie.genres || [])
-      }))
-      setMovies(moviesWithParsedGenres)
+      // Backend now returns genres as array, no need to parse
+      setMovies(res.data)
     } catch { setError('Lỗi tải dữ liệu') }
     finally { setLoading(false) }
   }
@@ -237,8 +233,7 @@ export default function AdminMoviesPage() {
         cast: form.cast?.trim() || '',
         description: form.description?.trim() || '',
         poster: form.poster?.trim() || '',
-        genres: form.genres,
-        genre: form.genres[0] || 'Hành động'
+        genres: form.genres  // Send as array, backend will handle JSON conversion
       }
 
       if (editingId) {

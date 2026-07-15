@@ -3,6 +3,7 @@ package com.example.backend.dto;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -11,7 +12,7 @@ import java.time.LocalDate;
 public class MovieDto {
     private Long id;
     private String title;
-    private String genres;
+    private List<String> genres;  // Changed from String to List<String>
     private String description;
     private Double rating;
     private Integer duration;
