@@ -110,7 +110,7 @@ export default function AdminShowtimesPage() {
     setForm({ 
       movieId: st.movieId,
       date: st.date,
-      time: st.time,
+      time: st.time.substring(0, 5), // Convert HH:MM:SS to HH:MM
       room: st.room,
       totalSeats: st.totalSeats,
       bookedSeats: st.bookedSeats,
@@ -177,9 +177,9 @@ export default function AdminShowtimesPage() {
       setError('❌ Ngày chiếu không được quá 1 năm trong tương lai.'); return
     }
     
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/
     if (!timeRegex.test(form.time)) {
-      setError('❌ Giờ chiếu không hợp lệ (định dạng HH:MM).'); return
+      setError('❌ Giờ chiếu không hợp lệ (định dạng HH:MM hoặc HH:MM:SS).'); return
     }
     
     const totalSeats = Number(form.totalSeats)
