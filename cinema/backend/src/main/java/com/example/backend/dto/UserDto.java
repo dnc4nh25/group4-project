@@ -1,11 +1,15 @@
 package com.example.backend.dto;
 
-import com.example.backend.enums.UserRole;
-import com.example.backend.enums.UserStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO dùng cho tất cả CRUD user.
+ * - role / status lưu dạng String (lowercase: "admin", "user", "active", "banned", "pending")
+ *   để khớp trực tiếp với frontend React.
+ * - Backend controller tự convert sang Enum khi lưu vào DB.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,11 +17,11 @@ import java.time.LocalDateTime;
 public class UserDto {
     private Long id;
     private String username;
-    private String password; // Only for create/update, never return in response
+    private String password;   // Nhận khi create/update; trả về bcrypt hash khi list
     private String fullName;
     private String email;
     private String phone;
-    private UserRole role;
-    private UserStatus status;
+    private String role;       // "admin" | "user"
+    private String status;     // "active" | "banned" | "pending"
     private LocalDateTime createdAt;
 }
