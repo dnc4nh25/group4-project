@@ -33,7 +33,7 @@ public class Showtime {
     private LocalTime time;
 
     // Tên phòng chiếu: "Phòng 1", "Phòng 2"...
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
     private String room;
 
     @Column(name = "total_seats", nullable = false)
@@ -47,7 +47,7 @@ public class Showtime {
 
     // Danh sách mã ghế đã đặt: ["A1","A2","B3"...]
     // Lưu dưới dạng JSON string trong DB
-    @Column(name = "booked_seat_nums", columnDefinition = "TEXT")
+    @Column(name = "booked_seat_nums", columnDefinition = "NVARCHAR(MAX)")
     @Builder.Default
     private String bookedSeatNums = "[]";
 }

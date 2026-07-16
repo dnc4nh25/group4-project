@@ -4,6 +4,7 @@ import com.example.backend.dto.VoucherDto;
 import com.example.backend.entity.Voucher;
 import com.example.backend.repository.VoucherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/vouchers")
+@RequestMapping(value = "/api/vouchers", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
 @CrossOrigin(origins = "*")
 public class VoucherController {
 
@@ -114,18 +115,18 @@ public class VoucherController {
                 .description(dto.getDescription())
                 .type(dto.getType())
                 .value(dto.getValue())
-                .minOrderValue(dto.getMinOrderValue())
-                .minSeats(dto.getMinSeats())
+                .minOrderValue(dto.getMinOrderValue() != null ? dto.getMinOrderValue() : 0L)
+                .minSeats(dto.getMinSeats() != null ? dto.getMinSeats() : 0)
                 .maxDiscount(dto.getMaxDiscount())
                 .usageLimit(dto.getUsageLimit())
                 .usedCount(dto.getUsedCount() != null ? dto.getUsedCount() : 0)
-                .newUsersOnly(dto.getNewUsersOnly())
-                .oneTimePerUser(dto.getOneTimePerUser())
+                .newUsersOnly(dto.getNewUsersOnly() != null ? dto.getNewUsersOnly() : false)
+                .oneTimePerUser(dto.getOneTimePerUser() != null ? dto.getOneTimePerUser() : false)
                 .daysAfterRegistration(dto.getDaysAfterRegistration())
-                .weekendOnly(dto.getWeekendOnly())
+                .weekendOnly(dto.getWeekendOnly() != null ? dto.getWeekendOnly() : false)
                 .validFrom(dto.getValidFrom())
                 .validTo(dto.getValidTo())
-                .isActive(dto.getIsActive())
+                .isActive(dto.getIsActive() != null ? dto.getIsActive() : true)
                 .build();
     }
 

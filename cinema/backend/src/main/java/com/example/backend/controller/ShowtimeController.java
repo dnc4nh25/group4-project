@@ -5,15 +5,20 @@ import com.example.backend.entity.Movie;
 import com.example.backend.entity.Showtime;
 import com.example.backend.repository.MovieRepository;
 import com.example.backend.repository.ShowtimeRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/showtimes")
+@RequestMapping(value = "/api/showtimes", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
 @CrossOrigin(origins = "*")
 public class ShowtimeController {
 
@@ -22,6 +27,8 @@ public class ShowtimeController {
 
     @Autowired
     private MovieRepository movieRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping
     public ResponseEntity<List<ShowtimeDto>> getAllShowtimes() {
@@ -82,8 +89,7 @@ public class ShowtimeController {
     }
 
     private ShowtimeDto convertToDto(Showtime showtime) {
-        String bookedSeatNums = showtime.getBookedSeatNums() != null ? showtime.getBookedSeatNums() : "[]";
-        int bookedCount = countSeatsFromJson(bookedSeatNums);
+        List<String> bookedSeatsList = parseSeatNumsFromJson(showtime.getBookedSeatNums());
 
         return ShowtimeDto.builder()
                 .id(showtime.getId())
@@ -93,12 +99,14 @@ public class ShowtimeController {
                 .room(showtime.getRoom())
                 .totalSeats(showtime.getTotalSeats())
                 .price(showtime.getPrice())
-                .bookedSeatNums(bookedSeatNums)
-                .bookedSeats(bookedCount)
+                .bookedSeatNums(bookedSeatsList)
+                .bookedSeats(bookedSeatsList.size())
                 .build();
     }
 
     private Showtime convertToEntity(ShowtimeDto dto, Movie movie) {
+        String bookedSeatsJson = convertSeatNumsToJson(dto.getBookedSeatNums());
+        
         return Showtime.builder()
                 .movie(movie)
                 .date(dto.getDate())
@@ -106,7 +114,7 @@ public class ShowtimeController {
                 .room(dto.getRoom())
                 .totalSeats(dto.getTotalSeats())
                 .price(dto.getPrice())
-                .bookedSeatNums(dto.getBookedSeatNums() != null ? dto.getBookedSeatNums() : "[]")
+                .bookedSeatNums(bookedSeatsJson)
                 .build();
     }
 
@@ -116,22 +124,30 @@ public class ShowtimeController {
         if (dto.getRoom() != null) showtime.setRoom(dto.getRoom());
         if (dto.getTotalSeats() != null) showtime.setTotalSeats(dto.getTotalSeats());
         if (dto.getPrice() != null) showtime.setPrice(dto.getPrice());
-        if (dto.getBookedSeatNums() != null) showtime.setBookedSeatNums(dto.getBookedSeatNums());
+        if (dto.getBookedSeatNums() != null) {
+            showtime.setBookedSeatNums(convertSeatNumsToJson(dto.getBookedSeatNums()));
+        }
     }
 
-    private int countSeatsFromJson(String bookedSeatNums) {
-        // Simple count by counting commas + 1, or check for empty array
-        if (bookedSeatNums == null || bookedSeatNums.equals("[]")) {
-            return 0;
+    private List<String> parseSeatNumsFromJson(String seatNumsJson) {
+        if (seatNumsJson == null || seatNumsJson.trim().isEmpty() || seatNumsJson.equals("[]")) {
+            return new ArrayList<>();
         }
-        // Count number of quotes to get approximate seat count
-        // Format: ["A1","A2","B3"] -> count opening quotes
-        int count = 0;
-        for (int i = 0; i < bookedSeatNums.length(); i++) {
-            if (bookedSeatNums.charAt(i) == '"' && (i == 0 || bookedSeatNums.charAt(i-1) != '\\')) {
-                count++;
-            }
+        try {
+            return objectMapper.readValue(seatNumsJson, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            return new ArrayList<>();
         }
-        return count / 2; // Each seat has opening and closing quote
+    }
+
+    private String convertSeatNumsToJson(List<String> seatNums) {
+        if (seatNums == null || seatNums.isEmpty()) {
+            return "[]";
+        }
+        try {
+            return objectMapper.writeValueAsString(seatNums);
+        } catch (JsonProcessingException e) {
+            return "[]";
+        }
     }
 }

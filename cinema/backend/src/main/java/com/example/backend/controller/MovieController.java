@@ -3,20 +3,27 @@ package com.example.backend.controller;
 import com.example.backend.dto.MovieDto;
 import com.example.backend.entity.Movie;
 import com.example.backend.repository.MovieRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping(value = "/api/movies", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
 @CrossOrigin(origins = "*")
 public class MovieController {
 
     @Autowired
     private MovieRepository movieRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping
     public ResponseEntity<List<MovieDto>> getAllMovies() {
@@ -61,10 +68,12 @@ public class MovieController {
     }
 
     private MovieDto convertToDto(Movie movie) {
+        List<String> genresList = parseGenresFromJson(movie.getGenres());
+        
         return MovieDto.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
-                .genres(movie.getGenres())
+                .genres(genresList)
                 .description(movie.getDescription())
                 .rating(movie.getRating())
                 .duration(movie.getDuration())
@@ -79,9 +88,11 @@ public class MovieController {
     }
 
     private Movie convertToEntity(MovieDto dto) {
+        String genresJson = convertGenresToJson(dto.getGenres());
+        
         return Movie.builder()
                 .title(dto.getTitle())
-                .genres(dto.getGenres())
+                .genres(genresJson)
                 .description(dto.getDescription())
                 .rating(dto.getRating())
                 .duration(dto.getDuration())
@@ -97,7 +108,7 @@ public class MovieController {
 
     private void updateEntityFromDto(Movie movie, MovieDto dto) {
         if (dto.getTitle() != null) movie.setTitle(dto.getTitle());
-        if (dto.getGenres() != null) movie.setGenres(dto.getGenres());
+        if (dto.getGenres() != null) movie.setGenres(convertGenresToJson(dto.getGenres()));
         if (dto.getDescription() != null) movie.setDescription(dto.getDescription());
         if (dto.getRating() != null) movie.setRating(dto.getRating());
         if (dto.getDuration() != null) movie.setDuration(dto.getDuration());
@@ -108,5 +119,30 @@ public class MovieController {
         if (dto.getReleaseDate() != null) movie.setReleaseDate(dto.getReleaseDate());
         if (dto.getAgeRating() != null) movie.setAgeRating(dto.getAgeRating());
         if (dto.getTrailerUrl() != null) movie.setTrailerUrl(dto.getTrailerUrl());
+    }
+
+    private List<String> parseGenresFromJson(String genresJson) {
+        if (genresJson == null || genresJson.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.readValue(genresJson, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            // If parsing fails, return empty list or single genre
+            List<String> fallback = new ArrayList<>();
+            fallback.add(genresJson);
+            return fallback;
+        }
+    }
+
+    private String convertGenresToJson(List<String> genres) {
+        if (genres == null || genres.isEmpty()) {
+            return "[]";
+        }
+        try {
+            return objectMapper.writeValueAsString(genres);
+        } catch (JsonProcessingException e) {
+            return "[]";
+        }
     }
 }

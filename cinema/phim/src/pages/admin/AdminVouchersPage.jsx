@@ -9,12 +9,16 @@ const EMPTY_FORM = {
   code: '',
   title: '',
   description: '',
-  type: 'percentage',
+  type: 'PERCENTAGE',
   value: '',
-  minOrderValue: '',
-  minSeats: '',
-  maxDiscount: '',
+  minOrderValue: 0,
+  minSeats: 0,
+  maxDiscount: null,
   usageLimit: '',
+  newUsersOnly: false,
+  oneTimePerUser: false,
+  daysAfterRegistration: null,
+  weekendOnly: false,
   validFrom: '',
   validTo: '',
   isActive: true
@@ -63,9 +67,22 @@ export default function AdminVouchersPage() {
 
   const handleOpenEdit = (voucher) => {
     setForm({
-      ...voucher,
+      code: voucher.code || '',
+      title: voucher.title || '',
+      description: voucher.description || '',
+      type: voucher.type || 'PERCENTAGE',
+      value: voucher.value || '',
+      minOrderValue: voucher.minOrderValue || 0,
+      minSeats: voucher.minSeats || 0,
+      maxDiscount: voucher.maxDiscount || null,
+      usageLimit: voucher.usageLimit || '',
+      newUsersOnly: voucher.newUsersOnly || false,
+      oneTimePerUser: voucher.oneTimePerUser || false,
+      daysAfterRegistration: voucher.daysAfterRegistration || null,
+      weekendOnly: voucher.weekendOnly || false,
       validFrom: voucher.validFrom ? voucher.validFrom.split('T')[0] : '',
-      validTo: voucher.validTo ? voucher.validTo.split('T')[0] : ''
+      validTo: voucher.validTo ? voucher.validTo.split('T')[0] : '',
+      isActive: voucher.isActive !== undefined ? voucher.isActive : true
     })
     setEditingId(voucher.id)
     setError('')
@@ -131,17 +148,23 @@ export default function AdminVouchersPage() {
     setSaving(true)
     try {
       const payload = {
-        ...form,
         code: form.code.toUpperCase().trim(),
         title: form.title.trim(),
         description: form.description?.trim() || '',
+        type: form.type.toUpperCase(),
         value: parseFloat(form.value),
-        minOrderValue: form.minOrderValue ? parseFloat(form.minOrderValue) : 0,
+        minOrderValue: form.minOrderValue ? parseInt(form.minOrderValue) : 0,
         minSeats: form.minSeats ? parseInt(form.minSeats) : 0,
-        maxDiscount: form.maxDiscount ? parseFloat(form.maxDiscount) : null,
+        maxDiscount: form.maxDiscount ? parseInt(form.maxDiscount) : null,
         usageLimit: parseInt(form.usageLimit),
-        usedCount: editingId ? vouchers.find(v => v.id === editingId)?.usedCount || 0 : 0,
-        createdAt: editingId ? vouchers.find(v => v.id === editingId)?.createdAt : new Date().toISOString()
+        usedCount: editingId ? (vouchers.find(v => v.id === editingId)?.usedCount || 0) : 0,
+        newUsersOnly: form.newUsersOnly || false,
+        oneTimePerUser: form.oneTimePerUser || false,
+        daysAfterRegistration: form.daysAfterRegistration ? parseInt(form.daysAfterRegistration) : null,
+        weekendOnly: form.weekendOnly || false,
+        validFrom: form.validFrom,
+        validTo: form.validTo,
+        isActive: form.isActive !== undefined ? form.isActive : true
       }
 
       if (editingId) {
@@ -324,13 +347,13 @@ export default function AdminVouchersPage() {
                           </div>
                         </td>
                         <td>
-                          <Badge bg={voucher.type === 'percentage' ? 'info' : 'warning'} className="time-badge">
-                            {voucher.type === 'percentage' ? 'Phần trăm' : 'Cố định'}
+                          <Badge bg={voucher.type === 'PERCENTAGE' ? 'info' : 'warning'} className="time-badge">
+                            {voucher.type === 'PERCENTAGE' ? 'Phần trăm' : 'Cố định'}
                           </Badge>
                         </td>
                         <td>
                           <span className="price-cell">
-                            {voucher.type === 'percentage'
+                            {voucher.type === 'PERCENTAGE'
                               ? `${voucher.value}%`
                               : `${voucher.value.toLocaleString()}đ`
                             }
@@ -429,8 +452,8 @@ export default function AdminVouchersPage() {
                 <Form.Group>
                   <Form.Label>Loại giảm giá *</Form.Label>
                   <Form.Select name="type" value={form.type} onChange={handleChange} required>
-                    <option value="percentage">Phần trăm (%)</option>
-                    <option value="fixed">Số tiền cố định (đ)</option>
+                    <option value="PERCENTAGE">Phần trăm (%)</option>
+                    <option value="FIXED">Số tiền cố định (đ)</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -463,7 +486,7 @@ export default function AdminVouchersPage() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>
-                    Giá trị giảm * {form.type === 'percentage' ? '(%)' : '(đ)'}
+                    Giá trị giảm * {form.type === 'PERCENTAGE' ? '(%)' : '(đ)'}
                   </Form.Label>
                   <Form.Control
                     type="number"
@@ -471,8 +494,8 @@ export default function AdminVouchersPage() {
                     value={form.value}
                     onChange={handleChange}
                     min="0"
-                    max={form.type === 'percentage' ? '100' : undefined}
-                    step={form.type === 'percentage' ? '0.1' : '1000'}
+                    max={form.type === 'PERCENTAGE' ? '100' : undefined}
+                    step={form.type === 'PERCENTAGE' ? '0.1' : '1000'}
                     required
                   />
                 </Form.Group>
@@ -565,6 +588,60 @@ export default function AdminVouchersPage() {
                     onChange={handleChange}
                     required
                   />
+                </Form.Group>
+              </Col>
+              <Col xs={12}>
+                <hr className="my-3" />
+                <h6 className="text-muted mb-3">⚙️ Cài đặt nâng cao</h6>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Check
+                    type="checkbox"
+                    name="newUsersOnly"
+                    label="Chỉ dành cho thành viên mới"
+                    checked={form.newUsersOnly}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Check
+                    type="checkbox"
+                    name="oneTimePerUser"
+                    label="Mỗi người dùng chỉ dùng 1 lần"
+                    checked={form.oneTimePerUser}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Check
+                    type="checkbox"
+                    name="weekendOnly"
+                    label="Chỉ áp dụng cuối tuần"
+                    checked={form.weekendOnly}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Số ngày sau khi đăng ký</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="daysAfterRegistration"
+                    value={form.daysAfterRegistration || ''}
+                    onChange={handleChange}
+                    min="0"
+                    placeholder="Không giới hạn"
+                    disabled={!form.newUsersOnly}
+                  />
+                  <Form.Text className="text-muted">
+                    Chỉ áp dụng khi bật "Thành viên mới"
+                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>

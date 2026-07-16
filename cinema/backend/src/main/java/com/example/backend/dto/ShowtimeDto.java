@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,6 +18,6 @@ public class ShowtimeDto {
     private String room;
     private Integer totalSeats;
     private Long price;
-    private String bookedSeatNums;
+    private List<String> bookedSeatNums;  // Changed from String to List<String>
     private Integer bookedSeats; // Calculated field
 }
