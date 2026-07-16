@@ -23,9 +23,19 @@ export default function MovieDetailPage() {
     axios.get('http://localhost:8080/api/showtimes')
       .then(res => {
         console.log('All showtimes:', res.data)
+        
+        // Filter showtimes for this movie
         const filtered = res.data.filter(st => String(st.movieId) === String(id))
-        console.log('Filtered showtimes for movie:', filtered)
-        setShowtimes(filtered)
+        
+        // Filter out past showtimes - compare full datetime
+        const now = new Date()
+        const validShowtimes = filtered.filter(st => {
+          const showtimeDateTime = new Date(`${st.date}T${st.time}`)
+          return showtimeDateTime >= now
+        })
+        
+        console.log('Filtered showtimes for movie (future only):', validShowtimes)
+        setShowtimes(validShowtimes)
       })
       .catch(err => {
         console.error('Error fetching showtimes:', err)
@@ -53,6 +63,7 @@ export default function MovieDetailPage() {
   const handleBook = (showtimeId, availableSeats, showtimeDate, showtimeTime) => {
     console.log('handleBook called:', { showtimeId, availableSeats, currentUser })
     
+    // Double-check showtime hasn't passed (shouldn't happen but extra safety)
     const now = new Date()
     const showtimeDateTime = new Date(`${showtimeDate}T${showtimeTime}`)
     
@@ -72,12 +83,6 @@ export default function MovieDetailPage() {
     }
     console.log('Navigating to booking page:', `/booking/${showtimeId}`)
     navigate(`/booking/${showtimeId}`)
-  }
-
-  const isShowtimePassed = (date, time) => {
-    const now = new Date()
-    const showtimeDateTime = new Date(`${date}T${time}`)
-    return showtimeDateTime < now
   }
 
   return (
@@ -154,7 +159,17 @@ export default function MovieDetailPage() {
         {loadingShowtimes ? (
           <ShowtimeSkeleton count={6} />
         ) : Object.keys(groupedShowtimes).length === 0 ? (
-          <Alert variant="info" className="animate-fade-in-up">Chưa có lịch chiếu cho phim này.</Alert>
+          <Alert variant="info" className="animate-fade-in-up">
+            <div className="d-flex align-items-center gap-2">
+              <span style={{ fontSize: '2rem' }}>📭</span>
+              <div>
+                <strong>Hiện chưa có suất chiếu khả dụng</strong>
+                <div className="small text-muted mt-1">
+                  Các suất chiếu sắp tới sẽ được cập nhật sớm.
+                </div>
+              </div>
+            </div>
+          </Alert>
         ) : (
           Object.entries(groupedShowtimes).sort(([a], [b]) => a.localeCompare(b)).map(([date, times], dateIndex) => (
             <div key={date} className="mb-4 animate-fade-in-up" style={{ animationDelay: `${0.2 + dateIndex * 0.1}s` }}>
@@ -165,13 +180,11 @@ export default function MovieDetailPage() {
                 {times.map((st, timeIndex) => {
                   const available = st.totalSeats - st.bookedSeats
                   const percent = Math.round((st.bookedSeats / st.totalSeats) * 100)
-                  const isPassed = isShowtimePassed(st.date, st.time)
                   
                   return (
                     <Card key={st.id} className="showtime-card animate-fade-in-up" style={{ 
                       minWidth: 170,
-                      animationDelay: `${0.3 + dateIndex * 0.1 + timeIndex * 0.05}s`,
-                      opacity: isPassed ? 0.6 : 1
+                      animationDelay: `${0.3 + dateIndex * 0.1 + timeIndex * 0.05}s`
                     }}>
                       <Card.Body className="text-center p-3">
                         <div className="showtime-time">{st.time}</div>
@@ -180,9 +193,7 @@ export default function MovieDetailPage() {
                           <div className="seat-bar-fill" style={{ width: `${percent}%` }}></div>
                         </div>
                         <div className="small mb-2">
-                          {isPassed ? (
-                            <span className="text-muted fw-semibold">⏰ Đã chiếu</span>
-                          ) : available > 0 ? (
+                          {available > 0 ? (
                             <span className="text-success fw-semibold">{available} ghế trống</span>
                           ) : (
                             <span className="text-danger fw-semibold">Hết ghế</span>
@@ -195,10 +206,10 @@ export default function MovieDetailPage() {
                           id={`book-${st.id}`}
                           size="sm"
                           className="btn-primary-custom w-100"
-                          disabled={available <= 0 || isPassed}
+                          disabled={available <= 0}
                           onClick={() => handleBook(st.id, available, st.date, st.time)}
                         >
-                          {isPassed ? '⏰ Đã chiếu' : available > 0 ? '🎟️ Đặt vé ngay' : 'Hết'}
+                          {available > 0 ? '🎟️ Đặt vé ngay' : 'Hết'}
                         </Button>
                       </Card.Body>
                     </Card>

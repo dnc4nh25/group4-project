@@ -27,6 +27,9 @@ public class ShowtimeController {
 
     @Autowired
     private MovieRepository movieRepository;
+    
+    @Autowired
+    private com.example.backend.repository.BookingRepository bookingRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -80,12 +83,23 @@ public class ShowtimeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteShowtime(@PathVariable Long id) {
-        if (showtimeRepository.existsById(id)) {
-            showtimeRepository.deleteById(id);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteShowtime(@PathVariable Long id) {
+        if (!showtimeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        
+        // Check if there are any bookings for this showtime
+        boolean hasBookings = bookingRepository.existsByShowtimeId(id);
+        if (hasBookings) {
+            return ResponseEntity.badRequest()
+                .body(java.util.Map.of(
+                    "error", "Không thể xóa suất chiếu này vì đã có người đặt vé",
+                    "message", "Suất chiếu đã có booking không thể xóa"
+                ));
+        }
+        
+        showtimeRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     private ShowtimeDto convertToDto(Showtime showtime) {
