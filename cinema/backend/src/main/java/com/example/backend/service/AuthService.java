@@ -43,7 +43,7 @@ public class AuthService {
         String token = jwtUtils.generateToken(user.getUsername(), roleStr);
 
         // 5. Trả về AuthResponse
-        return new AuthResponse(token, user.getUsername(), roleStr, user.getFullName());
+        return new AuthResponse(token, user.getId(), user.getUsername(), roleStr, user.getFullName());
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -81,6 +81,6 @@ public class AuthService {
         String roleStr = UserRole.USER.name().toLowerCase();
         String token = jwtUtils.generateToken(newUser.getUsername(), roleStr);
 
-        return new AuthResponse(token, newUser.getUsername(), roleStr, newUser.getFullName());
+        return new AuthResponse(token, newUser.getId(), newUser.getUsername(), roleStr, newUser.getFullName());
     }
 }
