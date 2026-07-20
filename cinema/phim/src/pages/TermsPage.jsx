@@ -74,7 +74,7 @@ export default function TermsPage() {
 
                     <h4>4.3 Hủy vé và hoàn tiền</h4>
                     <ul>
-                      <li>Có thể hủy vé trước giờ chiếu ít nhất 2 tiếng</li>
+                      <li>Có thể hủy vé trước giờ chiếu ít nhất 6 tiếng</li>
                       <li>Phí hủy vé: 10% giá trị vé (tối thiểu 10,000đ)</li>
                       <li>Tiền hoàn sẽ được chuyển về tài khoản trong 3-5 ngày làm việc</li>
                       <li>Không hoàn tiền trong trường hợp khách hàng không đến xem</li>

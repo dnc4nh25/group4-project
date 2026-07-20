@@ -103,6 +103,31 @@ export default function MyBookingsPage() {
     }
   }
 
+  // Kiểm tra xem vé có thể hủy không (còn ít nhất 6 giờ trước suất chiếu)
+  const canCancelBooking = (booking) => {
+    if (booking.status !== 'CONFIRMED') return false
+    
+    try {
+      // Parse showDate và showTime
+      const [year, month, day] = booking.showDate.split('-').map(Number)
+      const [hour, minute] = booking.showTime.split(':').map(Number)
+      
+      // Tạo datetime của suất chiếu
+      const showtimeStart = new Date(year, month - 1, day, hour, minute)
+      
+      // Tính thời hạn hủy (6 giờ trước suất chiếu)
+      const cancelDeadline = new Date(showtimeStart.getTime() - 6 * 60 * 60 * 1000)
+      
+      // So sánh với thời gian hiện tại
+      const now = new Date()
+      
+      return now <= cancelDeadline
+    } catch (e) {
+      console.error('Error checking cancel eligibility:', e)
+      return false
+    }
+  }
+
   if (loading) {
     return (
       <div className="bookings-page min-vh-100 d-flex justify-content-center align-items-center">
@@ -229,8 +254,8 @@ export default function MyBookingsPage() {
                           </div>
                         </div>
 
-                        {/* Cancel Button — chỉ hiện khi vé còn CONFIRMED */}
-                        {booking.status === 'CONFIRMED' && (
+                        {/* Cancel Button — chỉ hiện khi vé còn CONFIRMED và đủ thời gian */}
+                        {canCancelBooking(booking) && (
                           <div className="mt-3">
                             <Button
                               variant="outline-danger"

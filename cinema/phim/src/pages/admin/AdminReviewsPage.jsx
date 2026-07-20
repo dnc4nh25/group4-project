@@ -59,15 +59,12 @@ export default function AdminReviewsPage() {
 
   const handleToggleHidden = async (reviewId, currentHidden) => {
     try {
-      const review = reviews.find(r => r.id === reviewId)
-      await axios.put(`${API}/reviews/${reviewId}`, {
-        ...review,
-        hidden: !currentHidden
-      })
+      await axios.patch(`${API}/reviews/${reviewId}/toggle-hidden`)
       setReviews(reviews.map(r => 
         r.id === reviewId ? { ...r, hidden: !currentHidden } : r
       ))
-    } catch {
+    } catch (err) {
+      console.error('Error toggling hidden:', err)
       setError('Cập nhật trạng thái thất bại.')
     }
   }
@@ -241,13 +238,13 @@ export default function AdminReviewsPage() {
                         <td>
                           <div className="comment-cell">
                             {review.hidden ? (
-                              <span className="text-muted fst-italic">
+                              <span className="text-muted">
                                 [Nội dung đã bị ẩn]
                               </span>
                             ) : (
-                              <span>"{review.comment.length > 100 
+                              <span>{review.comment.length > 100 
                                 ? review.comment.substring(0, 100) + '...' 
-                                : review.comment}"</span>
+                                : review.comment}</span>
                             )}
                           </div>
                         </td>

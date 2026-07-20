@@ -15,7 +15,7 @@ export default function HelpCenterPage() {
         },
         {
           question: "Tôi có thể hủy vé đã đặt không?",
-          answer: "Có, bạn có thể hủy vé trước giờ chiếu ít nhất 2 tiếng. Vào 'Vé của tôi' và chọn 'Hủy vé'. Tiền sẽ được hoàn lại trong 3-5 ngày làm việc."
+          answer: "Có, bạn có thể hủy vé trước giờ chiếu ít nhất 6 tiếng. Vào 'Vé của tôi' và chọn 'Hủy vé'. Nếu vé đủ điều kiện, nút 'Hủy vé' sẽ hiển thị. Tiền sẽ được hoàn lại trong 3-5 ngày làm việc."
         },
         {
           question: "Tại sao tôi không thể chọn ghế mong muốn?",

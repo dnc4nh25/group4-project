@@ -128,13 +128,24 @@ public class BookingController {
                         return ResponseEntity.badRequest().body("Vé đã được hủy trước đó.");
                     }
 
+                    // Kiểm tra thời gian hủy vé: phải còn ít nhất 6 giờ trước suất chiếu
+                    Showtime showtime = booking.getShowtime();
+                    LocalDateTime showtimeStart = LocalDateTime.of(showtime.getDate(), showtime.getTime());
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime cancelDeadline = showtimeStart.minusHours(6);
+                    
+                    if (now.isAfter(cancelDeadline)) {
+                        return ResponseEntity.badRequest().body(
+                            "Không thể hủy vé. Chỉ được phép hủy vé trước suất chiếu ít nhất 6 giờ."
+                        );
+                    }
+
                     // Set trạng thái hủy
                     booking.setStatus(com.example.backend.enums.BookingStatus.CANCELLED);
                     booking.setCancelledAt(LocalDateTime.now());
 
                     // Trả ghế về Showtime (xóa khỏi bookedSeatNums)
                     try {
-                        Showtime showtime = booking.getShowtime();
                         String bookedJson = showtime.getBookedSeatNums();
                         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                         java.util.List<String> bookedSeats = mapper.readValue(bookedJson,
