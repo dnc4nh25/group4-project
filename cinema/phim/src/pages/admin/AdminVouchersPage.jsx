@@ -1,233 +1,253 @@
-﻿import { useState, useEffect } from 'react'
-import { Container, Table, Button, Modal, Form, Alert, Spinner, Badge, Row, Col, Card, InputGroup } from 'react-bootstrap'
-import axios from 'axios'
-import './AdminCommon.css'
+﻿import { useState, useEffect } from "react";
+import {
+  Container,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Alert,
+  Spinner,
+  Badge,
+  Row,
+  Col,
+  Card,
+  InputGroup,
+} from "react-bootstrap";
+import axios from "axios";
+import "./AdminCommon.css";
 
-const API = 'http://localhost:8080/api'
+const API = "http://localhost:8080/api";
 
 const EMPTY_FORM = {
-  code: '',
-  title: '',
-  description: '',
-  type: 'PERCENTAGE',
-  value: '',
+  code: "",
+  title: "",
+  description: "",
+  type: "PERCENTAGE",
+  value: "",
   minOrderValue: 0,
   minSeats: 0,
   maxDiscount: null,
-  usageLimit: '',
+  usageLimit: "",
   newUsersOnly: false,
   oneTimePerUser: false,
   daysAfterRegistration: null,
   weekendOnly: false,
-  validFrom: '',
-  validTo: '',
-  isActive: true
-}
+  validFrom: "",
+  validTo: "",
+  isActive: true,
+};
 
 export default function AdminVouchersPage() {
-  const [vouchers, setVouchers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [editingId, setEditingId] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deletingId, setDeletingId] = useState(null)
-  const [search, setSearch] = useState('')
+  const [vouchers, setVouchers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const load = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await axios.get(`${API}/vouchers`)
-      setVouchers(res.data)
+      const res = await axios.get(`${API}/vouchers`);
+      setVouchers(res.data);
     } catch {
-      setError('Lỗi tải dữ liệu voucher')
+      setError("Lỗi tải dữ liệu voucher");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    load()
+    load();
 
     const interval = setInterval(() => {
-      load()
-    }, 30000)
+      load();
+    }, 30000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   const handleOpenAdd = () => {
-    setForm(EMPTY_FORM)
-    setEditingId(null)
-    setError('')
-    setShowModal(true)
-  }
+    setForm(EMPTY_FORM);
+    setEditingId(null);
+    setError("");
+    setShowModal(true);
+  };
 
   const handleOpenEdit = (voucher) => {
     setForm({
-      code: voucher.code || '',
-      title: voucher.title || '',
-      description: voucher.description || '',
-      type: voucher.type || 'PERCENTAGE',
-      value: voucher.value || '',
+      code: voucher.code || "",
+      title: voucher.title || "",
+      description: voucher.description || "",
+      type: voucher.type || "PERCENTAGE",
+      value: voucher.value || "",
       minOrderValue: voucher.minOrderValue || 0,
       minSeats: voucher.minSeats || 0,
       maxDiscount: voucher.maxDiscount || null,
-      usageLimit: voucher.usageLimit || '',
+      usageLimit: voucher.usageLimit || "",
       newUsersOnly: voucher.newUsersOnly || false,
       oneTimePerUser: voucher.oneTimePerUser || false,
       daysAfterRegistration: voucher.daysAfterRegistration || null,
       weekendOnly: voucher.weekendOnly || false,
-      validFrom: voucher.validFrom ? voucher.validFrom.split('T')[0] : '',
-      validTo: voucher.validTo ? voucher.validTo.split('T')[0] : '',
-      isActive: voucher.isActive !== undefined ? voucher.isActive : true
-    })
-    setEditingId(voucher.id)
-    setError('')
-    setShowModal(true)
-  }
+      validFrom: voucher.validFrom ? voucher.validFrom.split("T")[0] : "",
+      validTo: voucher.validTo ? voucher.validTo.split("T")[0] : "",
+      isActive: voucher.isActive !== undefined ? voucher.isActive : true,
+    });
+    setEditingId(voucher.id);
+    setError("");
+    setShowModal(true);
+  };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setForm(prev => ({
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   const handleSave = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!form.code?.trim()) {
-      setError('❌ Mã voucher không được để trống.')
-      return
+      setError("❌ Mã voucher không được để trống.");
+      return;
     }
 
     if (!form.title?.trim()) {
-      setError('❌ Tiêu đề không được để trống.')
-      return
+      setError("❌ Tiêu đề không được để trống.");
+      return;
     }
 
     if (!form.value || form.value <= 0) {
-      setError('❌ Giá trị giảm giá phải lớn hơn 0.')
-      return
+      setError("❌ Giá trị giảm giá phải lớn hơn 0.");
+      return;
     }
 
-    if (form.type === 'percentage' && form.value > 100) {
-      setError('❌ Phần trăm giảm giá không được vượt quá 100%.')
-      return
+    if (form.type === "percentage" && form.value > 100) {
+      setError("❌ Phần trăm giảm giá không được vượt quá 100%.");
+      return;
     }
 
     if (!form.usageLimit || form.usageLimit <= 0) {
-      setError('❌ Giới hạn sử dụng phải lớn hơn 0.')
-      return
+      setError("❌ Giới hạn sử dụng phải lớn hơn 0.");
+      return;
     }
 
     if (!form.validFrom || !form.validTo) {
-      setError('❌ Vui lòng chọn thời gian hiệu lực.')
-      return
+      setError("❌ Vui lòng chọn thời gian hiệu lực.");
+      return;
     }
 
     if (new Date(form.validFrom) >= new Date(form.validTo)) {
-      setError('❌ Ngày bắt đầu phải trước ngày kết thúc.')
-      return
+      setError("❌ Ngày bắt đầu phải trước ngày kết thúc.");
+      return;
     }
 
-    const existingVoucher = vouchers.find(v =>
-      v.code.toLowerCase() === form.code.toLowerCase() &&
-      String(v.id) !== String(editingId)
-    )
+    const existingVoucher = vouchers.find(
+      (v) =>
+        v.code.toLowerCase() === form.code.toLowerCase() &&
+        String(v.id) !== String(editingId),
+    );
     if (existingVoucher) {
-      setError('❌ Mã voucher đã tồn tại.')
-      return
+      setError("❌ Mã voucher đã tồn tại.");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       const payload = {
         code: form.code.toUpperCase().trim(),
         title: form.title.trim(),
-        description: form.description?.trim() || '',
+        description: form.description?.trim() || "",
         type: form.type.toUpperCase(),
         value: parseFloat(form.value),
         minOrderValue: form.minOrderValue ? parseInt(form.minOrderValue) : 0,
         minSeats: form.minSeats ? parseInt(form.minSeats) : 0,
         maxDiscount: form.maxDiscount ? parseInt(form.maxDiscount) : null,
         usageLimit: parseInt(form.usageLimit),
-        usedCount: editingId ? (vouchers.find(v => v.id === editingId)?.usedCount || 0) : 0,
+        usedCount: editingId
+          ? vouchers.find((v) => v.id === editingId)?.usedCount || 0
+          : 0,
         newUsersOnly: form.newUsersOnly || false,
         oneTimePerUser: form.oneTimePerUser || false,
-        daysAfterRegistration: form.daysAfterRegistration ? parseInt(form.daysAfterRegistration) : null,
+        daysAfterRegistration: form.daysAfterRegistration
+          ? parseInt(form.daysAfterRegistration)
+          : null,
         weekendOnly: form.weekendOnly || false,
         validFrom: form.validFrom,
         validTo: form.validTo,
-        isActive: form.isActive !== undefined ? form.isActive : true
-      }
+        isActive: form.isActive !== undefined ? form.isActive : true,
+      };
 
       if (editingId) {
-        await axios.put(`${API}/vouchers/${editingId}`, payload)
+        await axios.put(`${API}/vouchers/${editingId}`, payload);
       } else {
-        await axios.post(`${API}/vouchers`, payload)
+        await axios.post(`${API}/vouchers`, payload);
       }
 
-      setShowModal(false)
-      load()
+      setShowModal(false);
+      load();
     } catch (err) {
-      setError('❌ Lưu thất bại. Vui lòng thử lại.')
-      console.error('Save error:', err)
+      setError("❌ Lưu thất bại. Vui lòng thử lại.");
+      console.error("Save error:", err);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDeleteClick = (id) => {
-    setDeletingId(id)
-    setShowDeleteConfirm(true)
-  }
+    setDeletingId(id);
+    setShowDeleteConfirm(true);
+  };
 
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`${API}/vouchers/${deletingId}`)
-      setShowDeleteConfirm(false)
-      load()
+      await axios.delete(`${API}/vouchers/${deletingId}`);
+      setShowDeleteConfirm(false);
+      load();
     } catch {
-      setError('Xóa thất bại.')
+      setError("Xóa thất bại.");
     }
-  }
+  };
 
   const handleToggleStatus = async (voucher) => {
     try {
       await axios.patch(`${API}/vouchers/${voucher.id}`, {
-        isActive: !voucher.isActive
-      })
-      load()
+        isActive: !voucher.isActive,
+      });
+      load();
     } catch {
-      setError('Cập nhật trạng thái thất bại.')
+      setError("Cập nhật trạng thái thất bại.");
     }
-  }
+  };
 
-  const filtered = vouchers.filter(v =>
-    v.code.toLowerCase().includes(search.toLowerCase()) ||
-    v.title.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = vouchers.filter(
+    (v) =>
+      v.code.toLowerCase().includes(search.toLowerCase()) ||
+      v.title.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  const totalVouchers = vouchers.length
-  const activeVouchers = vouchers.filter(v => v.isActive).length
-  const totalUsed = vouchers.reduce((sum, v) => sum + (v.usedCount || 0), 0)
-  const totalLimit = vouchers.reduce((sum, v) => sum + (v.usageLimit || 0), 0)
+  const totalVouchers = vouchers.length;
+  const activeVouchers = vouchers.filter((v) => v.isActive).length;
+  const totalUsed = vouchers.reduce((sum, v) => sum + (v.usedCount || 0), 0);
+  const totalLimit = vouchers.reduce((sum, v) => sum + (v.usageLimit || 0), 0);
 
   return (
     <div className="page-wrapper">
-      
       <div className="page-header-banner py-4">
         <Container>
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h1 className="fw-bold mb-1">🎫 Quản lý Voucher</h1>
-              <p className="text-muted mb-0">Quản lý mã giảm giá và ưu đãi cho khách hàng</p>
+              <p className="text-muted mb-0">
+                Quản lý mã giảm giá và ưu đãi cho khách hàng
+              </p>
             </div>
             <Button className="btn-primary-custom" onClick={handleOpenAdd}>
               ➕ Thêm voucher mới
@@ -237,7 +257,6 @@ export default function AdminVouchersPage() {
       </div>
 
       <Container className="py-4">
-        
         <Row className="admin-stats-row g-3 mb-4">
           <Col xs={6} lg={3}>
             <div className="admin-stat-card-custom">
@@ -269,10 +288,12 @@ export default function AdminVouchersPage() {
           </Col>
         </Row>
 
-        
-        {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
+        {error && (
+          <Alert variant="danger" onClose={() => setError("")} dismissible>
+            {error}
+          </Alert>
+        )}
 
-        
         <Card className="filter-card mb-4">
           <Card.Body>
             <Row className="g-3">
@@ -280,13 +301,15 @@ export default function AdminVouchersPage() {
                 <Form.Group>
                   <Form.Label className="small text-muted">Tìm kiếm</Form.Label>
                   <InputGroup>
-                    <InputGroup.Text className="search-addon">🔍</InputGroup.Text>
+                    <InputGroup.Text className="search-addon">
+                      🔍
+                    </InputGroup.Text>
                     <Form.Control
                       type="text"
                       className="filter-input"
                       placeholder="Tìm kiếm theo mã hoặc tiêu đề..."
                       value={search}
-                      onChange={e => setSearch(e.target.value)}
+                      onChange={(e) => setSearch(e.target.value)}
                     />
                   </InputGroup>
                 </Form.Group>
@@ -295,7 +318,6 @@ export default function AdminVouchersPage() {
           </Card.Body>
         </Card>
 
-        
         {loading ? (
           <div className="loading-spinner-wrapper">
             <div className="loading-spinner"></div>
@@ -305,7 +327,9 @@ export default function AdminVouchersPage() {
             <div className="empty-state-icon">🎫</div>
             <div className="empty-state-title">Không tìm thấy voucher nào</div>
             <div className="empty-state-text">
-              {search ? 'Thử thay đổi từ khóa tìm kiếm' : 'Bắt đầu bằng cách thêm voucher mới'}
+              {search
+                ? "Thử thay đổi từ khóa tìm kiếm"
+                : "Bắt đầu bằng cách thêm voucher mới"}
             </div>
             {!search && (
               <Button className="btn-primary-custom" onClick={handleOpenAdd}>
@@ -322,7 +346,7 @@ export default function AdminVouchersPage() {
                     <tr>
                       <th>#</th>
                       <th>Mã voucher</th>
-                      <th>Tiêu đề</th>
+                      <th>Mô tả</th>
                       <th>Loại</th>
                       <th>Giá trị</th>
                       <th>Sử dụng</th>
@@ -342,34 +366,50 @@ export default function AdminVouchersPage() {
                         </td>
                         <td>
                           <div className="voucher-title-cell">
-                            <strong>{voucher.title}</strong>
-                            <small className="text-muted d-block">{voucher.description}</small>
+                            <small className="text-muted d-block">
+                              {voucher.description}
+                            </small>
                           </div>
                         </td>
                         <td>
-                          <Badge bg={voucher.type === 'PERCENTAGE' ? 'info' : 'warning'} className="time-badge">
-                            {voucher.type === 'PERCENTAGE' ? 'Phần trăm' : 'Cố định'}
+                          <Badge
+                            bg={
+                              voucher.type === "PERCENTAGE" ? "info" : "warning"
+                            }
+                            className="time-badge"
+                          >
+                            {voucher.type === "PERCENTAGE"
+                              ? "Phần trăm"
+                              : "Cố định"}
                           </Badge>
                         </td>
                         <td>
                           <span className="price-cell">
-                            {voucher.type === 'PERCENTAGE'
+                            {voucher.type === "PERCENTAGE"
                               ? `${voucher.value}%`
-                              : `${voucher.value.toLocaleString()}đ`
-                            }
+                              : `${voucher.value.toLocaleString()}đ`}
                           </span>
                         </td>
                         <td>
                           <div className="usage-cell">
-                            <span className={voucher.usedCount >= voucher.usageLimit ? 'text-danger' : 'text-success'}>
+                            <span
+                              className={
+                                voucher.usedCount >= voucher.usageLimit
+                                  ? "text-danger"
+                                  : "text-success"
+                              }
+                            >
                               {voucher.usedCount || 0}/{voucher.usageLimit}
                             </span>
                             <div className="usage-bar">
                               <div
                                 className="usage-fill"
                                 style={{
-                                  width: `${Math.min((voucher.usedCount || 0) / voucher.usageLimit * 100, 100)}%`,
-                                  backgroundColor: voucher.usedCount >= voucher.usageLimit ? '#dc3545' : '#28a745'
+                                  width: `${Math.min(((voucher.usedCount || 0) / voucher.usageLimit) * 100, 100)}%`,
+                                  backgroundColor:
+                                    voucher.usedCount >= voucher.usageLimit
+                                      ? "#dc3545"
+                                      : "#28a745",
                                 }}
                               />
                             </div>
@@ -378,18 +418,19 @@ export default function AdminVouchersPage() {
                         <td>
                           <div className="validity-cell">
                             <small className="text-muted">
-                              {new Date(voucher.validFrom).toLocaleDateString()} - {new Date(voucher.validTo).toLocaleDateString()}
+                              {new Date(voucher.validFrom).toLocaleDateString()}{" "}
+                              - {new Date(voucher.validTo).toLocaleDateString()}
                             </small>
                           </div>
                         </td>
                         <td>
                           <Badge
-                            bg={voucher.isActive ? 'success' : 'secondary'}
+                            bg={voucher.isActive ? "success" : "secondary"}
                             className="time-badge"
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: "pointer" }}
                             onClick={() => handleToggleStatus(voucher)}
                           >
-                            {voucher.isActive ? 'Hoạt động' : 'Tạm dừng'}
+                            {voucher.isActive ? "Hoạt động" : "Tạm dừng"}
                           </Badge>
                         </td>
                         <td>
@@ -424,11 +465,15 @@ export default function AdminVouchersPage() {
         )}
       </Container>
 
-      
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingId ? '✏️ Sửa voucher' : '➕ Thêm voucher mới'}
+            {editingId ? "✏️ Sửa voucher" : "➕ Thêm voucher mới"}
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSave}>
@@ -443,7 +488,7 @@ export default function AdminVouchersPage() {
                     value={form.code}
                     onChange={handleChange}
                     placeholder="VD: WELCOME20"
-                    style={{ textTransform: 'uppercase' }}
+                    style={{ textTransform: "uppercase" }}
                     required
                   />
                 </Form.Group>
@@ -451,7 +496,12 @@ export default function AdminVouchersPage() {
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>Loại giảm giá *</Form.Label>
-                  <Form.Select name="type" value={form.type} onChange={handleChange} required>
+                  <Form.Select
+                    name="type"
+                    value={form.type}
+                    onChange={handleChange}
+                    required
+                  >
                     <option value="PERCENTAGE">Phần trăm (%)</option>
                     <option value="FIXED">Số tiền cố định (đ)</option>
                   </Form.Select>
@@ -486,7 +536,7 @@ export default function AdminVouchersPage() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>
-                    Giá trị giảm * {form.type === 'PERCENTAGE' ? '(%)' : '(đ)'}
+                    Giá trị giảm * {form.type === "PERCENTAGE" ? "(%)" : "(đ)"}
                   </Form.Label>
                   <Form.Control
                     type="number"
@@ -494,8 +544,8 @@ export default function AdminVouchersPage() {
                     value={form.value}
                     onChange={handleChange}
                     min="0"
-                    max={form.type === 'PERCENTAGE' ? '100' : undefined}
-                    step={form.type === 'PERCENTAGE' ? '0.1' : '1000'}
+                    max={form.type === "PERCENTAGE" ? "100" : undefined}
+                    step={form.type === "PERCENTAGE" ? "0.1" : "1000"}
                     required
                   />
                 </Form.Group>
@@ -633,7 +683,7 @@ export default function AdminVouchersPage() {
                   <Form.Control
                     type="number"
                     name="daysAfterRegistration"
-                    value={form.daysAfterRegistration || ''}
+                    value={form.daysAfterRegistration || ""}
                     onChange={handleChange}
                     min="0"
                     placeholder="Không giới hạn"
@@ -650,15 +700,28 @@ export default function AdminVouchersPage() {
             <Button variant="secondary" onClick={() => setShowModal(false)}>
               Hủy
             </Button>
-            <Button type="submit" className="btn-primary-custom" disabled={saving}>
-              {saving ? <Spinner size="sm" /> : (editingId ? 'Cập nhật' : 'Thêm mới')}
+            <Button
+              type="submit"
+              className="btn-primary-custom"
+              disabled={saving}
+            >
+              {saving ? (
+                <Spinner size="sm" />
+              ) : editingId ? (
+                "Cập nhật"
+              ) : (
+                "Thêm mới"
+              )}
             </Button>
           </Modal.Footer>
         </Form>
       </Modal>
 
-      
-      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
+      <Modal
+        show={showDeleteConfirm}
+        onHide={() => setShowDeleteConfirm(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>🗑️ Xác nhận xóa</Modal.Title>
         </Modal.Header>
@@ -667,7 +730,10 @@ export default function AdminVouchersPage() {
           <p className="text-muted small">Hành động này không thể hoàn tác.</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
             Hủy
           </Button>
           <Button variant="danger" onClick={handleConfirmDelete}>
@@ -676,5 +742,5 @@ export default function AdminVouchersPage() {
         </Modal.Footer>
       </Modal>
     </div>
-  )
+  );
 }
