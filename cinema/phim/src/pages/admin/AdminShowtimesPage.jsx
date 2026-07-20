@@ -284,23 +284,6 @@ export default function AdminShowtimesPage() {
     }
   }
 
-  const handleDuplicate = async (showtime) => {
-    const newDate = prompt('Nhập ngày mới (YYYY-MM-DD):', showtime.date)
-    if (!newDate) return
-    try {
-      await axios.post('http://localhost:8080/api/showtimes', {
-        movieId: showtime.movieId,
-        date: newDate,
-        time: showtime.time,
-        room: showtime.room,
-        totalSeats: showtime.totalSeats,
-        price: showtime.price,
-        bookedSeatNums: []
-      })
-      load()
-    } catch { setError('Sao chép thất bại.') }
-  }
-
   const clearFilters = () => {
     setFilterDate('')
     setFilterMovie('')
@@ -473,15 +456,6 @@ export default function AdminShowtimesPage() {
                                 title="Sửa"
                               >
                                 ✏️
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline-info" 
-                                className="action-btn"
-                                onClick={() => handleDuplicate(st)}
-                                title="Sao chép"
-                              >
-                                📋
                               </Button>
                               <Button 
                                 size="sm" 
