@@ -2,7 +2,9 @@ package com.example.backend.service;
 
 import com.example.backend.dto.AuthResponse;
 import com.example.backend.dto.LoginRequest;
+import com.example.backend.dto.RegisterRequest;
 import com.example.backend.entity.User;
+import com.example.backend.enums.UserRole;
 import com.example.backend.enums.UserStatus;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.security.JwtUtils;
@@ -41,6 +43,44 @@ public class AuthService {
         String token = jwtUtils.generateToken(user.getUsername(), roleStr);
 
         // 5. Trả về AuthResponse
-        return new AuthResponse(token, user.getUsername(), roleStr, user.getFullName());
+        return new AuthResponse(token, user.getId(), user.getUsername(), roleStr, user.getFullName());
+    }
+
+    public AuthResponse register(RegisterRequest request) {
+        // 1. Kiểm tra username đã tồn tại chưa
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Tên đăng nhập đã tồn tại.");
+        }
+
+        // 2. Kiểm tra email đã tồn tại chưa
+        if (request.getEmail() != null && !request.getEmail().isBlank()
+                && userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email đã được sử dụng.");
+        }
+
+        // 3. Kiểm tra phone đã tồn tại chưa
+        if (request.getPhone() != null && !request.getPhone().isBlank()
+                && userRepository.findByPhone(request.getPhone()).isPresent()) {
+            throw new RuntimeException("Số điện thoại đã được sử dụng.");
+        }
+
+        // 4. Tạo user mới
+        User newUser = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .role(UserRole.USER)
+                .status(UserStatus.ACTIVE)
+                .build();
+
+        userRepository.save(newUser);
+
+        // 5. Tự động đăng nhập sau khi đăng ký thành công
+        String roleStr = UserRole.USER.name().toLowerCase();
+        String token = jwtUtils.generateToken(newUser.getUsername(), roleStr);
+
+        return new AuthResponse(token, newUser.getId(), newUser.getUsername(), roleStr, newUser.getFullName());
     }
 }

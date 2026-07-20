@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap'
 import axios from 'axios'
@@ -61,53 +61,22 @@ export default function RegisterPage() {
     
     setLoading(true)
     try {
-      // Check username exists
-      try {
-        await axios.get(`http://localhost:8080/api/users/username/${form.username}`)
-        setError('Tên đăng nhập đã tồn tại.')
-        setLoading(false)
-        return
-      } catch (err) {
-        if (err.response?.status !== 404) throw err
-      }
-      
-      // Check email exists
-      if (form.email) {
-        try {
-          await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
-          setError('Email đã được sử dụng.')
-          setLoading(false)
-          return
-        } catch (err) {
-          if (err.response?.status !== 404) throw err
-        }
-      }
-      
-      // Check phone exists
-      if (form.phone) {
-        try {
-          await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
-          setError('Số điện thoại đã được sử dụng.')
-          setLoading(false)
-          return
-        } catch (err) {
-          if (err.response?.status !== 404) throw err
-        }
-      }
-      
-      const res = await axios.post('http://localhost:8080/api/users', {
+      const res = await axios.post('http://localhost:8080/api/auth/register', {
         username: form.username,
         password: form.password,
         fullName: form.fullName,
         email: form.email,
-        phone: form.phone,
-        role: 'user',
-        status: 'active'
+        phone: form.phone
       })
+      // Đăng ký thành công → Backend trả về JWT, tự động đăng nhập
       login(res.data)
       navigate('/')
     } catch (err) {
-      setError('Không thể kết nối đến máy chủ.')
+      if (err.response && err.response.data) {
+        setError(err.response.data)
+      } else {
+        setError('Không thể kết nối đến máy chủ.')
+      }
     } finally {
       setLoading(false)
     }
