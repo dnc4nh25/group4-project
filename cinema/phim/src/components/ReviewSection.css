@@ -8,3 +8,12 @@
 .admin-hide-btn:hover {
   transform: translateY(-1px) !important;
 }
+
+/* Đảm bảo review comment luôn hiển thị in đứng */
+.review-comment {
+  font-style: normal !important;
+}
+
+.review-section p {
+  font-style: normal !important;
+}

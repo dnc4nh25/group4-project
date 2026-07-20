@@ -18,12 +18,6 @@ const PAYMENT_METHODS = [
     icon: '💳',
     desc: 'Visa, Mastercard, ATM nội địa',
   },
-  {
-    id: 'CASH',
-    label: 'Tiền mặt tại quầy',
-    icon: '🏧',
-    desc: 'Thanh toán trực tiếp tại rạp',
-  },
 ]
 
 export default function PaymentPage() {
@@ -36,7 +30,6 @@ export default function PaymentPage() {
   // ─── State ───────────────────────────────────────────────
   const [vouchers, setVouchers] = useState([])
   const [selectedVoucher, setSelectedVoucher] = useState(null)
-  const [voucherCode, setVoucherCode] = useState('')
   const [voucherValidation, setVoucherValidation] = useState(null) // { valid, message, discountAmount }
   const [applyingVoucher, setApplyingVoucher] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('QR')
@@ -77,39 +70,6 @@ export default function PaymentPage() {
 
   const finalTotal = (bookingData?.subtotal || 0) - previewDiscount
 
-  // ─── Apply voucher từ input ────────────────────────────────
-  const handleApplyVoucher = useCallback(async () => {
-    if (!voucherCode.trim()) return
-    setApplyingVoucher(true)
-    setVoucherValidation(null)
-
-    const result = await paymentApi.validateVoucher({
-      voucherCode: voucherCode.trim().toUpperCase(),
-      userId: currentUser?.id,
-      subtotal: bookingData?.subtotal,
-      seatCount: bookingData?.seatCount,
-    }).then(r => r.data).catch(() => ({
-      valid: false,
-      message: 'Lỗi kết nối, vui lòng thử lại'
-    }))
-
-    setVoucherValidation(result)
-    if (result.valid) {
-      // Tìm trong danh sách hoặc tạo object tạm
-      const found = vouchers.find(v =>
-        v.code?.toUpperCase() === voucherCode.trim().toUpperCase()
-      )
-      setSelectedVoucher(found || {
-        id: result.voucherId,
-        code: result.voucherCode,
-        title: result.voucherTitle,
-        discountAmount: result.discountAmount,
-      })
-      setVoucherCode('')
-    }
-    setApplyingVoucher(false)
-  }, [voucherCode, currentUser, bookingData, vouchers])
-
   // ─── Click chọn voucher từ danh sách ─────────────────────
   const handleSelectVoucher = async (voucher) => {
     if (!voucher.canUse) return
@@ -143,7 +103,6 @@ export default function PaymentPage() {
   const handleRemoveVoucher = () => {
     setSelectedVoucher(null)
     setVoucherValidation(null)
-    setVoucherCode('')
   }
 
   // ─── Checkout ─────────────────────────────────────────────
@@ -330,33 +289,6 @@ export default function PaymentPage() {
                 <span className="pay-card-icon">🎫</span>
                 <h3>Mã giảm giá</h3>
               </div>
-
-              {/* Voucher input */}
-              <div className="pay-voucher-input-row">
-                <input
-                  type="text"
-                  placeholder="Nhập mã voucher (VD: WELCOME20)..."
-                  value={voucherCode}
-                  onChange={e => setVoucherCode(e.target.value.toUpperCase())}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyVoucher()}
-                  className="pay-voucher-input"
-                  disabled={!!selectedVoucher || applyingVoucher}
-                />
-                <button
-                  className="pay-voucher-btn"
-                  onClick={handleApplyVoucher}
-                  disabled={!voucherCode.trim() || !!selectedVoucher || applyingVoucher}
-                >
-                  {applyingVoucher ? <span className="pay-btn-spinner" /> : 'Áp dụng'}
-                </button>
-              </div>
-
-              {/* Validation message (từ server) */}
-              {voucherValidation && !voucherValidation.valid && (
-                <div className="pay-voucher-error">
-                  ❌ {voucherValidation.message}
-                </div>
-              )}
 
               {/* Voucher đang áp dụng */}
               {selectedVoucher && (
