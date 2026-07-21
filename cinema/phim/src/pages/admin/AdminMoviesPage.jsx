@@ -7,7 +7,7 @@ import './AdminCommon.css'
 const API = 'http://localhost:8080/api'
 
 const EMPTY_FORM = {
-  title: '', genres: ['Hành động'], rating: '', duration: '', description: '',
+  title: '', genres: [], rating: 0.0, duration: '', description: '',
   poster: '', director: '', cast: '', language: 'Tiếng Anh', releaseDate: '', ageRating: 'T13', trailerUrl: '',
   posterFile: null
 }
@@ -157,17 +157,8 @@ export default function AdminMoviesPage() {
       setError('❌ Tên phim không được để trống.'); return
     }
 
-    if (!form.rating) {
-      setError('❌ Đánh giá không được để trống.'); return
-    }
-
     if (!form.duration) {
       setError('❌ Thời lượng không được để trống.'); return
-    }
-
-    const rating = parseFloat(form.rating)
-    if (isNaN(rating) || rating < 0 || rating > 10) {
-      setError('❌ Đánh giá phải là số từ 0 đến 10.'); return
     }
 
     const duration = parseInt(form.duration)
@@ -227,7 +218,7 @@ export default function AdminMoviesPage() {
       const payload = {
         ...form,
         title: form.title.trim(),
-        rating: parseFloat(form.rating),
+        rating: editingId ? parseFloat(form.rating || 0) : 0.0, // Khi tạo mới luôn là 0.0, khi sửa giữ nguyên
         duration: parseInt(form.duration),
         director: form.director?.trim() || '',
         cast: form.cast?.trim() || '',
@@ -821,23 +812,6 @@ export default function AdminMoviesPage() {
             </div>
 
             <div className="row g-3 mb-2">
-              <div className="col-md-6">
-                <label className="form-label-custom">
-                  Đánh giá <span className="required">*</span>
-                </label>
-                <input
-                  type="number"
-                  className="form-input-custom"
-                  name="rating"
-                  value={form.rating}
-                  onChange={handleChange}
-                  placeholder="8.5"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  required
-                />
-              </div>
               <div className="col-md-6">
                 <label className="form-label-custom">
                   Thời lượng <span className="required">*</span>

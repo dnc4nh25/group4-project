@@ -45,10 +45,13 @@ export default function AdminShowtimesPage() {
       setShowtimes(stRes.data)
       setMovies(mvRes.data)
       
-      // Count bookings per showtime
+      // Chỉ đếm bookings có status CONFIRMED (bỏ qua CANCELLED)
       const counts = {}
       bookingsRes.data.forEach(booking => {
-        counts[booking.showtimeId] = (counts[booking.showtimeId] || 0) + 1
+        // Chỉ đếm nếu status là CONFIRMED
+        if (booking.status === 'CONFIRMED') {
+          counts[booking.showtimeId] = (counts[booking.showtimeId] || 0) + 1
+        }
       })
       setBookingCounts(counts)
     } catch { setError('Lỗi tải dữ liệu') }
