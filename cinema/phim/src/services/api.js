@@ -51,9 +51,11 @@ export const bookingApi = {
   getAll: () => apiClient.get('/bookings'),
   getById: (id) => apiClient.get(`/bookings/${id}`),
   getByUser: (userId) => apiClient.get(`/bookings/user/${userId}`),
+  getHistory: (userId) => apiClient.get(`/bookings/history/${userId}`),
   create: (data) => apiClient.post('/bookings', data),
   update: (id, data) => apiClient.put(`/bookings/${id}`, data),
   patch: (id, data) => apiClient.patch(`/bookings/${id}`, data),
+  cancel: (id) => apiClient.patch(`/bookings/${id}/cancel`),
   delete: (id) => apiClient.delete(`/bookings/${id}`),
 };
 
@@ -92,6 +94,11 @@ export const contactMessageApi = {
 export const authApi = {
   login: (credentials) => apiClient.post('/auth/login', credentials),
   register: (userData) => apiClient.post('/auth/register', userData),
+};
+
+export const paymentApi = {
+  validateVoucher: (data) => apiClient.post('/payment/validate-voucher', data),
+  checkout: (data) => apiClient.post('/payment/checkout', data),
 };
 
 export default apiClient;

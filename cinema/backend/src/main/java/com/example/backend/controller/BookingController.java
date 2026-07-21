@@ -53,6 +53,34 @@ public class BookingController {
         return ResponseEntity.ok(bookings);
     }
 
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<List<com.example.backend.dto.MyBookingResponse>> getBookingHistory(@PathVariable Long userId) {
+        List<com.example.backend.dto.MyBookingResponse> bookings = bookingRepository.findByUserId(userId).stream()
+                .map(booking -> {
+                    Showtime showtime = booking.getShowtime();
+                    com.example.backend.entity.Movie movie = showtime.getMovie();
+                    return com.example.backend.dto.MyBookingResponse.builder()
+                            .id(booking.getId())
+                            .movieName(movie.getTitle())
+                            .moviePoster(movie.getPoster())
+                            .theaterName("CinemaXP") // Theater không có trong DB, dùng mặc định
+                            .roomName(showtime.getRoom())
+                            .showDate(showtime.getDate())
+                            .showTime(showtime.getTime())
+                            .seatNums(booking.getSeatNums())
+                            .totalPrice(booking.getTotalPrice())
+                            .originalPrice(booking.getOriginalPrice())
+                            .discount(booking.getDiscount())
+                            .voucherCode(booking.getVoucherCode())
+                            .status(booking.getStatus())
+                            .createdAt(booking.getCreatedAt())
+                            .build();
+                })
+                .sorted((com.example.backend.dto.MyBookingResponse b1, com.example.backend.dto.MyBookingResponse b2) -> b2.getCreatedAt().compareTo(b1.getCreatedAt())) // Mới nhất lên đầu
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(bookings);
+    }
+
     @PostMapping
     public ResponseEntity<BookingDto> createBooking(@RequestBody BookingDto bookingDto) {
         User user = userRepository.findById(bookingDto.getUserId())
@@ -89,6 +117,53 @@ public class BookingController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+        return bookingRepository.findById(id)
+                .map(booking -> {
+                    // Kiểm tra vé đã hủy chưa
+                    if (booking.getStatus() == com.example.backend.enums.BookingStatus.CANCELLED) {
+                        return ResponseEntity.badRequest().body("Vé đã được hủy trước đó.");
+                    }
+
+                    // Kiểm tra thời gian hủy vé: phải còn ít nhất 6 giờ trước suất chiếu
+                    Showtime showtime = booking.getShowtime();
+                    LocalDateTime showtimeStart = LocalDateTime.of(showtime.getDate(), showtime.getTime());
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime cancelDeadline = showtimeStart.minusHours(6);
+                    
+                    if (now.isAfter(cancelDeadline)) {
+                        return ResponseEntity.badRequest().body(
+                            "Không thể hủy vé. Chỉ được phép hủy vé trước suất chiếu ít nhất 6 giờ."
+                        );
+                    }
+
+                    // Set trạng thái hủy
+                    booking.setStatus(com.example.backend.enums.BookingStatus.CANCELLED);
+                    booking.setCancelledAt(LocalDateTime.now());
+
+                    // Trả ghế về Showtime (xóa khỏi bookedSeatNums)
+                    try {
+                        String bookedJson = showtime.getBookedSeatNums();
+                        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                        java.util.List<String> bookedSeats = mapper.readValue(bookedJson,
+                                mapper.getTypeFactory().constructCollectionType(java.util.List.class, String.class));
+                        java.util.List<String> cancelledSeats = mapper.readValue(booking.getSeatNums(),
+                                mapper.getTypeFactory().constructCollectionType(java.util.List.class, String.class));
+                        bookedSeats.removeAll(cancelledSeats);
+                        showtime.setBookedSeatNums(mapper.writeValueAsString(bookedSeats));
+                        showtimeRepository.save(showtime);
+                    } catch (Exception e) {
+                        // Nếu parse JSON thất bại thì vẫn hủy vé, chỉ không trả ghế
+                        System.err.println("Warning: Could not restore seats for booking " + id + ": " + e.getMessage());
+                    }
+
+                    bookingRepository.save(booking);
+                    return ResponseEntity.ok().body("Hủy vé thành công.");
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     private BookingDto convertToDto(Booking booking) {

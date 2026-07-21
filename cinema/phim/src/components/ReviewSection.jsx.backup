@@ -59,27 +59,14 @@ export default function ReviewSection({ movieId, movie }) {
   const loadReviews = async () => {
     setLoadingReviews(true)
     try {
-      // Đảm bảo movieId là number
-      const numericMovieId = parseInt(movieId) || movieId
-      console.log('Loading reviews for movie:', numericMovieId)
-      const res = await axios.get(`${API}/reviews/movie/${numericMovieId}`)
-      console.log('Reviews loaded:', res.data)
-      
-      // Safe sort với fallback cho createdAt
-      const sortedReviews = res.data.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0)
-        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0)
-        return dateB - dateA
-      })
-      
-      setReviews(sortedReviews)
+      const res = await axios.get(`${API}/reviews`)
+      const movieReviews = res.data.filter(r => String(r.movieId) === String(movieId))
+      setReviews(movieReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
       if (currentUser) {
-        const mine = sortedReviews.find(r => String(r.userId) === String(currentUser.id))
+        const mine = movieReviews.find(r => String(r.userId) === String(currentUser.id))
         setMyReview(mine || null)
       }
-    } catch (err) {
-      console.error('Error loading reviews for movie', movieId, ':', err)
-      console.error('Error details:', err.response?.data)
+    } catch {
       setReviews([])
     } finally {
       setLoadingReviews(false)
@@ -110,18 +97,8 @@ export default function ReviewSection({ movieId, movie }) {
         )
         if (!showtime) continue
 
-        // LocalTime từ backend có format "HH:mm:ss", không cần thêm ":00"
-        const startTime = new Date(`${showtime.date}T${showtime.time}`)
+        const startTime = new Date(`${showtime.date}T${showtime.time}:00`)
         const endTime = new Date(startTime.getTime() + duration * 60 * 1000)
-
-        console.log('🎬 Checking showtime:', {
-          showtimeId: showtime.id,
-          startTime: startTime.toLocaleString('vi-VN'),
-          endTime: endTime.toLocaleString('vi-VN'),
-          now: now.toLocaleString('vi-VN'),
-          duration: duration,
-          hasEnded: endTime < now
-        })
 
         if (endTime < now) {
           setEligible(true)
@@ -147,18 +124,19 @@ export default function ReviewSection({ movieId, movie }) {
     try {
       if (isEditing && myReview) {
         await axios.put(`${API}/reviews/${myReview.id}`, {
-          movieId: parseInt(movieId),
-          userId: currentUser.id,
+          ...myReview,
           rating,
-          comment: comment.trim()
+          comment: comment.trim(),
+          updatedAt: new Date().toISOString().split('T')[0]
         })
         setFeedback({ type: 'success', msg: 'Đánh giá của bạn đã được cập nhật!' })
       } else {
         await axios.post(`${API}/reviews`, {
-          movieId: parseInt(movieId),
+          movieId: String(movieId),
           userId: currentUser.id,
           rating,
-          comment: comment.trim()
+          comment: comment.trim(),
+          createdAt: new Date().toISOString().split('T')[0]
         })
         setFeedback({ type: 'success', msg: 'Cảm ơn bạn đã đánh giá!' })
       }
@@ -166,10 +144,8 @@ export default function ReviewSection({ movieId, movie }) {
       setRating(5)
       setIsEditing(false)
       await loadReviews()
-    } catch (err) {
-      console.error('Error submitting review:', err)
-      const errorMsg = err.response?.data?.error || 'Gửi đánh giá thất bại. Vui lòng thử lại.'
-      setFeedback({ type: 'danger', msg: errorMsg })
+    } catch {
+      setFeedback({ type: 'danger', msg: 'Gửi đánh giá thất bại. Vui lòng thử lại.' })
     } finally {
       setSubmitting(false)
     }
@@ -193,12 +169,15 @@ export default function ReviewSection({ movieId, movie }) {
 
   const handleToggleHidden = async (reviewId, currentHidden) => {
     try {
-      await axios.patch(`${API}/reviews/${reviewId}/toggle-hidden`)
+      const review = reviews.find(r => r.id === reviewId)
+      await axios.put(`${API}/reviews/${reviewId}`, {
+        ...review,
+        hidden: !currentHidden
+      })
       setReviews(reviews.map(r =>
         r.id === reviewId ? { ...r, hidden: !currentHidden } : r
       ))
-    } catch (err) {
-      console.error('Error toggling hidden:', err)
+    } catch {
       setFeedback({ type: 'danger', msg: 'Cập nhật trạng thái thất bại.' })
     }
   }
@@ -250,13 +229,13 @@ export default function ReviewSection({ movieId, movie }) {
               </Button>
             </div>
           </div>
-          <p className="mt-2 mb-0" style={{ fontStyle: 'normal' }}>
+          <p className="mt-2 mb-0 fst-italic">
             {myReview.hidden ? (
               <span className="text-muted">
                 [Nội dung đánh giá đã bị ẩn bởi quản trị viên]
               </span>
             ) : (
-              myReview.comment
+              `"${myReview.comment}"`
             )}
           </p>
           <small className="text-muted">{myReview.createdAt}</small>
@@ -322,7 +301,7 @@ export default function ReviewSection({ movieId, movie }) {
     {loadingReviews ? (
       <div className="text-center py-3"><Spinner variant="warning" size="sm" /></div>
     ) : reviews.length === 0 ? (
-      <p className="text-muted text-center py-3">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+      <p className="text-muted fst-italic text-center py-3">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
     ) : (
       <div className="review-list d-flex flex-column gap-3">
         
@@ -331,13 +310,9 @@ export default function ReviewSection({ movieId, movie }) {
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start mb-2">
                 <div className="d-flex align-items-center gap-2">
-                  <div className="reviewer-avatar">
-                    {r.userName ? r.userName.charAt(0).toUpperCase() : (r.userId ? String(r.userId).charAt(0) : 'U')}
-                  </div>
+                  <div className="reviewer-avatar">{r.userId?.charAt(0)?.toUpperCase() || 'U'}</div>
                   <div>
-                    <div className="fw-semibold reviewer-name">
-                      {r.userName || `Người dùng #${String(r.userId).slice(-4)}`}
-                    </div>
+                    <div className="fw-semibold reviewer-name">Người dùng #{String(r.userId).slice(-4)}</div>
                     <StarDisplay value={r.rating} />
                   </div>
                 </div>
@@ -357,13 +332,13 @@ export default function ReviewSection({ movieId, movie }) {
                   )}
                 </div>
               </div>
-              <p className="review-comment mb-0" style={{ fontStyle: 'normal' }}>
+              <p className="review-comment mb-0">
                 {r.hidden ? (
-                  <span className="text-muted">
+                  <span className="text-muted fst-italic">
                     [Nội dung đánh giá đã bị ẩn bởi quản trị viên]
                   </span>
                 ) : (
-                  r.comment
+                  `"${r.comment}"`
                 )}
               </p>
             </Card.Body>

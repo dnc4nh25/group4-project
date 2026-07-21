@@ -220,6 +220,13 @@ export default function NavBar({ theme, onToggleTheme }) {
               >
                 Thông tin cá nhân
               </Link>
+              <Link
+                to="/my-bookings"
+                className="custom-dropdown-item"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Vé của tôi
+              </Link>
               <div className="custom-dropdown-divider" />
             </>
           )}

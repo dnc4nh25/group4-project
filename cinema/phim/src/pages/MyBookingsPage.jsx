@@ -1,8 +1,8 @@
-﻿import { useState, useEffect } from 'react'
-import { Container, Badge, Button, Alert, Spinner, Modal, Card } from 'react-bootstrap'
-import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
+import { useState, useEffect } from 'react'
+import { Container, Row, Col, Card, Badge, Spinner, Alert, Button, Modal } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { bookingApi } from '../services/api'
 import './MyBookingsPage.css'
 
 export default function MyBookingsPage() {
@@ -10,261 +10,277 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [deletingId, setDeletingId] = useState(null)
-  const [deleting, setDeleting] = useState(false)
-  const [activeTab, setActiveTab] = useState('upcoming')
+  const [cancellingId, setCancellingId] = useState(null)
+  const [confirmModal, setConfirmModal] = useState({ show: false, bookingId: null, movieName: '' })
+  const [toast, setToast] = useState({ show: false, message: '', type: '' })
 
-  const loadBookings = async () => {
-    setLoading(true)
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchBookings(currentUser.id)
+    } else {
+      setLoading(false)
+      setError('Vui lòng đăng nhập lại để xem lịch sử vé.')
+    }
+  }, [currentUser])
+
+  const fetchBookings = async (userId) => {
     try {
-      const res = await axios.get('http://localhost:8080/api/bookings')
-      const allBookings = res.data
-      const myBookings = allBookings.filter(
-        b => String(b.userId) === String(currentUser.id)
-      )
-
-      const indexMap = new Map(allBookings.map((b, i) => [b.id, i]))
-
-      const enriched = await Promise.all(myBookings.map(async (b) => {
-        try {
-          const stRes = await axios.get(`http://localhost:8080/api/showtimes/${b.showtimeId}`)
-          const mvRes = await axios.get(`http://localhost:8080/api/movies/${stRes.data.movieId}`)
-          return { ...b, showtime: stRes.data, movie: mvRes.data }
-        } catch {
-          return { ...b, showtime: null, movie: null }
-        }
-      }))
-
-      setBookings(
-        enriched.sort((a, b) => {
-          const dateDiff = new Date(b.createdAt) - new Date(a.createdAt)
-          if (dateDiff !== 0) return dateDiff
-          return (indexMap.get(b.id) ?? 0) - (indexMap.get(a.id) ?? 0)
-        })
-      )
-    } catch {
-      setError('Không thể tải dữ liệu.')
+      const res = await bookingApi.getHistory(userId)
+      setBookings(res.data)
+    } catch (err) {
+      console.error('Error fetching bookings:', err)
+      setError('Không thể tải lịch sử vé. Vui lòng thử lại sau.')
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { loadBookings() }, [currentUser.id])
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => setToast({ show: false, message: '', type: '' }), 3500)
+  }
 
-  const handleCancelClick = (id) => { setDeletingId(id); setShowConfirm(true) }
+  const openCancelModal = (bookingId, movieName) => {
+    setConfirmModal({ show: true, bookingId, movieName })
+  }
+
+  const closeCancelModal = () => {
+    setConfirmModal({ show: false, bookingId: null, movieName: '' })
+  }
 
   const handleConfirmCancel = async () => {
-    setDeleting(true)
+    const bookingId = confirmModal.bookingId
+    closeCancelModal()
+    setCancellingId(bookingId)
     try {
-      const booking = bookings.find(b => b.id === deletingId)
-
-      await axios.patch(`http://localhost:8080/api/bookings/${deletingId}`, {
-        status: 'CANCELLED'
-      })
-
-      if (booking?.showtimeId) {
-        const seatNumsToRestore = typeof booking.seatNums === 'string' 
-          ? JSON.parse(booking.seatNums) 
-          : (booking.seatNums || [])
-        
-        const showtimeRes = await axios.get(`http://localhost:8080/api/showtimes/${booking.showtimeId}`)
-        const currentShowtime = showtimeRes.data
-        
-        const currentBookedStr = currentShowtime.bookedSeatNums || '[]'
-        const currentBooked = JSON.parse(currentBookedStr)
-        const newBookedSeatNums = currentBooked.filter(s => !seatNumsToRestore.includes(s))
-        
-        await axios.patch(`http://localhost:8080/api/showtimes/${booking.showtimeId}`, {
-          bookedSeatNums: JSON.stringify(newBookedSeatNums)
-        })
-      }
-
-      setShowConfirm(false)
-      setDeletingId(null)
-      loadBookings()
+      await bookingApi.cancel(bookingId)
+      // Cập nhật state local, không cần fetch lại
+      setBookings(prev =>
+        prev.map(b =>
+          b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
+        )
+      )
+      showToast('Hủy vé thành công! Ghế đã được trả lại.', 'success')
     } catch (err) {
-      console.error('Cancel booking error:', err)
-      setError('Hủy vé thất bại. Vui lòng thử lại.')
+      const msg = err.response?.data || 'Không thể hủy vé. Vui lòng thử lại.'
+      showToast(msg, 'error')
     } finally {
-      setDeleting(false)
+      setCancellingId(null)
     }
   }
 
-  const isShowtimePast = (showtime) => {
-    if (!showtime) return false
-    return new Date(`${showtime.date}T${showtime.time}:00`) < new Date()
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'CONFIRMED':
+        return <Badge className="status-badge status-confirmed">✓ Đã xác nhận</Badge>
+      case 'CANCELLED':
+        return <Badge className="status-badge status-cancelled">✕ Đã hủy</Badge>
+      default:
+        return <Badge className="status-badge status-pending">{status}</Badge>
+    }
   }
 
-  const upcomingBookings = bookings.filter(b => b.status !== 'cancelled' && !isShowtimePast(b.showtime))
-  const pastBookings = bookings.filter(b => b.status === 'cancelled' || isShowtimePast(b.showtime))
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
-  const activeBookings = activeTab === 'upcoming' ? upcomingBookings : pastBookings;
+  const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    const [year, month, day] = dateStr.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return ''
+    return timeStr.substring(0, 5)
+  }
+
+  const parseSeats = (seatStr) => {
+    try {
+      const seats = JSON.parse(seatStr)
+      return Array.isArray(seats) ? seats.join(', ') : seatStr
+    } catch (e) {
+      return seatStr
+    }
+  }
+
+  // Kiểm tra xem vé có thể hủy không (còn ít nhất 6 giờ trước suất chiếu)
+  const canCancelBooking = (booking) => {
+    if (booking.status !== 'CONFIRMED') return false
+    
+    try {
+      // Parse showDate và showTime
+      const [year, month, day] = booking.showDate.split('-').map(Number)
+      const [hour, minute] = booking.showTime.split(':').map(Number)
+      
+      // Tạo datetime của suất chiếu
+      const showtimeStart = new Date(year, month - 1, day, hour, minute)
+      
+      // Tính thời hạn hủy (6 giờ trước suất chiếu)
+      const cancelDeadline = new Date(showtimeStart.getTime() - 6 * 60 * 60 * 1000)
+      
+      // So sánh với thời gian hiện tại
+      const now = new Date()
+      
+      return now <= cancelDeadline
+    } catch (e) {
+      console.error('Error checking cancel eligibility:', e)
+      return false
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bookings-page min-vh-100 d-flex justify-content-center align-items-center">
+        <Spinner animation="border" variant="light" />
+      </div>
+    )
+  }
 
   return (
-    <div className="my-bookings-page">
-    
-      
+    <div className="bookings-page min-vh-100 py-5">
+      {/* Toast notification */}
+      {toast.show && (
+        <div className={`bookings-toast bookings-toast-${toast.type}`}>
+          <span>{toast.type === 'success' ? '✓' : '✕'}</span>
+          {toast.message}
+        </div>
+      )}
 
-      
-      <Container className="py-4">
+      {/* Confirm Cancel Modal */}
+      <Modal
+        show={confirmModal.show}
+        onHide={closeCancelModal}
+        centered
+        contentClassName="cancel-modal-content"
+      >
+        <Modal.Header className="cancel-modal-header border-0">
+          <Modal.Title className="text-white fw-bold">Xác nhận hủy vé</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="cancel-modal-body">
+          <div className="cancel-warning-icon mb-3">⚠️</div>
+          <p className="text-white mb-1">Bạn có chắc muốn hủy vé xem phim</p>
+          <p className="text-warning fw-bold mb-3">"{confirmModal.movieName}"?</p>
+          <p className="text-white-50 small">
+            Hành động này không thể hoàn tác. Ghế sẽ được trả lại cho suất chiếu.
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="cancel-modal-footer border-0">
+          <Button variant="outline-light" className="btn-modal-cancel" onClick={closeCancelModal}>
+            Giữ vé
+          </Button>
+          <Button variant="danger" className="btn-modal-confirm" onClick={handleConfirmCancel}>
+            Xác nhận hủy
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Container>
+        <div className="page-header mb-5">
+          <h1 className="fw-bold text-white mb-2">Vé của tôi</h1>
+          <p className="text-white-50">Quản lý lịch sử đặt vé xem phim của bạn</p>
+        </div>
+
         {error && (
-          <Alert variant="danger" onClose={() => setError('')} dismissible className="custom-alert">
+          <Alert variant="danger" className="border-0 bg-danger bg-opacity-25 text-white">
             {error}
           </Alert>
         )}
 
-        {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner">
-              <Spinner animation="border" role="status" />
-            </div>
-            <p className="loading-text">Đang tải vé của bạn...</p>
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">🎭</div>
-            <h3 className="empty-title">Bạn chưa đặt vé nào</h3>
-            <p className="empty-text">Hãy bắt đầu đặt vé phim đầu tiên của bạn!</p>
-            <Button as={Link} to="/movies" className="btn-explore">
-              🎬 Khám phá phim
-            </Button>
+        {!error && bookings.length === 0 ? (
+          <div className="empty-state text-center py-5">
+            <div className="empty-icon mb-4">🎟️</div>
+            <h3 className="text-white mb-3">Bạn chưa có vé nào</h3>
+            <p className="text-white-50 mb-4">Hãy đặt vé ngay để thưởng thức những bộ phim hấp dẫn nhất!</p>
+            <Link to="/" className="btn btn-primary-custom px-4 py-2">
+              Xem lịch chiếu ngay
+            </Link>
           </div>
         ) : (
-          <>
-            <div className="bookings-tabs-container mb-4">
-              <div className="bookings-tabs">
-                <button 
-                  className={`booking-tab ${activeTab === 'upcoming' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('upcoming')}
-                >
-                  Vé sắp chiếu 
-                  <span className="tab-badge">{upcomingBookings.length}</span>
-                </button>
-                <button 
-                  className={`booking-tab ${activeTab === 'past' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('past')}
-                >
-                  Lịch sử vé
-                  <span className="tab-badge text-muted">{pastBookings.length}</span>
-                </button>
-              </div>
-            </div>
-
-            {activeBookings.length === 0 ? (
-              <div className="text-center py-5 text-muted">
-                {activeTab === 'upcoming' ? 'Bạn không có vé nào sắp chiếu.' : 'Chưa có lịch sử vé.'}
-              </div>
-            ) : (
-              <div className="bookings-grid">
-                {activeBookings.map((b, i) => {
-                const isPast = isShowtimePast(b.showtime)
-                return (
-                  <div key={b.id} className="booking-card" style={{ animationDelay: `${i * 0.1}s` }}>
-                    
-                    <div className="booking-card-header">
-                      {b.movie?.poster && (
-                        <div className="movie-poster-container">
-                          <img
-                            src={b.movie.poster}
-                            alt={b.movie.title}
-                            className="movie-poster-thumb"
-                            onError={(e) => { e.target.style.display = 'none' }}
-                          />
-                        </div>
-                      )}
-                      <div className="movie-info">
-                        <h3 className="movie-name">{b.movie?.title || 'Phim không rõ'}</h3>
-                        <span className="movie-genre">{b.movie?.genre}</span>
+          <Row className="g-4">
+            {bookings.map((booking) => (
+              <Col lg={6} key={booking.id}>
+                <Card className={`booking-card h-100 bg-transparent border-0 ${booking.status === 'CANCELLED' ? 'booking-cancelled' : ''}`}>
+                  <div className="d-flex flex-column flex-sm-row h-100 booking-card-inner">
+                    {/* Poster Section */}
+                    <div className="booking-poster-wrapper">
+                      <img
+                        src={booking.moviePoster || 'https://via.placeholder.com/200x300'}
+                        alt={booking.movieName}
+                        className="booking-poster"
+                      />
+                      <div className="booking-status-overlay">
+                        {getStatusBadge(booking.status)}
                       </div>
                     </div>
 
-                    
-                    <div className="booking-card-body">
-                      <div className="booking-detail-row">
-                        <span className="detail-label">📅 Ngày giờ</span>
-                        <span className="detail-value">{b.showtime?.date} | {b.showtime?.time}</span>
-                      </div>
-                      <div className="booking-detail-row">
-                        <span className="detail-label">🎪 Phòng chiếu</span>
-                        <span className="detail-value room-tag">{b.showtime?.room || 'N/A'}</span>
-                      </div>
-                      <div className="booking-detail-row">
-                        <span className="detail-label">💺 Ghế</span>
-                        <div className="seats-list">
-                          {b.seatNums && b.seatNums.length > 0 ? (
-                            b.seatNums.sort().map(s => (
-                              <span key={s} className="seat-tag">{s}</span>
-                            ))
-                          ) : (
-                            <span className="detail-value">{b.seats} ghế</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="booking-detail-row">
-                        <span className="detail-label">📆 Ngày đặt</span>
-                        <span className="detail-value booking-date">{b.createdAt}</span>
-                      </div>
-                    </div>
+                    {/* Details Section */}
+                    <Card.Body className="d-flex flex-column justify-content-between p-4">
+                      <div>
+                        <h4 className="movie-title text-white fw-bold mb-3">{booking.movieName}</h4>
 
-                    
-                    <div className="booking-card-footer">
-                      <div className="price-section">
-                        <span className="price-label">Tổng cộng</span>
-                        <span className="price-value">{b.totalPrice?.toLocaleString()}đ</span>
-                      </div>
-                      <div className="action-section">
-                        {b.status === 'cancelled' ? (
-                          <span className="status-badge status-cancelled">
-                            ❌ Đã hủy
+                        <div className="info-row mb-2">
+                          <span className="info-icon">📍</span>
+                          <span className="info-text text-white-50">{booking.theaterName} — {booking.roomName}</span>
+                        </div>
+
+                        <div className="info-row mb-2">
+                          <span className="info-icon">🕒</span>
+                          <span className="info-text text-white-50">
+                            <span className="text-white fw-medium">{formatTime(booking.showTime)}</span>
+                            {' '}•{' '}
+                            {formatDate(booking.showDate)}
                           </span>
-                        ) : (
-                          <>
-                            <span className={`status-badge ${isPast ? 'status-past' : 'status-confirmed'}`}>
-                              {isPast ? '🎬 Đã chiếu' : '✓ Xác nhận'}
-                            </span>
-                            {!isPast && (
-                              <Button
-                                className="btn-cancel"
-                                onClick={() => handleCancelClick(b.id)}
-                              >
-                                Hủy vé
-                              </Button>
-                            )}
-                          </>
+                        </div>
+
+                        <div className="info-row mb-3">
+                          <span className="info-icon">💺</span>
+                          <span className="info-text">
+                            Ghế: <span className="text-white fw-bold">{parseSeats(booking.seatNums)}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="booking-footer pt-3 mt-2">
+                        <div className="d-flex justify-content-between align-items-end">
+                          <div>
+                            <small className="text-white-50 d-block mb-1">Mã vé</small>
+                            <span className="font-monospace text-white-50">#{booking.id}</span>
+                          </div>
+                          <div className="text-end">
+                            <small className="text-white-50 d-block mb-1">Tổng tiền</small>
+                            <h5 className={`mb-0 fw-bold ${booking.status === 'CANCELLED' ? 'text-white-50 text-decoration-line-through' : 'text-success'}`}>
+                              {formatCurrency(booking.totalPrice)}
+                            </h5>
+                          </div>
+                        </div>
+
+                        {/* Cancel Button — chỉ hiện khi vé còn CONFIRMED và đủ thời gian */}
+                        {canCancelBooking(booking) && (
+                          <div className="mt-3">
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              className="btn-cancel-booking w-100"
+                              disabled={cancellingId === booking.id}
+                              onClick={() => openCancelModal(booking.id, booking.movieName)}
+                            >
+                              {cancellingId === booking.id ? (
+                                <><Spinner animation="border" size="sm" className="me-2" />Đang hủy...</>
+                              ) : (
+                                '🗑 Hủy vé'
+                              )}
+                            </Button>
+                          </div>
                         )}
                       </div>
-                    </div>
+                    </Card.Body>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
-    </Container>
-
-      
-      <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered className="dark-modal-custom">
-        <div className="modal-custom-content">
-          <div className="modal-custom-header">
-            <div className="modal-icon">⚠️</div>
-            <Modal.Title>Xác nhận hủy vé</Modal.Title>
-          </div>
-          <Modal.Body>
-            <p>Bạn có chắc chắn muốn hủy vé này không?</p>
-            <p className="modal-warning">Các ghế sẽ được giải phóng và thao tác này không thể hoàn tác.</p>
-          </Modal.Body>
-          <div className="modal-custom-footer">
-            <Button variant="secondary" className="btn-modal-secondary" onClick={() => setShowConfirm(false)}>
-              Giữ lại
-            </Button>
-            <Button variant="danger" className="btn-modal-danger" onClick={handleConfirmCancel} disabled={deleting}>
-              {deleting ? <><Spinner size="sm" animation="border" /> Đang hủy...</> : '🗑️ Hủy vé'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Container>
     </div>
   )
 }

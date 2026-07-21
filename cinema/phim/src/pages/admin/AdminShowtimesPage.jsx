@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Container, Table, Button, Modal, Form, Alert, Spinner, Badge, Card, Row, Col, InputGroup, ToggleButtonGroup, ToggleButton } from 'react-bootstrap'
 import axios from 'axios'
 import './AdminShowtimesPage.css'
@@ -32,16 +32,28 @@ export default function AdminShowtimesPage() {
   const [filterRoom, setFilterRoom] = useState('')
   const [searchText, setSearchText] = useState('')
   const [viewMode, setViewMode] = useState('table') // 'table' or 'calendar'
+  const [bookingCounts, setBookingCounts] = useState({})
 
   const load = async () => {
     setLoading(true)
     try {
-      const [stRes, mvRes] = await Promise.all([
+      const [stRes, mvRes, bookingsRes] = await Promise.all([
         axios.get('http://localhost:8080/api/showtimes'),
-        axios.get('http://localhost:8080/api/movies')
+        axios.get('http://localhost:8080/api/movies'),
+        axios.get('http://localhost:8080/api/bookings')
       ])
       setShowtimes(stRes.data)
       setMovies(mvRes.data)
+      
+      // Chỉ đếm bookings có status CONFIRMED (bỏ qua CANCELLED)
+      const counts = {}
+      bookingsRes.data.forEach(booking => {
+        // Chỉ đếm nếu status là CONFIRMED
+        if (booking.status === 'CONFIRMED') {
+          counts[booking.showtimeId] = (counts[booking.showtimeId] || 0) + 1
+        }
+      })
+      setBookingCounts(counts)
     } catch { setError('Lỗi tải dữ liệu') }
     finally { setLoading(false) }
   }
@@ -252,29 +264,27 @@ export default function AdminShowtimesPage() {
     finally { setSaving(false) }
   }
 
-  const handleDeleteClick = (id) => { setDeletingId(id); setShowDeleteConfirm(true) }
+  const handleDeleteClick = (id) => { 
+    setDeletingId(id)
+    setShowDeleteConfirm(true)
+  }
   const handleConfirmDelete = async () => {
     try {
       await axios.delete(`http://localhost:8080/api/showtimes/${deletingId}`)
-      setShowDeleteConfirm(false); load()
-    } catch { setError('Xóa thất bại.') }
-  }
-
-  const handleDuplicate = async (showtime) => {
-    const newDate = prompt('Nhập ngày mới (YYYY-MM-DD):', showtime.date)
-    if (!newDate) return
-    try {
-      await axios.post('http://localhost:8080/api/showtimes', {
-        movieId: showtime.movieId,
-        date: newDate,
-        time: showtime.time,
-        room: showtime.room,
-        totalSeats: showtime.totalSeats,
-        price: showtime.price,
-        bookedSeatNums: []
-      })
+      setShowDeleteConfirm(false)
       load()
-    } catch { setError('Sao chép thất bại.') }
+    } catch (err) {
+      setShowDeleteConfirm(false)
+      
+      // Check if error response has specific message
+      if (err.response?.data?.error) {
+        setError(`❌ ${err.response.data.error}`)
+      } else if (err.response?.status === 400) {
+        setError('❌ Không thể xóa suất chiếu này vì đã có người đặt vé.')
+      } else {
+        setError('❌ Xóa thất bại. Vui lòng thử lại.')
+      }
+    }
   }
 
   const clearFilters = () => {
@@ -452,21 +462,12 @@ export default function AdminShowtimesPage() {
                               </Button>
                               <Button 
                                 size="sm" 
-                                variant="outline-info" 
-                                className="action-btn"
-                                onClick={() => handleDuplicate(st)}
-                                title="Sao chép"
-                              >
-                                📋
-                              </Button>
-                              <Button 
-                                size="sm" 
                                 variant="outline-danger" 
                                 className="action-btn"
                                 onClick={() => handleDeleteClick(st.id)}
-                                title="Xóa"
+                                title={bookingCounts[st.id] > 0 ? `Có ${bookingCounts[st.id]} vé đã đặt - Không thể xóa` : 'Xóa'}
                               >
-                                🗑️
+                                {bookingCounts[st.id] > 0 ? '🔒' : '🗑️'}
                               </Button>
                             </div>
                           </td>
@@ -545,8 +546,9 @@ export default function AdminShowtimesPage() {
                                   variant="outline-danger" 
                                   className="flex-fill"
                                   onClick={() => handleDeleteClick(st.id)}
+                                  title={bookingCounts[st.id] > 0 ? `Có ${bookingCounts[st.id]} vé đã đặt` : 'Xóa'}
                                 >
-                                  🗑️
+                                  {bookingCounts[st.id] > 0 ? '🔒' : '🗑️'}
                                 </Button>
                               </div>
                             </Card.Body>
@@ -650,11 +652,54 @@ export default function AdminShowtimesPage() {
       </Modal>
 
       <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
-        <Modal.Header closeButton><Modal.Title>Xác nhận xóa</Modal.Title></Modal.Header>
-        <Modal.Body>Bạn có chắc muốn xóa suất chiếu này?</Modal.Body>
+        <Modal.Header closeButton>
+          <Modal.Title>🗑️ Xác nhận xóa suất chiếu</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {deletingId && (() => {
+            const showtime = showtimes.find(st => st.id === deletingId)
+            const bookingCount = bookingCounts[deletingId] || 0
+            
+            return (
+              <div>
+                {bookingCount > 0 ? (
+                  <Alert variant="warning" className="mb-3">
+                    <strong>⚠️ Cảnh báo:</strong> Suất chiếu này đã có <strong>{bookingCount} vé</strong> được đặt. 
+                    Không thể xóa!
+                  </Alert>
+                ) : (
+                  <p>Bạn có chắc chắn muốn xóa suất chiếu này?</p>
+                )}
+                
+                {showtime && (
+                  <div className="mt-3 p-3 bg-dark bg-opacity-25 rounded">
+                    <div className="mb-2"><strong>Phim:</strong> {getMovieTitle(showtime.movieId)}</div>
+                    <div className="mb-2"><strong>Ngày giờ:</strong> {showtime.date} {showtime.time}</div>
+                    <div className="mb-2"><strong>Phòng:</strong> {showtime.room}</div>
+                    <div><strong>Ghế đã đặt:</strong> {showtime.bookedSeats}/{showtime.totalSeats}</div>
+                  </div>
+                )}
+                
+                {bookingCount === 0 && (
+                  <p className="text-muted small mt-3 mb-0">
+                    ⚠️ Hành động này không thể hoàn tác.
+                  </p>
+                )}
+              </div>
+            )
+          })()}
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Hủy</Button>
-          <Button variant="danger" onClick={handleConfirmDelete}>Xóa</Button>
+          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+            Hủy
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleConfirmDelete}
+            disabled={bookingCounts[deletingId] > 0}
+          >
+            {bookingCounts[deletingId] > 0 ? '🔒 Không thể xóa' : '🗑️ Xác nhận xóa'}
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

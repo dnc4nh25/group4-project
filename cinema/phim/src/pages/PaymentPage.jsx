@@ -1,423 +1,412 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Container, Card, Button, Alert, Spinner, Row, Col, Form, InputGroup, Badge } from 'react-bootstrap'
-import axios from 'axios'
 import { useAuth } from '../contexts/AuthContext'
+import { paymentApi } from '../services/api'
 import VoucherValidator from '../utils/voucherValidation'
 import './PaymentPage.css'
+
+const PAYMENT_METHODS = [
+  {
+    id: 'QR',
+    label: 'Ví điện tử / QR',
+    icon: '📱',
+    desc: 'MoMo, ZaloPay, VNPay, QR Banking',
+  },
+  {
+    id: 'CARD',
+    label: 'Thẻ ngân hàng',
+    icon: '💳',
+    desc: 'Visa, Mastercard, ATM nội địa',
+  },
+]
 
 export default function PaymentPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { currentUser } = useAuth()
-  
+
   const bookingData = location.state
-  
+
+  // ─── State ───────────────────────────────────────────────
   const [vouchers, setVouchers] = useState([])
   const [selectedVoucher, setSelectedVoucher] = useState(null)
-  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherValidation, setVoucherValidation] = useState(null) // { valid, message, discountAmount }
+  const [applyingVoucher, setApplyingVoucher] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('QR')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [voucherError, setVoucherError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [successData, setSuccessData] = useState(null)
 
+  // ─── Redirect nếu không có data ──────────────────────────
   useEffect(() => {
     if (!bookingData) {
       navigate('/movies')
       return
     }
-    
     const loadVouchers = async () => {
       try {
-        if (currentUser) {
-          const availableVouchers = await VoucherValidator.getAvailableVouchersForUser(currentUser.id)
-          setVouchers(availableVouchers)
-        }
+        const { subtotal, seatCount } = bookingData
+        const list = await VoucherValidator.getVouchersWithStatus(
+          currentUser?.id,
+          subtotal,
+          seatCount
+        )
+        setVouchers(list)
       } catch (err) {
         console.error('Lỗi tải voucher:', err)
       } finally {
         setLoading(false)
       }
     }
-    
     loadVouchers()
   }, [bookingData, navigate, currentUser])
 
-  const calculateDiscount = (voucher, subtotal, seatCount) => {
-    if (!voucher) return 0
-    
-    if (voucher.minOrderValue && voucher.minOrderValue > 0 && subtotal < voucher.minOrderValue) {
-      return 0
-    }
-    if (voucher.minSeats && voucher.minSeats > 0 && seatCount < voucher.minSeats) {
-      return 0
-    }
-    
-    let discount = 0
-    if (voucher.type === 'percentage') {
-      discount = (subtotal * voucher.value) / 100
-    } else if (voucher.type === 'fixed') {
-      discount = voucher.value
-    }
-    
-    if (voucher.maxDiscount && discount > voucher.maxDiscount) {
-      discount = voucher.maxDiscount
-    }
-    
-    return Math.min(discount, subtotal) // Không được giảm quá tổng tiền
-  }
+  // ─── Tính giảm giá preview (client-side) ─────────────────
+  const previewDiscount = selectedVoucher
+    ? VoucherValidator.calculateDiscount(selectedVoucher, bookingData?.subtotal || 0)
+    : (voucherValidation?.valid ? (voucherValidation.discountAmount || 0) : 0)
 
-  const handleApplyVoucher = () => {
-    setVoucherError('')
-    
-    if (!voucherCode.trim()) {
-      setVoucherError('Vui lòng nhập mã voucher')
-      return
-    }
-    
-    let voucher = vouchers.find(v => v.code === voucherCode)
-    if (!voucher) {
-      voucher = vouchers.find(v => v.code.toLowerCase() === voucherCode.toLowerCase())
-    }
-    if (!voucher) {
-      voucher = vouchers.find(v => v.code.trim() === voucherCode.trim())
-    }
-    
-    if (!voucher) {
-      setVoucherError(`Mã voucher "${voucherCode}" không tồn tại hoặc đã hết hạn`)
-      return
-    }
-    
-    if (voucher.restricted) {
-      setVoucherError(voucher.restrictionReason)
-      return
-    }
+  const finalTotal = (bookingData?.subtotal || 0) - previewDiscount
 
-    const { subtotal, seatCount } = bookingData
-    
-    if (voucher.minSeats && voucher.minSeats > 0 && seatCount < voucher.minSeats) {
-      setVoucherError(`Cần mua tối thiểu ${voucher.minSeats} ghế`)
+  // ─── Click chọn voucher từ danh sách ─────────────────────
+  const handleSelectVoucher = async (voucher) => {
+    if (!voucher.canUse) return
+    if (selectedVoucher?.id === voucher.id) {
+      setSelectedVoucher(null)
+      setVoucherValidation(null)
       return
     }
-    
-    if (voucher.minOrderValue && voucher.minOrderValue > 0 && subtotal < voucher.minOrderValue) {
-      setVoucherError(`Đơn hàng tối thiểu ${voucher.minOrderValue.toLocaleString()}đ`)
-      return
+    setApplyingVoucher(true)
+    setVoucherValidation(null)
+
+    const result = await paymentApi.validateVoucher({
+      voucherCode: voucher.code,
+      userId: currentUser?.id,
+      subtotal: bookingData?.subtotal,
+      seatCount: bookingData?.seatCount,
+    }).then(r => r.data).catch(() => ({
+      valid: false,
+      message: 'Lỗi kết nối, vui lòng thử lại'
+    }))
+
+    if (result.valid) {
+      setSelectedVoucher(voucher)
+      setVoucherValidation(result)
+    } else {
+      setVoucherValidation(result)
     }
-    
-    if (voucher.usedCount >= voucher.usageLimit) {
-      setVoucherError('Voucher đã hết lượt sử dụng')
-      return
-    }
-    
-    setSelectedVoucher(voucher)
-    setVoucherCode('')
+    setApplyingVoucher(false)
   }
 
   const handleRemoveVoucher = () => {
     setSelectedVoucher(null)
-    setVoucherError('')
+    setVoucherValidation(null)
   }
 
-  const handlePayment = async () => {
+  // ─── Checkout ─────────────────────────────────────────────
+  const handleCheckout = async () => {
     setSubmitting(true)
     setError('')
-    
+
     try {
-      const { showtimeId, selectedSeats, subtotal, seatCount, showtime, movie } = bookingData
-      const discount = calculateDiscount(selectedVoucher, subtotal, seatCount)
-      const finalTotal = subtotal - discount
-      
-      const bookingRes = await axios.post('http://localhost:8080/api/bookings', {
+      const { showtimeId, selectedSeats, subtotal } = bookingData
+
+      const res = await paymentApi.checkout({
         userId: currentUser.id,
-        showtimeId: showtimeId,
-        seatNums: JSON.stringify(selectedSeats), // Convert to JSON string
-        totalPrice: finalTotal,
-        originalPrice: subtotal,
-        discount: discount,
+        showtimeId,
+        seatNums: JSON.stringify(selectedSeats),
+        subtotal,
         voucherCode: selectedVoucher?.code || null,
-        status: 'CONFIRMED'
+        paymentMethod,
       })
 
-      // Update showtime booked seats
-      const currentBookedStr = showtime.bookedSeatNums || '[]'
-      const currentBooked = JSON.parse(currentBookedStr)
-      const newBookedSeatNums = [...currentBooked, ...selectedSeats]
-      
-      await axios.patch(`http://localhost:8080/api/showtimes/${showtimeId}`, {
-        bookedSeatNums: JSON.stringify(newBookedSeatNums)
-      })
-
-      if (selectedVoucher) {
-        console.log('Updating voucher usage:', selectedVoucher.code, 'from', selectedVoucher.usedCount, 'to', selectedVoucher.usedCount + 1)
-        
-        await axios.patch(`http://localhost:8080/api/vouchers/${selectedVoucher.id}`, {
-          usedCount: (selectedVoucher.usedCount || 0) + 1
-        })
-        
-        console.log('Voucher usage updated successfully')
-      }
-
+      setSuccessData(res.data)
       setSuccess(true)
     } catch (err) {
-      setError('Thanh toán thất bại. Vui lòng thử lại.')
+      const msg = err.response?.data || 'Thanh toán thất bại. Vui lòng thử lại.'
+      setError(typeof msg === 'string' ? msg : 'Thanh toán thất bại. Vui lòng thử lại.')
       console.error('Payment error:', err)
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (!bookingData) {
-    return null
-  }
+  // ─── Guard ────────────────────────────────────────────────
+  if (!bookingData) return null
 
   if (loading) {
     return (
-      <div className="text-center py-5 mt-5">
-        <Spinner variant="warning" style={{ width: 60, height: 60 }} />
+      <div className="pay-loading">
+        <div className="pay-spinner" />
+        <p>Đang tải thông tin thanh toán…</p>
       </div>
     )
   }
 
+  // ─── SUCCESS SCREEN ───────────────────────────────────────
   if (success) {
     const { selectedSeats, showtime, movie } = bookingData
-    const discount = calculateDiscount(selectedVoucher, bookingData.subtotal, bookingData.seatCount)
-    const finalTotal = bookingData.subtotal - discount
-
     return (
-      <div className="page-wrapper d-flex align-items-center min-vh-100">
-        <Container style={{ maxWidth: 500 }} className="mx-auto">
-          <Card className="booking-success-card text-center p-5">
-            <div style={{ fontSize: 64 }}>🎉</div>
-            <h3 className="fw-bold mt-3 mb-2">Thanh toán thành công!</h3>
-            <p className="text-muted">Chúc bạn xem phim vui vẻ!</p>
-            <div className="booking-confirm-info my-3 p-3 rounded text-start">
-              <div><strong>Phim:</strong> {movie?.title}</div>
-              <div><strong>Ngày chiếu:</strong> {showtime?.date} lúc {showtime?.time}</div>
-              <div><strong>Phòng:</strong> {showtime?.room}</div>
-              <div><strong>Ghế:</strong> <span className="text-warning fw-bold">{selectedSeats.join(', ')}</span></div>
+      <div className="pay-success-wrapper">
+        <div className="pay-success-card">
+          <div className="pay-success-icon">🎉</div>
+          <h2>Thanh toán thành công!</h2>
+          <p className="pay-success-sub">Chúc bạn xem phim vui vẻ! Vé đã được ghi nhận.</p>
+
+          <div className="pay-ticket">
+            <div className="pay-ticket-movie">{movie?.title}</div>
+            <div className="pay-ticket-grid">
+              <div><span>📅 Ngày</span><strong>{showtime?.date}</strong></div>
+              <div><span>⏰ Giờ</span><strong>{showtime?.time}</strong></div>
+              <div><span>🏟️ Phòng</span><strong>{showtime?.room}</strong></div>
+              <div>
+                <span>💺 Ghế</span>
+                <strong className="pay-ticket-seats">{selectedSeats.join(', ')}</strong>
+              </div>
               {selectedVoucher && (
-                <>
-                  <div><strong>Voucher:</strong> {selectedVoucher.code} (-{discount.toLocaleString()}đ)</div>
-                </>
+                <div>
+                  <span>🎫 Voucher</span>
+                  <strong className="pay-ticket-discount">-{previewDiscount.toLocaleString()}đ</strong>
+                </div>
               )}
-              <div><strong>Tổng tiền:</strong> <span className="text-warning fw-bold">{finalTotal.toLocaleString()}đ</span></div>
+              <div>
+                <span>💰 Tổng tiền</span>
+                <strong className="pay-ticket-total">{finalTotal.toLocaleString()}đ</strong>
+              </div>
+              <div>
+                <span>💳 Phương thức</span>
+                <strong>{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}</strong>
+              </div>
             </div>
-            <div className="d-flex gap-2 justify-content-center mt-3">
-              <Button className="btn-primary-custom" onClick={() => navigate('/my-bookings')}>🎫 Xem vé của tôi</Button>
-              <Button variant="outline-secondary" onClick={() => navigate('/movies')}>Đặt vé khác</Button>
-            </div>
-          </Card>
-        </Container>
+          </div>
+
+          <div className="pay-success-actions">
+            <button className="pay-btn-primary" onClick={() => navigate('/my-bookings')}>
+              🎫 Xem vé của tôi
+            </button>
+            <button className="pay-btn-outline" onClick={() => navigate('/movies')}>
+              Đặt vé khác
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
+  // ─── MAIN PAYMENT PAGE ────────────────────────────────────
   const { selectedSeats, subtotal, seatCount, showtime, movie } = bookingData
-  const discount = calculateDiscount(selectedVoucher, subtotal, seatCount)
-  const finalTotal = subtotal - discount
 
   return (
-    <div className="page-wrapper">
-      <div className="page-header-banner py-4 text-center">
-        <Container>
-          <h1 className="fw-bold">💳 Thanh Toán</h1>
-          <p className="text-muted mb-0">Xác nhận thông tin và hoàn tất thanh toán</p>
-        </Container>
+    <div className="pay-wrapper">
+      {/* Header */}
+      <div className="pay-header">
+        <div className="pay-header-inner">
+          <h1>💳 Thanh Toán</h1>
+          <p>Xác nhận thông tin và hoàn tất đặt vé</p>
+        </div>
       </div>
 
-      <Container className="py-4">
-        {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
+      <div className="pay-container">
+        {error && (
+          <div className="pay-error-banner">
+            <span>⚠️ {error}</span>
+            <button onClick={() => setError('')}>✕</button>
+          </div>
+        )}
 
-        <Row className="g-4">
-          
-          <Col lg={8}>
-            <Card className="booking-info-card mb-4">
-              <Card.Body className="p-4">
-                <h5 className="fw-bold mb-3">📋 Thông tin đặt vé</h5>
-                <div className="d-flex gap-3 mb-3">
-                  <img
-                    src={movie?.poster}
-                    alt={movie?.title}
-                    style={{ width: 80, height: 120, borderRadius: 8, objectFit: 'cover' }}
-                    onError={e => e.target.src = 'https://via.placeholder.com/80x120?text=?'}
-                  />
-                  <div>
-                    <h6 className="fw-bold mb-1">{movie?.title}</h6>
-                    <div className="text-muted small mb-1">
-                      
-                      {movie?.genres && Array.isArray(movie.genres) 
-                        ? movie.genres.slice(0, 2).join(', ') 
-                        : movie?.genre
-                      } · {movie?.duration} phút
+        <div className="pay-grid">
+          {/* ─── LEFT COLUMN ─────────────────────────────────── */}
+          <div className="pay-left">
+
+            {/* Thông tin đặt vé */}
+            <div className="pay-card">
+              <div className="pay-card-header">
+                <span className="pay-card-icon">🎬</span>
+                <h3>Thông tin đặt vé</h3>
+              </div>
+              <div className="pay-movie-info">
+                <img
+                  src={movie?.poster}
+                  alt={movie?.title}
+                  className="pay-poster"
+                  onError={e => e.target.src = 'https://placehold.co/80x120?text=?'}
+                />
+                <div className="pay-movie-details">
+                  <h4>{movie?.title}</h4>
+                  <div className="pay-meta">
+                    {movie?.genres && Array.isArray(movie.genres)
+                      ? movie.genres.slice(0, 2).join(' · ')
+                      : movie?.genre}
+                    {movie?.duration ? ` · ${movie.duration} phút` : ''}
+                  </div>
+                  <div className="pay-meta">📅 {showtime?.date} · ⏰ {showtime?.time}</div>
+                  <div className="pay-meta">🏟️ {showtime?.room}</div>
+                </div>
+              </div>
+              <div className="pay-seats-row">
+                <span>💺 Ghế đã chọn:</span>
+                <div className="pay-seat-badges">
+                  {selectedSeats.map(seat => (
+                    <span key={seat} className="pay-seat-badge">{seat}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Phương thức thanh toán */}
+            <div className="pay-card">
+              <div className="pay-card-header">
+                <span className="pay-card-icon">💳</span>
+                <h3>Phương thức thanh toán</h3>
+              </div>
+              <div className="pay-methods">
+                {PAYMENT_METHODS.map(m => (
+                  <div
+                    key={m.id}
+                    className={`pay-method-card ${paymentMethod === m.id ? 'active' : ''}`}
+                    onClick={() => setPaymentMethod(m.id)}
+                    role="radio"
+                    aria-checked={paymentMethod === m.id}
+                  >
+                    <div className="pay-method-radio">
+                      <div className={`pay-radio-dot ${paymentMethod === m.id ? 'active' : ''}`} />
                     </div>
-                    <div className="text-muted small mb-1">📅 {showtime?.date} · ⏰ {showtime?.time}</div>
-                    <div className="text-muted small">🏟️ {showtime?.room}</div>
+                    <div className="pay-method-icon">{m.icon}</div>
+                    <div className="pay-method-body">
+                      <div className="pay-method-label">{m.label}</div>
+                      <div className="pay-method-desc">{m.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mã giảm giá */}
+            <div className="pay-card">
+              <div className="pay-card-header">
+                <span className="pay-card-icon">🎫</span>
+                <h3>Mã giảm giá</h3>
+              </div>
+
+              {/* Voucher đang áp dụng */}
+              {selectedVoucher && (
+                <div className="pay-voucher-applied">
+                  <div className="pay-voucher-applied-left">
+                    <div className="pay-voucher-applied-icon">✅</div>
+                    <div>
+                      <div className="pay-voucher-applied-title">{selectedVoucher.title || selectedVoucher.code}</div>
+                      <div className="pay-voucher-applied-code">
+                        Mã: <strong>{selectedVoucher.code}</strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pay-voucher-applied-right">
+                    <div className="pay-voucher-applied-discount">
+                      -{previewDiscount.toLocaleString()}đ
+                    </div>
+                    <button className="pay-voucher-remove" onClick={handleRemoveVoucher}>
+                      Bỏ chọn
+                    </button>
                   </div>
                 </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>Ghế đã chọn:</span>
-                  <div>
-                    {selectedSeats.map(seat => (
-                      <Badge key={seat} bg="primary" className="me-1">{seat}</Badge>
+              )}
+
+              {/* Danh sách voucher có sẵn */}
+              {vouchers.length > 0 && (
+                <div className="pay-voucher-list">
+                  <div className="pay-voucher-list-title">Voucher khả dụng:</div>
+                  <div className="pay-voucher-grid">
+                    {vouchers.slice(0, 6).map(voucher => (
+                      <div
+                        key={voucher.id}
+                        className={`pay-voucher-chip
+                          ${voucher.canUse ? 'usable' : 'unusable'}
+                          ${selectedVoucher?.id === voucher.id ? 'selected' : ''}
+                        `}
+                        onClick={() => handleSelectVoucher(voucher)}
+                        title={voucher.reason || VoucherValidator.getRestrictionText(voucher)}
+                      >
+                        <div className="pay-voucher-chip-value">{voucher.displayValue} OFF</div>
+                        <div className="pay-voucher-chip-code">{voucher.code}</div>
+                        {!voucher.canUse && (
+                          <div className="pay-voucher-chip-overlay">{voucher.reason}</div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
+              )}
+            </div>
+          </div>
 
-            
-            <Card className="booking-info-card">
-              <Card.Body className="p-4">
-                <h5 className="fw-bold mb-3">🎫 Mã giảm giá</h5>
-                
-                
-                <div className="mb-4">
-                  <h6 className="mb-3">Voucher khả dụng:</h6>
-                  <Row xs={1} sm={2} className="g-2">
-                    {vouchers.slice(0, 4).map(voucher => {
-                      let canUse = !voucher.restricted
-                      let reason = voucher.restrictionReason || ''
-                      
-                      if (canUse) {
-                        if (voucher.minSeats && voucher.minSeats > 0 && seatCount < voucher.minSeats) {
-                          canUse = false
-                          reason = `Cần tối thiểu ${voucher.minSeats} ghế`
-                        }
-                        
-                        else if (voucher.minOrderValue && voucher.minOrderValue > 0 && subtotal < voucher.minOrderValue) {
-                          canUse = false
-                          reason = `Cần tối thiểu ${voucher.minOrderValue.toLocaleString()}đ`
-                        }
-                        
-                        else if (voucher.usedCount >= voucher.usageLimit) {
-                          canUse = false
-                          reason = 'Đã hết lượt'
-                        }
-                      }
-                      
-                      return (
-                        <Col key={voucher.id}>
-                          <div 
-                            className={`voucher-mini-card ${canUse ? 'available' : 'unavailable'} ${selectedVoucher?.id === voucher.id ? 'selected' : ''}`}
-                            onClick={() => canUse && setSelectedVoucher(selectedVoucher?.id === voucher.id ? null : voucher)}
-                          >
-                            <div className="voucher-mini-header">
-                              <span className="voucher-mini-discount">
-                                {voucher.type === 'percentage' ? `${voucher.value}%` : `${(voucher.value/1000)}K`}
-                              </span>
-                              <span className="voucher-mini-type">OFF</span>
-                            </div>
-                            <div className="voucher-mini-body">
-                              <div className="voucher-mini-title">{voucher.title}</div>
-                              <div className="voucher-mini-code">{voucher.code}</div>
-                            </div>
-                            {!canUse && (
-                              <div className="voucher-mini-overlay">
-                                <small>{reason}</small>
-                              </div>
-                            )}
-                          </div>
-                        </Col>
-                      )
-                    })}
-                  </Row>
+          {/* ─── RIGHT COLUMN (Sticky Summary) ───────────────── */}
+          <div className="pay-right">
+            <div className="pay-summary-card">
+              <div className="pay-card-header">
+                <span className="pay-card-icon">💰</span>
+                <h3>Tổng kết đơn hàng</h3>
+              </div>
+
+              <div className="pay-summary-rows">
+                <div className="pay-summary-row">
+                  <span>Số ghế</span>
+                  <span>{seatCount} ghế</span>
                 </div>
-
-                
-                <div>
-                  <h6 className="mb-2">Hoặc nhập mã voucher:</h6>
-                  <InputGroup>
-                    <Form.Control
-                      type="text"
-                      placeholder="Nhập mã voucher..."
-                      value={voucherCode}
-                      onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                      onKeyPress={(e) => e.key === 'Enter' && handleApplyVoucher()}
-                    />
-                    <Button variant="outline-primary" onClick={handleApplyVoucher}>
-                      Áp dụng
-                    </Button>
-                  </InputGroup>
-                  {voucherError && <div className="text-danger small mt-1">{voucherError}</div>}
+                <div className="pay-summary-row">
+                  <span>Giá/ghế</span>
+                  <span>{showtime?.price?.toLocaleString()}đ</span>
                 </div>
-
-                
-                {selectedVoucher && (
-                  <div className="selected-voucher-card mt-3 p-3 rounded">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <div className="fw-bold text-success">✅ {selectedVoucher.title}</div>
-                        <div className="small text-muted">{selectedVoucher.description}</div>
-                        <div className="small">Mã: <strong>{selectedVoucher.code}</strong></div>
-                      </div>
-                      <div className="text-end">
-                        <div className="text-success fw-bold">-{discount.toLocaleString()}đ</div>
-                        <Button size="sm" variant="outline-danger" onClick={handleRemoveVoucher}>
-                          Bỏ chọn
-                        </Button>
-                      </div>
-                    </div>
+                <div className="pay-summary-row">
+                  <span>Tạm tính</span>
+                  <span>{subtotal.toLocaleString()}đ</span>
+                </div>
+                {selectedVoucher && previewDiscount > 0 && (
+                  <div className="pay-summary-row discount">
+                    <span>🎫 Giảm giá ({selectedVoucher.code})</span>
+                    <span>-{previewDiscount.toLocaleString()}đ</span>
                   </div>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-
-          
-          <Col lg={4}>
-            <Card className="booking-form-card sticky-top" style={{ top: 90 }}>
-              <Card.Body className="p-4">
-                <h5 className="fw-bold mb-3">💰 Tổng kết thanh toán</h5>
-                
-                <div className="payment-summary">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Số ghế:</span>
-                    <span>{seatCount} ghế</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Giá/ghế:</span>
-                    <span>{showtime?.price?.toLocaleString()}đ</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Tạm tính:</span>
-                    <span>{subtotal.toLocaleString()}đ</span>
-                  </div>
-                  
-                  {selectedVoucher && (
-                    <div className="d-flex justify-content-between mb-2 text-success">
-                      <span>Giảm giá ({selectedVoucher.code}):</span>
-                      <span>-{discount.toLocaleString()}đ</span>
-                    </div>
-                  )}
-                  
-                  <hr />
-                  <div className="d-flex justify-content-between fw-bold fs-5 mb-3">
-                    <span>Tổng cộng:</span>
-                    <span className="text-warning">{finalTotal.toLocaleString()}đ</span>
-                  </div>
+                <div className="pay-summary-row method">
+                  <span>Phương thức</span>
+                  <span>{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.icon} {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}</span>
                 </div>
+              </div>
 
-                <Button
-                  className="w-100 btn-primary-custom"
-                  disabled={submitting}
-                  onClick={handlePayment}
-                  size="lg"
-                >
-                  {submitting ? <Spinner size="sm" /> : `💳 Thanh toán ${finalTotal.toLocaleString()}đ`}
-                </Button>
+              <div className="pay-summary-divider" />
 
-                <div className="text-center mt-3">
-                  <small className="text-muted">
-                    Bằng cách thanh toán, bạn đồng ý với điều khoản sử dụng
-                  </small>
+              <div className="pay-summary-total">
+                <span>Tổng cộng</span>
+                <span className="pay-total-amount">{finalTotal.toLocaleString()}đ</span>
+              </div>
+
+              {selectedVoucher && previewDiscount > 0 && (
+                <div className="pay-saving-badge">
+                  🎉 Bạn tiết kiệm được {previewDiscount.toLocaleString()}đ
                 </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+              )}
+
+              <button
+                className="pay-checkout-btn"
+                onClick={handleCheckout}
+                disabled={submitting}
+                id="checkout-btn"
+              >
+                {submitting
+                  ? <><span className="pay-btn-spinner" /> Đang xử lý…</>
+                  : `💳 Thanh toán ${finalTotal.toLocaleString()}đ`
+                }
+              </button>
+
+              <p className="pay-terms-note">
+                Bằng cách thanh toán, bạn đồng ý với{' '}
+                <a href="/terms" target="_blank">điều khoản sử dụng</a> của CinemaXP.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
