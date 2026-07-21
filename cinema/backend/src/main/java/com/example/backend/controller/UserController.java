@@ -168,6 +168,42 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ─── CHANGE PASSWORD ─────────────────────────────────────────────────────
+    /**
+     * POST /api/users/{id}/change-password
+     * Body: { "currentPassword": "...", "newPassword": "..." }
+     * Verify currentPassword bằng BCrypt rồi lưu hash mới.
+     */
+    @PostMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+
+        String currentPassword = body.get("currentPassword");
+        String newPassword     = body.get("newPassword");
+
+        if (currentPassword == null || currentPassword.isBlank() ||
+            newPassword     == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body("Vui lòng nhập đầy đủ mật khẩu.");
+        }
+
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body("Mật khẩu mới phải có ít nhất 6 ký tự.");
+        }
+
+        return userRepository.findById(id)
+                .map(user -> {
+                    // Verify mật khẩu hiện tại bằng BCrypt
+                    if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                        return ResponseEntity.status(401).body("Mật khẩu hiện tại không đúng.");
+                    }
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    userRepository.save(user);
+                    return ResponseEntity.ok().body("Đổi mật khẩu thành công.");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // ─── DELETE ──────────────────────────────────────────────────────────────
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {

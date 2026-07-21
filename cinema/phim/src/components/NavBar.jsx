@@ -211,25 +211,23 @@ export default function NavBar({ theme, onToggleTheme }) {
             zIndex: 999999,
           }}
         >
+          <Link
+            to="/profile"
+            className="custom-dropdown-item"
+            onClick={() => setDropdownOpen(false)}
+          >
+            👤 Thông tin cá nhân
+          </Link>
           {!isAdmin && (
-            <>
-              <Link
-                to="/profile"
-                className="custom-dropdown-item"
-                onClick={() => setDropdownOpen(false)}
-              >
-                Thông tin cá nhân
-              </Link>
-              <Link
-                to="/my-bookings"
-                className="custom-dropdown-item"
-                onClick={() => setDropdownOpen(false)}
-              >
-                Vé của tôi
-              </Link>
-              <div className="custom-dropdown-divider" />
-            </>
+            <Link
+              to="/my-bookings"
+              className="custom-dropdown-item"
+              onClick={() => setDropdownOpen(false)}
+            >
+              🎟️ Vé của tôi
+            </Link>
           )}
+          <div className="custom-dropdown-divider" />
           <button
             className="custom-dropdown-item text-danger-item"
             onClick={() => { setDropdownOpen(false); handleLogout() }}

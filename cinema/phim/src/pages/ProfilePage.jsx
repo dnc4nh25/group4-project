@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col, Badge } from 'react-bootstrap'
 import axios from 'axios'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,15 +10,18 @@ export default function ProfilePage() {
     username: '',
     fullName: '',
     email: '',
-    phone: '',
-    password: '',
-    newPassword: '',
-    confirmPassword: ''
+    phone: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // State riêng cho đổi mật khẩu
   const [showPasswordFields, setShowPasswordFields] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ current: '', newPwd: '', confirm: '' })
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdError, setPwdError] = useState('')
+  const [pwdSuccess, setPwdSuccess] = useState('')
 
   useEffect(() => {
     if (currentUser) {
@@ -26,10 +29,7 @@ export default function ProfilePage() {
         username: currentUser.username || '',
         fullName: currentUser.fullName || '',
         email: currentUser.email || '',
-        phone: currentUser.phone || '',
-        password: '',
-        newPassword: '',
-        confirmPassword: ''
+        phone: currentUser.phone || ''
       })
     }
   }, [currentUser])
@@ -70,25 +70,6 @@ export default function ProfilePage() {
       return
     }
 
-    if (showPasswordFields) {
-      if (!form.password) {
-        setError('Vui lòng nhập mật khẩu hiện tại.')
-        return
-      }
-      if (!form.newPassword || form.newPassword.length < 6) {
-        setError('Mật khẩu mới phải có ít nhất 6 ký tự.')
-        return
-      }
-      if (form.newPassword !== form.confirmPassword) {
-        setError('Mật khẩu xác nhận không khớp.')
-        return
-      }
-      if (form.password !== currentUser.password) {
-        setError('Mật khẩu hiện tại không đúng.')
-        return
-      }
-    }
-
     setLoading(true)
     try {
       // Check email exists (excluding current user)
@@ -125,29 +106,52 @@ export default function ProfilePage() {
         phone: form.phone
       }
 
-      if (showPasswordFields && form.newPassword) {
-        updateData.password = form.newPassword
-      }
-
       const response = await axios.put(`http://localhost:8080/api/users/${currentUser.id}`, updateData)
-      
       login(response.data)
-      
       setSuccess('Cập nhật thông tin thành công!')
-      
-      if (showPasswordFields) {
-        setForm({
-          ...form,
-          password: '',
-          newPassword: '',
-          confirmPassword: ''
-        })
-        setShowPasswordFields(false)
-      }
     } catch (err) {
       setError('Có lỗi xảy ra khi cập nhật thông tin.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // ─── Đổi mật khẩu riêng biệt ──────────────────────────────────────
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    setPwdError('')
+    setPwdSuccess('')
+
+    if (!passwordForm.current) {
+      setPwdError('Vui lòng nhập mật khẩu hiện tại.'); return
+    }
+    if (!passwordForm.newPwd || passwordForm.newPwd.length < 6) {
+      setPwdError('Mật khẩu mới phải có ít nhất 6 ký tự.'); return
+    }
+    if (passwordForm.newPwd !== passwordForm.confirm) {
+      setPwdError('Mật khẩu xác nhận không khớp.'); return
+    }
+    if (passwordForm.newPwd === passwordForm.current) {
+      setPwdError('Mật khẩu mới phải khác mật khẩu hiện tại.'); return
+    }
+
+    setPwdLoading(true)
+    try {
+      await axios.post(`http://localhost:8080/api/users/${currentUser.id}/change-password`, {
+        currentPassword: passwordForm.current,
+        newPassword: passwordForm.newPwd
+      })
+      setPwdSuccess('✅ Đổi mật khẩu thành công!')
+      setPasswordForm({ current: '', newPwd: '', confirm: '' })
+      setShowPasswordFields(false)
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setPwdError('❌ Mật khẩu hiện tại không đúng.')
+      } else {
+        setPwdError('Có lỗi xảy ra. Vui lòng thử lại.')
+      }
+    } finally {
+      setPwdLoading(false)
     }
   }
 
@@ -158,9 +162,9 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <Container className="profile-container">
-        
+
         <div className="text-center mb-4">
-          <div 
+          <div
             className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
             style={{
               width: '80px',
@@ -177,7 +181,7 @@ export default function ProfilePage() {
           <p className="text-muted">Quản lý thông tin tài khoản của bạn</p>
         </div>
 
-        
+
         {missingInfo.length > 0 && (
           <Alert variant="warning" className="mb-4">
             <div className="d-flex align-items-center gap-2 mb-2">
@@ -193,19 +197,19 @@ export default function ProfilePage() {
           </Alert>
         )}
 
-        
+
         <Card style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Card.Body className="p-4">
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
 
             <Form onSubmit={handleSubmit}>
-              
+
               <div className="mb-4">
                 <h5 className="text-light mb-3 d-flex align-items-center gap-2">
                   📋 Thông tin cơ bản
                 </h5>
-                
+
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group>
@@ -248,12 +252,12 @@ export default function ProfilePage() {
                 </Row>
               </div>
 
-              
+
               <div className="mb-4">
                 <h5 className="text-light mb-3 d-flex align-items-center gap-2">
                   📞 Thông tin liên hệ
                 </h5>
-                
+
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group>
@@ -304,7 +308,7 @@ export default function ProfilePage() {
                 </Row>
               </div>
 
-              
+
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="text-light mb-0 d-flex align-items-center gap-2">
@@ -313,70 +317,76 @@ export default function ProfilePage() {
                   <Button
                     variant="outline-warning"
                     size="sm"
-                    onClick={() => setShowPasswordFields(!showPasswordFields)}
+                    onClick={() => {
+                      setShowPasswordFields(!showPasswordFields)
+                      setPwdError('')
+                      setPwdSuccess('')
+                      setPasswordForm({ current: '', newPwd: '', confirm: '' })
+                    }}
                   >
-                    {showPasswordFields ? 'Hủy đổi mật khẩu' : 'Đổi mật khẩu'}
+                    {showPasswordFields ? 'Hủy' : '🔑 Đổi mật khẩu'}
                   </Button>
                 </div>
 
                 {showPasswordFields && (
-                  <Row className="g-3">
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="text-light">Mật khẩu hiện tại</Form.Label>
-                        <Form.Control
-                          name="password"
-                          type="password"
-                          placeholder="Nhập mật khẩu hiện tại"
-                          value={form.password}
-                          onChange={handleChange}
-                          style={{
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text-light)'
-                          }}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="text-light">Mật khẩu mới</Form.Label>
-                        <Form.Control
-                          name="newPassword"
-                          type="password"
-                          placeholder="Ít nhất 6 ký tự"
-                          value={form.newPassword}
-                          onChange={handleChange}
-                          style={{
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text-light)'
-                          }}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label className="text-light">Xác nhận mật khẩu mới</Form.Label>
-                        <Form.Control
-                          name="confirmPassword"
-                          type="password"
-                          placeholder="Nhập lại mật khẩu mới"
-                          value={form.confirmPassword}
-                          onChange={handleChange}
-                          style={{
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text-light)'
-                          }}
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
+                  <div>
+                    {pwdError && <Alert variant="danger" className="py-2">{pwdError}</Alert>}
+                    {pwdSuccess && <Alert variant="success" className="py-2">{pwdSuccess}</Alert>}
+                    <Row className="g-3 align-items-end">
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label className="text-light">Mật khẩu hiện tại</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Nhập mật khẩu hiện tại"
+                            value={passwordForm.current}
+                            onChange={e => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-light)' }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label className="text-light">Mật khẩu mới</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Ít nhất 6 ký tự"
+                            value={passwordForm.newPwd}
+                            onChange={e => setPasswordForm({ ...passwordForm, newPwd: e.target.value })}
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-light)' }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className="text-light">Xác nhận mật khẩu mới</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Nhập lại mật khẩu mới"
+                            value={passwordForm.confirm}
+                            onChange={e => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                            onKeyDown={e => e.key === 'Enter' && handleChangePassword(e)}
+                            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-light)' }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={1}>
+                        <Button
+                          type="button"
+                          variant="warning"
+                          className="w-100"
+                          disabled={pwdLoading}
+                          onClick={handleChangePassword}
+                        >
+                          {pwdLoading ? <Spinner size="sm" /> : '✔'}
+                        </Button>
+                      </Col>
+                    </Row>
+                  </div>
                 )}
               </div>
 
-              
+
               <div className="text-center">
                 <Button
                   type="submit"
@@ -397,7 +407,7 @@ export default function ProfilePage() {
           </Card.Body>
         </Card>
 
-        
+
         <Card className="mt-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Card.Body className="p-4">
             <h5 className="text-light mb-3 d-flex align-items-center gap-2">
