@@ -6,6 +6,10 @@ import com.example.backend.enums.UserRole;
 import com.example.backend.enums.UserStatus;
 import com.example.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,13 +29,56 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ─── GET ALL ─────────────────────────────────────────────────────────────
+    // ─── GET ALL (có filter + pagination) ────────────────────────────────────
+    /**
+     * GET /api/users?search=...&role=admin&status=active&page=0&size=10
+     * Trả về Page<UserDto> để frontend có thể dùng .content, .totalPages, .totalElements
+     */
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> users = userRepository.findAll().stream()
+    public ResponseEntity<Page<UserDto>> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        // Lấy tất cả user rồi filter in-memory (đơn giản, không cần JpaSpecificationExecutor)
+        List<User> all = userRepository.findAll();
+
+        List<UserDto> filtered = all.stream()
+                .filter(u -> {
+                    // Filter theo search (username hoặc fullName)
+                    if (search != null && !search.isBlank()) {
+                        String q = search.trim().toLowerCase();
+                        boolean matchUsername = u.getUsername() != null && u.getUsername().toLowerCase().contains(q);
+                        boolean matchFullName = u.getFullName() != null && u.getFullName().toLowerCase().contains(q);
+                        if (!matchUsername && !matchFullName) return false;
+                    }
+                    // Filter theo role
+                    if (role != null && !role.isBlank()) {
+                        UserRole roleEnum = parseRole(role);
+                        if (u.getRole() != roleEnum) return false;
+                    }
+                    // Filter theo status
+                    if (status != null && !status.isBlank()) {
+                        UserStatus statusEnum = parseStatus(status);
+                        if (u.getStatus() != statusEnum) return false;
+                    }
+                    return true;
+                })
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(users);
+
+        // Phân trang thủ công
+        int total = filtered.size();
+        int fromIndex = Math.min(page * size, total);
+        int toIndex   = Math.min(fromIndex + size, total);
+        List<UserDto> pageContent = filtered.subList(fromIndex, toIndex);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDto> result = new PageImpl<>(pageContent, pageable, total);
+
+        return ResponseEntity.ok(result);
     }
 
     // ─── GET BY ID ───────────────────────────────────────────────────────────

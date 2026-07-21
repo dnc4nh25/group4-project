@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Container, Table, Button, Modal, Form, Alert, Spinner, Badge, Card, Row, Col, InputGroup } from 'react-bootstrap'
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
@@ -10,14 +10,20 @@ const ROLES = ['user', 'admin']
 const STATUS_OPTIONS = ['active', 'banned', 'pending']
 
 export default function AdminUsersPage() {
-  const { currentUser } = useAuth() // Lấy thông tin admin hiện tại
+  const { currentUser } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [error, setError] = useState('')
-  const [showPasswords, setShowPasswords] = useState({}) // State để track password visibility
+  const [showPasswords, setShowPasswords] = useState({})
+
+  // Pagination state
+  const [page, setPage] = useState(0)
+  const [pageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
 
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -27,7 +33,7 @@ export default function AdminUsersPage() {
     fullName: '', 
     email: '', 
     phone: '', 
-    role: 'user', 
+    role: 'admin', 
     status: 'active' 
   })
   const [saving, setSaving] = useState(false)
@@ -43,16 +49,37 @@ export default function AdminUsersPage() {
   const isEditingSelf = (userId) => currentUser && currentUser.id === userId
   const isDeletingSelf = (userId) => currentUser && currentUser.id === userId
 
-  const load = async () => {
+  // Server-side load với filter + pagination
+  const load = useCallback(async (pg = page) => {
     setLoading(true)
     try {
-      const res = await axios.get('http://localhost:8080/api/users')
-      setUsers(res.data)
+      const params = new URLSearchParams()
+      if (search.trim())   params.append('search', search.trim())
+      if (filterRole)      params.append('role',   filterRole)
+      if (filterStatus)    params.append('status', filterStatus)
+      params.append('page', pg)
+      params.append('size', pageSize)
+      const res = await axios.get(`http://localhost:8080/api/users?${params}`)
+      setUsers(res.data.content || [])
+      setTotalPages(res.data.totalPages || 0)
+      setTotalElements(res.data.totalElements || 0)
     } catch { setError('Lỗi tải dữ liệu') }
     finally { setLoading(false) }
-  }
+  }, [search, filterRole, filterStatus, page, pageSize])
 
-  useEffect(() => { load() }, [])
+  // Debounce search 400ms, reset về trang 0 khi filter thay đổi
+  const debounceRef = useRef(null)
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setPage(0)
+      load(0)
+    }, 400)
+    return () => clearTimeout(debounceRef.current)
+  }, [search, filterRole, filterStatus]) // eslint-disable-line
+
+  // Load lại khi page thay đổi (không reset)
+  useEffect(() => { load(page) }, [page]) // eslint-disable-line
 
   const handleOpenAdd = () => {
     setForm({ 
@@ -61,7 +88,7 @@ export default function AdminUsersPage() {
       fullName: '', 
       email: '', 
       phone: '', 
-      role: 'user', 
+      role: 'admin', 
       status: 'active' 
     })
     setEditingId(null); setError(''); setShowModal(true)
@@ -216,7 +243,7 @@ export default function AdminUsersPage() {
         
         await axios.post('http://localhost:8080/api/users', payload)
       }
-      setShowModal(false); load()
+      setShowModal(false); load(page)
     } catch (err) { 
       setError('❌ Lưu thất bại. Vui lòng thử lại.')
       console.error('Save error:', err)
@@ -228,7 +255,7 @@ export default function AdminUsersPage() {
   const handleConfirmDelete = async () => {
     try {
       await axios.delete(`http://localhost:8080/api/users/${deletingId}`)
-      setShowDelete(false); load()
+      setShowDelete(false); load(page)
     } catch { setError('Xóa thất bại.') }
   }
 
@@ -266,37 +293,15 @@ export default function AdminUsersPage() {
     return { totalSpent, totalBookings }
   }
 
-  const incompleteUsers = useMemo(() => {
-    return users.filter(u => !u.email || !u.phone)
-  }, [users])
-
-  const missingEmailUsers = useMemo(() => {
-    return users.filter(u => !u.email)
-  }, [users])
-
-  const missingPhoneUsers = useMemo(() => {
-    return users.filter(u => !u.phone)
-  }, [users])
-
-  const filtered = users.filter(u => {
-    const matchSearch = u.username?.toLowerCase().includes(search.toLowerCase()) ||
-      u.fullName?.toLowerCase().includes(search.toLowerCase())
-    const matchRole = !filterRole || u.role === filterRole
-    const matchStatus = !filterStatus || (u.status || 'active') === filterStatus
-    return matchSearch && matchRole && matchStatus
-  })
-
   const togglePasswordVisibility = (userId) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }))
+    setShowPasswords(prev => ({ ...prev, [userId]: !prev[userId] }))
   }
 
   const clearFilters = () => {
     setSearch('')
     setFilterRole('')
     setFilterStatus('')
+    setPage(0)
   }
 
   const hasActiveFilters = search || filterRole || filterStatus
@@ -412,44 +417,7 @@ export default function AdminUsersPage() {
         </Card>
 
         
-        {incompleteUsers.length > 0 && (
-          <Alert variant="warning" className="mb-4">
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-              <strong>Thông báo: Tài khoản chưa cập nhật đầy đủ thông tin</strong>
-            </div>
-            <div className="mb-2">
-              Có <strong>{incompleteUsers.length}</strong> tài khoản chưa cập nhật đầy đủ thông tin liên hệ:
-            </div>
-            <Row className="g-3">
-              {missingEmailUsers.length > 0 && (
-                <Col md={6}>
-                  <div className="d-flex align-items-center gap-2">
-                    <Badge bg="danger" className="px-2 py-1">
-                      📧 {missingEmailUsers.length}
-                    </Badge>
-                    <span>tài khoản chưa có email</span>
-                  </div>
-                </Col>
-              )}
-              {missingPhoneUsers.length > 0 && (
-                <Col md={6}>
-                  <div className="d-flex align-items-center gap-2">
-                    <Badge bg="danger" className="px-2 py-1">
-                      📱 {missingPhoneUsers.length}
-                    </Badge>
-                    <span>tài khoản chưa có số điện thoại</span>
-                  </div>
-                </Col>
-              )}
-            </Row>
-            <div className="mt-3">
-              <small className="text-muted">
-                💡 Khuyến nghị: Liên hệ với người dùng để cập nhật thông tin liên hệ nhằm đảm bảo khả năng thông báo và hỗ trợ tốt nhất.
-              </small>
-            </div>
-          </Alert>
-        )}
+
 
         {loading ? (
           <div className="text-center py-5">
@@ -474,9 +442,9 @@ export default function AdminUsersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((u, i) => (
+                    {users.map((u, i) => (
                       <tr key={u.id} className="table-row-hover">
-                        <td className="text-muted">{i + 1}</td>
+                        <td className="text-muted">{page * pageSize + i + 1}</td>
                         <td>
                           <div className="d-flex align-items-center gap-3">
                             <div 
@@ -570,7 +538,7 @@ export default function AdminUsersPage() {
                         </td>
                       </tr>
                     ))}
-                    {filtered.length === 0 && (
+                    {users.length === 0 && (
                       <tr>
                         <td colSpan="8" className="text-center py-5 text-muted">
                           <div className="empty-state">
@@ -585,6 +553,63 @@ export default function AdminUsersPage() {
               </div>
             </Card.Body>
           </Card>
+        )}
+
+        {/* ── PHÂN TRANG ── */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+              Hiển thị <strong>{page * pageSize + 1}</strong> – <strong>{Math.min((page + 1) * pageSize, totalElements)}</strong> trong tổng <strong>{totalElements}</strong> người dùng
+            </div>
+            <div className="d-flex align-items-center gap-1">
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setPage(0)}
+                disabled={page === 0}
+                title="Trang đầu"
+              >«</button>
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0}
+                title="Trang trước"
+              >‹</button>
+              {Array.from({ length: totalPages }, (_, idx) => idx)
+                .filter(idx => idx === 0 || idx === totalPages - 1 || Math.abs(idx - page) <= 2)
+                .reduce((acc, idx, i, arr) => {
+                  if (i > 0 && idx - arr[i - 1] > 1) acc.push('...')
+                  acc.push(idx)
+                  return acc
+                }, [])
+                .map((item, idx) =>
+                  item === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-muted">…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      className={`btn btn-sm ${item === page ? 'btn-warning' : 'btn-outline-secondary'}`}
+                      onClick={() => setPage(item)}
+                      style={{ minWidth: '36px', fontWeight: item === page ? '700' : '400' }}
+                    >
+                      {item + 1}
+                    </button>
+                  )
+                )
+              }
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1}
+                title="Trang sau"
+              >›</button>
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setPage(totalPages - 1)}
+                disabled={page === totalPages - 1}
+                title="Trang cuối"
+              >»</button>
+            </div>
+          </div>
         )}
       </Container>
 
@@ -632,24 +657,43 @@ export default function AdminUsersPage() {
               />
             </Form.Group>
             <Row className="g-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Vai trò</Form.Label>
-                  <Form.Select 
-                    name="role" 
-                    value={form.role} 
-                    onChange={handleChange}
-                    disabled={editingId && isEditingSelf(editingId)}
-                  >
-                    {ROLES.map(r => <option key={r} value={r}>{r === 'admin' ? '👑 Admin' : '👤 User'}</option>)}
-                  </Form.Select>
-                  {editingId && isEditingSelf(editingId) && (
+              {/* Chỉ hiện dropdown Vai trò khi đang chỉnh sửa, không hiện khi thêm mới */}
+              {editingId && (
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Vai trò</Form.Label>
+                    <Form.Select 
+                      name="role" 
+                      value={form.role} 
+                      onChange={handleChange}
+                      disabled={editingId && isEditingSelf(editingId)}
+                    >
+                      {ROLES.map(r => <option key={r} value={r}>{r === 'admin' ? '👑 Admin' : '👤 User'}</option>)}
+                    </Form.Select>
+                    {editingId && isEditingSelf(editingId) && (
+                      <Form.Text className="text-muted">
+                        Không thể thay đổi vai trò của chính mình
+                      </Form.Text>
+                    )}
+                  </Form.Group>
+                </Col>
+              )}
+              {!editingId && (
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Vai trò</Form.Label>
+                    <Form.Control
+                      value="👑 Admin"
+                      disabled
+                      readOnly
+                      style={{ background: 'rgba(255,193,7,0.1)', color: 'var(--admin-warning, #ffc107)', fontWeight: '600', cursor: 'default' }}
+                    />
                     <Form.Text className="text-muted">
-                      Không thể thay đổi vai trò của chính mình
+                      Tài khoản tạo bởi admin sẽ có vai trò Admin
                     </Form.Text>
-                  )}
-                </Form.Group>
-              </Col>
+                  </Form.Group>
+                </Col>
+              )}
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>Trạng thái</Form.Label>
