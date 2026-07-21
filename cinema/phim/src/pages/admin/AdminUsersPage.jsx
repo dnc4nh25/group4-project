@@ -17,7 +17,6 @@ export default function AdminUsersPage() {
   const [filterRole, setFilterRole] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [error, setError] = useState('')
-  const [showPasswords, setShowPasswords] = useState({})
 
   // Pagination state
   const [page, setPage] = useState(0)
@@ -120,67 +119,62 @@ export default function AdminUsersPage() {
   const handleSave = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     if (!form.username?.trim()) {
       setError('Tên đăng nhập không được để trống.'); return
     }
-    
-    if (!form.password?.trim()) {
-      setError('Mật khẩu không được để trống.'); return
+
+    // Chỉ validate password khi tạo mới (edit không có field password)
+    if (!editingId) {
+      if (!form.password?.trim()) {
+        setError('Mật khẩu không được để trống.'); return
+      }
+      if (form.password.length < 6) {
+        setError('Mật khẩu phải có ít nhất 6 ký tự.'); return
+      }
+      if (form.password.length > 50) {
+        setError('Mật khẩu không được quá 50 ký tự.'); return
+      }
     }
-    
+
     if (!form.fullName?.trim()) {
       setError('Họ tên không được để trống.'); return
     }
-    
+
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
     if (!usernameRegex.test(form.username.trim())) {
       setError('Tên đăng nhập phải từ 3-20 ký tự, chỉ chứa chữ, số và dấu gạch dưới.'); return
     }
-    
-    if (form.password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự.'); return
-    }
-    
-    if (form.password.length > 50) {
-      setError('Mật khẩu không được quá 50 ký tự.'); return
-    }
-    
+
     if (form.fullName.trim().length < 2) {
       setError('Họ tên phải có ít nhất 2 ký tự.'); return
     }
-    
+
     if (form.fullName.trim().length > 100) {
       setError('Họ tên không được quá 100 ký tự.'); return
     }
-    
+
     const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/
     if (!nameRegex.test(form.fullName.trim())) {
       setError('Họ tên chỉ được chứa chữ cái và khoảng trắng.'); return
     }
-    
+
     if (!['user', 'admin'].includes(form.role)) {
       setError('Vai trò không hợp lệ.'); return
     }
-    
+
     if (!['active', 'banned', 'pending'].includes(form.status)) {
       setError('Trạng thái không hợp lệ.'); return
     }
-    
-    setSaving(true)
-    
-    if (!form.username || !form.password || !form.fullName) {
-      setError('Vui lòng điền đầy đủ thông tin bắt buộc (Tên đăng nhập, Mật khẩu, Họ tên).'); return
-    }
-    
+
     if (form.email && !validateEmail(form.email)) {
       setError('Email không hợp lệ.'); return
     }
-    
+
     if (form.phone && !validatePhone(form.phone)) {
       setError('Số điện thoại phải có 10-11 chữ số.'); return
     }
-    
+
     setSaving(true); setError('')
     try {
       const payload = {
@@ -190,7 +184,7 @@ export default function AdminUsersPage() {
       }
       
       if (editingId) {
-        // Update existing user
+        // Update existing user (không gửi password)
         if (form.email) {
           try {
             const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
@@ -201,7 +195,7 @@ export default function AdminUsersPage() {
             if (err.response?.status !== 404) throw err
           }
         }
-        
+
         if (form.phone) {
           try {
             const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
@@ -212,8 +206,10 @@ export default function AdminUsersPage() {
             if (err.response?.status !== 404) throw err
           }
         }
-        
-        await axios.put(`http://localhost:8080/api/users/${editingId}`, form)
+
+        // Loại bỏ password khỏi payload khi update
+        const { password: _pw, ...updatePayload } = form
+        await axios.put(`http://localhost:8080/api/users/${editingId}`, updatePayload)
       } else {
         // Create new user
         try {
@@ -482,20 +478,9 @@ export default function AdminUsersPage() {
                           </div>
                         </td>
                         <td>
-                          <div className="d-flex align-items-center gap-2">
-                            <code className="password-inline-code px-2 py-1 rounded" style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>
-                              {showPasswords[u.id] ? u.password : '••••••••'}
-                            </code>
-                            <Button
-                              size="sm"
-                              variant="outline-secondary"
-                              onClick={() => togglePasswordVisibility(u.id)}
-                              title={showPasswords[u.id] ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                            >
-                              {showPasswords[u.id] ? '🙈' : '👁️'}
-                            </Button>
-                          </div>
+                          <code className="password-inline-code px-2 py-1 rounded" style={{ fontSize: '0.8rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                            ••••••••
+                          </code>
                         </td>
                         <td>
                           {u.role === 'admin' ? (
@@ -628,13 +613,16 @@ export default function AdminUsersPage() {
                 onChange={handleChange} placeholder="username" disabled={!!editingId}
               />
             </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Mật khẩu <span style={{ color: 'var(--admin-danger)' }}>*</span></Form.Label>
-              <Form.Control
-                id="user-password" name="password" type="password"
-                value={form.password} onChange={handleChange} placeholder="Nhập mật khẩu"
-              />
-            </Form.Group>
+            {/* Chỉ hiện field mật khẩu khi TẠO MỚI, không cho sửa khi edit */}
+            {!editingId && (
+              <Form.Group className="mb-3">
+                <Form.Label>Mật khẩu <span style={{ color: 'var(--admin-danger)' }}>*</span></Form.Label>
+                <Form.Control
+                  id="user-password" name="password" type="password"
+                  value={form.password} onChange={handleChange} placeholder="Nhập mật khẩu"
+                />
+              </Form.Group>
+            )}
             <Form.Group className="mb-3">
               <Form.Label>Họ tên <span style={{ color: 'var(--admin-danger)' }}>*</span></Form.Label>
               <Form.Control
@@ -697,14 +685,25 @@ export default function AdminUsersPage() {
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>Trạng thái</Form.Label>
-                  <Form.Select 
-                    name="status" 
-                    value={form.status} 
-                    onChange={handleChange}
-                    disabled={editingId && isEditingSelf(editingId)}
-                  >
-                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s === 'active' ? '✅ Active' : s === 'banned' ? '❌ Banned' : '⏳ Pending'}</option>)}
-                  </Form.Select>
+                  {editingId ? (
+                    // Khi sửa: cho chọn trạng thái (trừ chính mình)
+                    <Form.Select
+                      name="status"
+                      value={form.status}
+                      onChange={handleChange}
+                      disabled={isEditingSelf(editingId)}
+                    >
+                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s === 'active' ? '✅ Active' : s === 'banned' ? '❌ Banned' : '⏳ Pending'}</option>)}
+                    </Form.Select>
+                  ) : (
+                    // Khi tạo mới: cố định Active
+                    <Form.Control
+                      value="✅ Active"
+                      disabled
+                      readOnly
+                      style={{ background: 'rgba(25,135,84,0.1)', color: '#198754', fontWeight: '600', cursor: 'default' }}
+                    />
+                  )}
                   {editingId && isEditingSelf(editingId) && (
                     <Form.Text className="text-muted">
                       Không thể thay đổi trạng thái của chính mình
