@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Badge, Spinner, Alert, Button, Modal } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { bookingApi } from '../services/api'
+import { useAuth } from '../../contexts/AuthContext'
+import { bookingApi } from '../../services/api'
 import './MyBookingsPage.css'
 
 export default function MyBookingsPage() {
@@ -19,7 +19,7 @@ export default function MyBookingsPage() {
       fetchBookings(currentUser.id)
     } else {
       setLoading(false)
-      setError('Vui lòng đăng nhập lại để xem lịch sử vé.')
+      setError('Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i Ä‘á»ƒ xem lá»‹ch sá»­ vÃ©.')
     }
   }, [currentUser])
 
@@ -29,7 +29,7 @@ export default function MyBookingsPage() {
       setBookings(res.data)
     } catch (err) {
       console.error('Error fetching bookings:', err)
-      setError('Không thể tải lịch sử vé. Vui lòng thử lại sau.')
+      setError('KhÃ´ng thá»ƒ táº£i lá»‹ch sá»­ vÃ©. Vui lÃ²ng thá»­ láº¡i sau.')
     } finally {
       setLoading(false)
     }
@@ -54,15 +54,15 @@ export default function MyBookingsPage() {
     setCancellingId(bookingId)
     try {
       await bookingApi.cancel(bookingId)
-      // Cập nhật state local, không cần fetch lại
+      // Cáº­p nháº­t state local, khÃ´ng cáº§n fetch láº¡i
       setBookings(prev =>
         prev.map(b =>
           b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
         )
       )
-      showToast('Hủy vé thành công! Ghế đã được trả lại.', 'success')
+      showToast('Há»§y vÃ© thÃ nh cÃ´ng! Gháº¿ Ä‘Ã£ Ä‘Æ°á»£c tráº£ láº¡i.', 'success')
     } catch (err) {
-      const msg = err.response?.data || 'Không thể hủy vé. Vui lòng thử lại.'
+      const msg = err.response?.data || 'KhÃ´ng thá»ƒ há»§y vÃ©. Vui lÃ²ng thá»­ láº¡i.'
       showToast(msg, 'error')
     } finally {
       setCancellingId(null)
@@ -72,9 +72,9 @@ export default function MyBookingsPage() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'CONFIRMED':
-        return <Badge className="status-badge status-confirmed">✓ Đã xác nhận</Badge>
+        return <Badge className="status-badge status-confirmed">âœ“ ÄÃ£ xÃ¡c nháº­n</Badge>
       case 'CANCELLED':
-        return <Badge className="status-badge status-cancelled">✕ Đã hủy</Badge>
+        return <Badge className="status-badge status-cancelled">âœ• ÄÃ£ há»§y</Badge>
       default:
         return <Badge className="status-badge status-pending">{status}</Badge>
     }
@@ -103,31 +103,6 @@ export default function MyBookingsPage() {
     }
   }
 
-  // Kiểm tra xem vé có thể hủy không (còn ít nhất 6 giờ trước suất chiếu)
-  const canCancelBooking = (booking) => {
-    if (booking.status !== 'CONFIRMED') return false
-    
-    try {
-      // Parse showDate và showTime
-      const [year, month, day] = booking.showDate.split('-').map(Number)
-      const [hour, minute] = booking.showTime.split(':').map(Number)
-      
-      // Tạo datetime của suất chiếu
-      const showtimeStart = new Date(year, month - 1, day, hour, minute)
-      
-      // Tính thời hạn hủy (6 giờ trước suất chiếu)
-      const cancelDeadline = new Date(showtimeStart.getTime() - 6 * 60 * 60 * 1000)
-      
-      // So sánh với thời gian hiện tại
-      const now = new Date()
-      
-      return now <= cancelDeadline
-    } catch (e) {
-      console.error('Error checking cancel eligibility:', e)
-      return false
-    }
-  }
-
   if (loading) {
     return (
       <div className="bookings-page min-vh-100 d-flex justify-content-center align-items-center">
@@ -141,7 +116,7 @@ export default function MyBookingsPage() {
       {/* Toast notification */}
       {toast.show && (
         <div className={`bookings-toast bookings-toast-${toast.type}`}>
-          <span>{toast.type === 'success' ? '✓' : '✕'}</span>
+          <span>{toast.type === 'success' ? 'âœ“' : 'âœ•'}</span>
           {toast.message}
         </div>
       )}
@@ -154,30 +129,30 @@ export default function MyBookingsPage() {
         contentClassName="cancel-modal-content"
       >
         <Modal.Header className="cancel-modal-header border-0">
-          <Modal.Title className="text-white fw-bold">Xác nhận hủy vé</Modal.Title>
+          <Modal.Title className="text-white fw-bold">XÃ¡c nháº­n há»§y vÃ©</Modal.Title>
         </Modal.Header>
         <Modal.Body className="cancel-modal-body">
-          <div className="cancel-warning-icon mb-3">⚠️</div>
-          <p className="text-white mb-1">Bạn có chắc muốn hủy vé xem phim</p>
+          <div className="cancel-warning-icon mb-3">âš ï¸</div>
+          <p className="text-white mb-1">Báº¡n cÃ³ cháº¯c muá»‘n há»§y vÃ© xem phim</p>
           <p className="text-warning fw-bold mb-3">"{confirmModal.movieName}"?</p>
           <p className="text-white-50 small">
-            Hành động này không thể hoàn tác. Ghế sẽ được trả lại cho suất chiếu.
+            HÃ nh Ä‘á»™ng nÃ y khÃ´ng thá»ƒ hoÃ n tÃ¡c. Gháº¿ sáº½ Ä‘Æ°á»£c tráº£ láº¡i cho suáº¥t chiáº¿u.
           </p>
         </Modal.Body>
         <Modal.Footer className="cancel-modal-footer border-0">
           <Button variant="outline-light" className="btn-modal-cancel" onClick={closeCancelModal}>
-            Giữ vé
+            Giá»¯ vÃ©
           </Button>
           <Button variant="danger" className="btn-modal-confirm" onClick={handleConfirmCancel}>
-            Xác nhận hủy
+            XÃ¡c nháº­n há»§y
           </Button>
         </Modal.Footer>
       </Modal>
 
       <Container>
         <div className="page-header mb-5">
-          <h1 className="fw-bold text-white mb-2">Vé của tôi</h1>
-          <p className="text-white-50">Quản lý lịch sử đặt vé xem phim của bạn</p>
+          <h1 className="fw-bold text-white mb-2">VÃ© cá»§a tÃ´i</h1>
+          <p className="text-white-50">Quáº£n lÃ½ lá»‹ch sá»­ Ä‘áº·t vÃ© xem phim cá»§a báº¡n</p>
         </div>
 
         {error && (
@@ -188,11 +163,11 @@ export default function MyBookingsPage() {
 
         {!error && bookings.length === 0 ? (
           <div className="empty-state text-center py-5">
-            <div className="empty-icon mb-4">🎟️</div>
-            <h3 className="text-white mb-3">Bạn chưa có vé nào</h3>
-            <p className="text-white-50 mb-4">Hãy đặt vé ngay để thưởng thức những bộ phim hấp dẫn nhất!</p>
+            <div className="empty-icon mb-4">ðŸŽŸï¸</div>
+            <h3 className="text-white mb-3">Báº¡n chÆ°a cÃ³ vÃ© nÃ o</h3>
+            <p className="text-white-50 mb-4">HÃ£y Ä‘áº·t vÃ© ngay Ä‘á»ƒ thÆ°á»Ÿng thá»©c nhá»¯ng bá»™ phim háº¥p dáº«n nháº¥t!</p>
             <Link to="/" className="btn btn-primary-custom px-4 py-2">
-              Xem lịch chiếu ngay
+              Xem lá»‹ch chiáº¿u ngay
             </Link>
           </div>
         ) : (
@@ -219,23 +194,23 @@ export default function MyBookingsPage() {
                         <h4 className="movie-title text-white fw-bold mb-3">{booking.movieName}</h4>
 
                         <div className="info-row mb-2">
-                          <span className="info-icon">📍</span>
-                          <span className="info-text text-white-50">{booking.theaterName} — {booking.roomName}</span>
+                          <span className="info-icon">ðŸ“</span>
+                          <span className="info-text text-white-50">{booking.theaterName} â€” {booking.roomName}</span>
                         </div>
 
                         <div className="info-row mb-2">
-                          <span className="info-icon">🕒</span>
+                          <span className="info-icon">ðŸ•’</span>
                           <span className="info-text text-white-50">
                             <span className="text-white fw-medium">{formatTime(booking.showTime)}</span>
-                            {' '}•{' '}
+                            {' '}â€¢{' '}
                             {formatDate(booking.showDate)}
                           </span>
                         </div>
 
                         <div className="info-row mb-3">
-                          <span className="info-icon">💺</span>
+                          <span className="info-icon">ðŸ’º</span>
                           <span className="info-text">
-                            Ghế: <span className="text-white fw-bold">{parseSeats(booking.seatNums)}</span>
+                            Gháº¿: <span className="text-white fw-bold">{parseSeats(booking.seatNums)}</span>
                           </span>
                         </div>
                       </div>
@@ -243,19 +218,19 @@ export default function MyBookingsPage() {
                       <div className="booking-footer pt-3 mt-2">
                         <div className="d-flex justify-content-between align-items-end">
                           <div>
-                            <small className="text-white-50 d-block mb-1">Mã vé</small>
+                            <small className="text-white-50 d-block mb-1">MÃ£ vÃ©</small>
                             <span className="font-monospace text-white-50">#{booking.id}</span>
                           </div>
                           <div className="text-end">
-                            <small className="text-white-50 d-block mb-1">Tổng tiền</small>
+                            <small className="text-white-50 d-block mb-1">Tá»•ng tiá»n</small>
                             <h5 className={`mb-0 fw-bold ${booking.status === 'CANCELLED' ? 'text-white-50 text-decoration-line-through' : 'text-success'}`}>
                               {formatCurrency(booking.totalPrice)}
                             </h5>
                           </div>
                         </div>
 
-                        {/* Cancel Button — chỉ hiện khi vé còn CONFIRMED và đủ thời gian */}
-                        {canCancelBooking(booking) && (
+                        {/* Cancel Button â€” chá»‰ hiá»‡n khi vÃ© cÃ²n CONFIRMED */}
+                        {booking.status === 'CONFIRMED' && (
                           <div className="mt-3">
                             <Button
                               variant="outline-danger"
@@ -265,9 +240,9 @@ export default function MyBookingsPage() {
                               onClick={() => openCancelModal(booking.id, booking.movieName)}
                             >
                               {cancellingId === booking.id ? (
-                                <><Spinner animation="border" size="sm" className="me-2" />Đang hủy...</>
+                                <><Spinner animation="border" size="sm" className="me-2" />Äang há»§y...</>
                               ) : (
-                                '🗑 Hủy vé'
+                                'ðŸ—‘ Há»§y vÃ©'
                               )}
                             </Button>
                           </div>

@@ -1,13 +1,13 @@
 ﻿import { Link } from 'react-router-dom'
 import { Container, Button, Row, Col, Badge } from 'react-bootstrap'
 import { useState, useEffect } from 'react'
-import MovieCard from '../components/MovieCard'
-import { useAuth } from '../contexts/AuthContext'
-import { MovieGridSkeleton } from '../components/LoadingSkeleton'
-import { VoucherValidator } from '../utils/voucherValidation'
-import { movieApi, voucherApi } from '../services/api'
-import '../components/HeroBannerV2.css'
-import '../components/VoucherCard.css'
+import MovieCard from '../../components/MovieCard'
+import { useAuth } from '../../contexts/AuthContext'
+import { MovieGridSkeleton } from '../../components/LoadingSkeleton'
+import { VoucherValidator } from '../../utils/voucherValidation'
+import { movieApi, voucherApi } from '../../services/api'
+import '../../components/HeroBannerV2.css'
+import '../../components/VoucherCard.css'
 
 export default function HomePage() {
   const { currentUser } = useAuth()
@@ -26,7 +26,7 @@ export default function HomePage() {
         const res = await movieApi.getAll()
         setMovies(res.data)
       } catch (err) {
-        console.error('Lỗi tải phim:', err)
+        console.error('L?i t?i phim:', err)
       } finally {
         setLoading(false)
       }
@@ -44,7 +44,7 @@ export default function HomePage() {
 
     const interval = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % hotMovies.length)
-    }, 4000) // Chuyển slide mỗi 4 giây
+    }, 4000) // Chuy?n slide m?i 4 giây
 
     return () => clearInterval(interval)
   }, [hotMovies.length])
@@ -53,9 +53,9 @@ export default function HomePage() {
     const loadVouchers = async () => {
       try {
         const res = await voucherApi.getActive()
-        setVouchers(res.data.slice(0, 4)) // Chỉ lấy 4 voucher đầu tiên
+        setVouchers(res.data.slice(0, 4)) // Ch? l?y 4 voucher d?u tiên
       } catch (err) {
-        console.error('Lỗi tải voucher:', err)
+        console.error('L?i t?i voucher:', err)
       } finally {
         setVouchersLoading(false)
       }
@@ -84,9 +84,9 @@ export default function HomePage() {
           <div className="cinematic-content">
             <div className="award-section">
               <span className="award-badge">
-                <span className="star">★</span>
-                <span>PHIM ĐỈNH CAO</span>
-                <span className="star">★</span>
+                <span className="star">?</span>
+                <span>PHIM Ð?NH CAO</span>
+                <span className="star">?</span>
               </span>
             </div>
 
@@ -97,13 +97,13 @@ export default function HomePage() {
             )}
 
             <p className="movie-description">
-              "{currentMovie?.description || 'Đang cập nhật nội dung phim...'}"
+              "{currentMovie?.description || 'Ðang c?p nh?t n?i dung phim...'}"
             </p>
 
             {currentMovie && (
               <div className="movie-meta">
                 <span className="meta-item">
-                  <span className="icon">⭐</span>
+                  <span className="icon">?</span>
                   <span>{currentMovie.rating} IMDb</span>
                 </span>
                 <span className="divider">|</span>
@@ -121,7 +121,7 @@ export default function HomePage() {
               </Button>
               {!currentUser && (
                 <Button as={Link} to="/register" className="btn-register">
-                  Đăng ký miễn phí
+                  Ðang ký mi?n phí
                 </Button>
               )}
             </div>
@@ -147,7 +147,7 @@ export default function HomePage() {
                   key={movie.id}
                   className={`cinematic-thumb ${index === currentSlide ? 'active' : ''}`}
                   onClick={() => setCurrentSlide(index)}
-                  aria-label={`Chọn phim ${movie.title}`}
+                  aria-label={`Ch?n phim ${movie.title}`}
                 >
                   <img src={movie.poster} alt={movie.title} />
                 </button>
@@ -162,8 +162,8 @@ export default function HomePage() {
         <Container>
           <div className="section-header d-flex justify-content-between align-items-center mb-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div>
-              <h2 className="section-title">🔥 Phim Nổi Bật</h2>
-              <p className="text-muted mb-0">Những bộ phim có điểm số cao nhất</p>
+              <h2 className="section-title">?? Phim N?i B?t</h2>
+              <p className="text-muted mb-0">Nh?ng b? phim có di?m s? cao nh?t</p>
             </div>
             <Button
               as={Link}
@@ -171,7 +171,7 @@ export default function HomePage() {
               variant="outline-warning"
               className="btn-primary-custom"
             >
-              Xem tất cả →
+              Xem t?t c? ?
             </Button>
           </div>
           {loading ? (
@@ -194,13 +194,13 @@ export default function HomePage() {
       <section className="hot-deals-section py-5">
         <Container>
           <div className="text-center mb-4">
-            <h2 className="section-title mb-2">🔥 ƯU ĐÃI HOT</h2>
-            <p className="text-muted mb-0">Nhận ngay voucher giảm giá hấp dẫn!</p>
+            <h2 className="section-title mb-2">?? UU ÐÃI HOT</h2>
+            <p className="text-muted mb-0">Nh?n ngay voucher gi?m giá h?p d?n!</p>
           </div>
           {vouchersLoading ? (
             <div className="text-center py-4">
               <div className="spinner-border text-warning" style={{ width: '2rem', height: '2rem' }}></div>
-              <p className="mt-2 text-muted">Đang tải ưu đãi...</p>
+              <p className="mt-2 text-muted">Ðang t?i uu dãi...</p>
             </div>
           ) : (
             <Row xs={1} sm={2} lg={4} className="g-3">
@@ -223,7 +223,7 @@ export default function HomePage() {
                         <div className="voucher-code">{voucher.code}</div>
                         <div className="voucher-remaining">
                           <Badge bg="success" className="mt-2">
-                            🎫 Còn {remainingUses} lượt
+                            ?? Còn {remainingUses} lu?t
                           </Badge>
                         </div>
                       </div>
@@ -232,7 +232,7 @@ export default function HomePage() {
                         className="voucher-btn" 
                         onClick={() => navigator.clipboard.writeText(voucher.code)}
                       >
-                        📋 Sao chép mã
+                        ?? Sao chép mã
                       </Button>
                     </div>
                   </Col>
@@ -243,9 +243,9 @@ export default function HomePage() {
           
           {!vouchersLoading && vouchers.length === 0 && (
             <div className="text-center py-4">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>😔</div>
-              <h5>Hiện tại chưa có ưu đãi nào</h5>
-              <p className="text-muted">Vui lòng quay lại sau để xem các ưu đãi mới nhất!</p>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>??</div>
+              <h5>Hi?n t?i chua có uu dãi nào</h5>
+              <p className="text-muted">Vui lòng quay l?i sau d? xem các uu dãi m?i nh?t!</p>
             </div>
           )}
           
@@ -256,7 +256,7 @@ export default function HomePage() {
               variant="outline-warning"
               className="btn-primary-custom"
             >
-              Xem tất cả ưu đãi →
+              Xem t?t c? uu dãi ?
             </Button>
           </div>
         </Container>
@@ -270,10 +270,10 @@ export default function HomePage() {
         <Container className="text-center">
           <div className="animate-fade-in-up">
             <h2 className="section-title mb-3" style={{ fontSize: '2rem' }}>
-              🎬 Sẵn sàng trải nghiệm?
+              ?? S?n sàng tr?i nghi?m?
             </h2>
             <p className="text-muted mb-4" style={{ maxWidth: '500px', margin: '0 auto' }}>
-              Đặt vé ngay hôm nay và nhận ưu đãi hấp dẫn cho lần đặt đầu tiên
+              Ð?t vé ngay hôm nay và nh?n uu dãi h?p d?n cho l?n d?t d?u tiên
             </p>
             <Button
               as={Link}
