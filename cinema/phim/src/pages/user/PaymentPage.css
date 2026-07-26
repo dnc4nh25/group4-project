@@ -1,9 +1,9 @@
-/* ================================================
-   PaymentPage.css — Full redesign
+﻿/* ================================================
+   PaymentPage.css â€” Full redesign
    Dark/Light mode supported via [data-theme]
    ================================================ */
 
-/* ─── Loading ────────────────────────────────────── */
+/* â”€â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-loading {
   min-height: 60vh;
   display: flex;
@@ -23,7 +23,7 @@
 }
 @keyframes pay-spin { to { transform: rotate(360deg); } }
 
-/* ─── Page Header ────────────────────────────────── */
+/* â”€â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-header {
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffcf77 100%);
   padding: 40px 0 32px;
@@ -51,7 +51,7 @@
   font-size: 0.95rem;
 }
 
-/* ─── Container & Grid ───────────────────────────── */
+/* â”€â”€â”€ Container & Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-wrapper { min-height: 100vh; }
 .pay-container {
   max-width: 1100px;
@@ -68,7 +68,7 @@
   .pay-grid { grid-template-columns: 1fr; }
 }
 
-/* ─── Error Banner ───────────────────────────────── */
+/* â”€â”€â”€ Error Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-error-banner {
   display: flex;
   justify-content: space-between;
@@ -100,7 +100,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Cards ──────────────────────────────────────── */
+/* â”€â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-card {
   background: var(--card-bg, #fff);
   border: 1px solid var(--border-color, #e9ecef);
@@ -129,7 +129,7 @@
 }
 [data-theme="dark"] .pay-card-header h3 { color: #e0e0e0; }
 
-/* ─── Movie Info ─────────────────────────────────── */
+/* â”€â”€â”€ Movie Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-movie-info {
   display: flex;
   gap: 16px;
@@ -177,7 +177,7 @@
   border-radius: 20px;
 }
 
-/* ─── Payment Methods ────────────────────────────── */
+/* â”€â”€â”€ Payment Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-methods { display: flex; flex-direction: column; gap: 12px; }
 .pay-method-card {
   display: flex;
@@ -243,7 +243,7 @@
   margin-top: 2px;
 }
 
-/* ─── Voucher Input ──────────────────────────────── */
+/* â”€â”€â”€ Voucher Input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-voucher-input-row {
   display: flex;
   gap: 10px;
@@ -300,7 +300,7 @@
   border-radius: 8px;
 }
 
-/* ─── Applied Voucher ────────────────────────────── */
+/* â”€â”€â”€ Applied Voucher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-voucher-applied {
   display: flex;
   justify-content: space-between;
@@ -347,7 +347,7 @@
 }
 .pay-voucher-remove:hover { background: #e74c3c; color: #fff; }
 
-/* ─── Voucher Grid List ──────────────────────────── */
+/* â”€â”€â”€ Voucher Grid List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-voucher-list { margin-top: 4px; }
 .pay-voucher-list-title {
   font-size: 0.83rem;
@@ -421,7 +421,7 @@
 }
 [data-theme="dark"] .pay-voucher-chip-overlay { background: rgba(30, 35, 48, 0.8); }
 
-/* ─── Summary Card ───────────────────────────────── */
+/* â”€â”€â”€ Summary Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-summary-card {
   background: var(--card-bg, #fff);
   border: 1px solid var(--border-color, #e9ecef);
@@ -490,7 +490,7 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* ─── Checkout Button ────────────────────────────── */
+/* â”€â”€â”€ Checkout Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-checkout-btn {
   width: 100%;
   padding: 16px;
@@ -541,7 +541,7 @@
 .pay-terms-note a { color: #ff6b35; text-decoration: none; }
 .pay-terms-note a:hover { text-decoration: underline; }
 
-/* ─── Success Screen ─────────────────────────────── */
+/* â”€â”€â”€ Success Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pay-success-wrapper {
   min-height: 100vh;
   display: flex;
@@ -682,7 +682,7 @@
   color: #ff6b35;
 }
 
-/* ─── Responsive ─────────────────────────────────── */
+/* â”€â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 600px) {
   .pay-header h1 { font-size: 1.5rem; }
   .pay-success-card { padding: 32px 24px; }

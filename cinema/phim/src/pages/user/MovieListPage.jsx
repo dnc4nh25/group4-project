@@ -1,26 +1,26 @@
 ﻿import { useState, useMemo, useRef, useEffect } from 'react'
 import { Container, Row, Col, Form, InputGroup, Button, Spinner, Alert, Badge, Pagination } from 'react-bootstrap'
-import { useFetch } from '../hooks/useFetch'
-import MovieCard from '../components/MovieCard'
-import { MovieGridSkeleton } from '../components/LoadingSkeleton'
+import { useFetch } from '../../hooks/useFetch'
+import MovieCard from '../../components/MovieCard'
+import { MovieGridSkeleton } from '../../components/LoadingSkeleton'
 
 const GENRES = [
-  { key: 'all', label: 'Tất cả', icon: '🎬' },
-  { key: 'Hành động', label: 'Hành động', icon: '🔥' },
-  { key: 'Giật gân', label: 'Giật gân', icon: '😱' },
-  { key: 'Khoa học viễn tưởng', label: 'Khoa học viễn tưởng', icon: '🚀' },
-  { key: 'Hoạt hình', label: 'Hoạt hình', icon: '🎨' },
-  { key: 'Lịch sử', label: 'Lịch sử', icon: '📜' },
-  { key: 'Tình cảm', label: 'Tình cảm', icon: '💕' }
+  { key: 'all', label: 'T?t c?', icon: '??' },
+  { key: 'Hành d?ng', label: 'Hành d?ng', icon: '??' },
+  { key: 'Gi?t gân', label: 'Gi?t gân', icon: '??' },
+  { key: 'Khoa h?c vi?n tu?ng', label: 'Khoa h?c vi?n tu?ng', icon: '??' },
+  { key: 'Ho?t hình', label: 'Ho?t hình', icon: '??' },
+  { key: 'L?ch s?', label: 'L?ch s?', icon: '??' },
+  { key: 'Tình c?m', label: 'Tình c?m', icon: '??' }
 ]
 
 const SORT_OPTIONS = [
-  { value: 'default', label: 'Mặc định', icon: '📋' },
-  { value: 'rating-desc', label: '⭐ Đánh giá cao nhất', icon: '⭐' },
-  { value: 'rating-asc', label: '⭐ Đánh giá thấp nhất', icon: '📉' },
-  { value: 'title-az', label: 'A → Z', icon: '🔤' },
-  { value: 'title-za', label: 'Z → A', icon: '🔡' },
-  { value: 'duration-desc', label: 'Thời lượng dài nhất', icon: '⏱️' }
+  { value: 'default', label: 'M?c d?nh', icon: '??' },
+  { value: 'rating-desc', label: '? Ðánh giá cao nh?t', icon: '?' },
+  { value: 'rating-asc', label: '? Ðánh giá th?p nh?t', icon: '??' },
+  { value: 'title-az', label: 'A ? Z', icon: '??' },
+  { value: 'title-za', label: 'Z ? A', icon: '??' },
+  { value: 'duration-desc', label: 'Th?i lu?ng dài nh?t', icon: '??' }
 ]
 
 export default function MovieListPage() {
@@ -103,7 +103,7 @@ export default function MovieListPage() {
                 ref={searchInputRef}
                 type="text"
                 className="modern-search-input flex-grow-1"
-                placeholder="Tìm kiếm phim, đạo diễn, thể loại..."
+                placeholder="Tìm ki?m phim, d?o di?n, th? lo?i..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 onFocus={() => setSearchFocus(true)}
@@ -113,7 +113,7 @@ export default function MovieListPage() {
                 <button
                   className="clear-search-btn ms-2"
                   onClick={() => { setSearch(''); searchInputRef.current?.focus() }}
-                  title="Xóa tìm kiếm"
+                  title="Xóa tìm ki?m"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 6 6 18"></path>
@@ -170,7 +170,7 @@ export default function MovieListPage() {
               <button
                 className="filter-toggle-btn"
                 onClick={() => setShowFilters(!showFilters)}
-                title={showFilters ? 'Ẩn bộ lọc' : 'Hiện bộ lọc'}
+                title={showFilters ? '?n b? l?c' : 'Hi?n b? l?c'}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
@@ -187,7 +187,7 @@ export default function MovieListPage() {
                       <path d="M21 6v6"></path>
                       <path d="M21 18v-6"></path>
                     </svg>
-                    Sắp xếp:
+                    S?p x?p:
                   </label>
                   <div className="custom-select-wrapper">
                     <select
@@ -205,21 +205,21 @@ export default function MovieListPage() {
                 
                 {(search || genre !== 'all') && (
                   <div className="active-filters d-flex gap-2 align-items-center flex-wrap ms-auto">
-                    <span className="filter-info-text text-muted">Bộ lọc đang áp dụng:</span>
+                    <span className="filter-info-text text-muted">B? l?c dang áp d?ng:</span>
                     {search && (
                       <Badge className="active-filter-badge" bg="primary">
-                        🔍 "{search}"
+                        ?? "{search}"
                         <button className="filter-badge-remove" onClick={() => setSearch('')}>×</button>
                       </Badge>
                     )}
                     {genre !== 'all' && (
                       <Badge className="active-filter-badge" bg="primary">
-                        🎬 {GENRES.find(g => g.key === genre)?.label}
+                        ?? {GENRES.find(g => g.key === genre)?.label}
                         <button className="filter-badge-remove" onClick={() => setGenre('all')}>×</button>
                       </Badge>
                     )}
                     <button className="clear-all-filters" onClick={() => { setSearch(''); setGenre('all'); setSortBy('default') }}>
-                      Xóa tất cả
+                      Xóa t?t c?
                     </button>
                   </div>
                 )}
@@ -232,9 +232,9 @@ export default function MovieListPage() {
         <div className="results-info mb-4 animate-fade-in-up">
           {!loading && (
             <div className="results-count-badge">
-              <span className="results-icon">🎞️</span>
+              <span className="results-icon">???</span>
               <span className="results-text">
-                Tìm thấy <strong className="results-number">{filteredMovies.length}</strong> phim
+                Tìm th?y <strong className="results-number">{filteredMovies.length}</strong> phim
                 {totalPages > 1 && (
                   <span className="pagination-info"> • Trang {currentPage}/{totalPages}</span>
                 )}
@@ -248,18 +248,18 @@ export default function MovieListPage() {
         {loading ? (
           <MovieGridSkeleton count={8} />
         ) : error ? (
-          <Alert variant="danger" className="animate-fade-in-up">Lỗi tải dữ liệu: {error}</Alert>
+          <Alert variant="danger" className="animate-fade-in-up">L?i t?i d? li?u: {error}</Alert>
         ) : filteredMovies.length === 0 ? (
           <div className="text-center py-5 animate-fade-in-up">
-            <div style={{ fontSize: 60, animation: 'float 3s ease-in-out infinite' }}>🎭</div>
-            <h5 className="mt-3 text-muted">Không tìm thấy phim phù hợp</h5>
-            <p className="text-muted mb-3">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+            <div style={{ fontSize: 60, animation: 'float 3s ease-in-out infinite' }}>??</div>
+            <h5 className="mt-3 text-muted">Không tìm th?y phim phù h?p</h5>
+            <p className="text-muted mb-3">Th? thay d?i b? l?c ho?c t? khóa tìm ki?m</p>
             <Button
               variant="link"
               className="text-warning btn-primary-custom"
               onClick={() => { setSearch(''); setGenre('all') }}
             >
-              Xóa bộ lọc
+              Xóa b? l?c
             </Button>
           </div>
         ) : (
@@ -329,7 +329,7 @@ export default function MovieListPage() {
               <div className="text-center mt-3 animate-fade-in-up">
                 <small className="text-muted">
                   Trang {currentPage} / {totalPages} •
-                  Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredMovies.length)} trong {filteredMovies.length} phim
+                  Hi?n th? {startIndex + 1}-{Math.min(endIndex, filteredMovies.length)} trong {filteredMovies.length} phim
                 </small>
               </div>
             )}

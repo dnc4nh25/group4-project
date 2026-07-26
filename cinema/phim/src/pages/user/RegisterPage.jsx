@@ -1,8 +1,8 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ 
@@ -35,27 +35,27 @@ export default function RegisterPage() {
     setError('')
     
     if (!form.username || !form.password || !form.fullName || !form.email || !form.phone) {
-      setError('Vui lòng điền đầy đủ thông tin.')
+      setError('Vui lÃ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ thÃ´ng tin.')
       return
     }
     
     if (!validateEmail(form.email)) {
-      setError('Email không hợp lệ.')
+      setError('Email khÃ´ng há»£p lá»‡.')
       return
     }
     
     if (!validatePhone(form.phone)) {
-      setError('Số điện thoại phải có 10-11 chữ số.')
+      setError('Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i cÃ³ 10-11 chá»¯ sá»‘.')
       return
     }
     
     if (form.password !== form.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.')
+      setError('Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p.')
       return
     }
     
     if (form.password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự.')
+      setError('Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.')
       return
     }
     
@@ -68,14 +68,14 @@ export default function RegisterPage() {
         email: form.email,
         phone: form.phone
       })
-      // Đăng ký thành công → Backend trả về JWT, tự động đăng nhập
+      // ÄÄƒng kÃ½ thÃ nh cÃ´ng â†’ Backend tráº£ vá» JWT, tá»± Ä‘á»™ng Ä‘Äƒng nháº­p
       login(res.data)
       navigate('/')
     } catch (err) {
       if (err.response && err.response.data) {
         setError(err.response.data)
       } else {
-        setError('Không thể kết nối đến máy chủ.')
+        setError('KhÃ´ng thá»ƒ káº¿t ná»‘i Ä‘áº¿n mÃ¡y chá»§.')
       }
     } finally {
       setLoading(false)
@@ -88,19 +88,19 @@ export default function RegisterPage() {
         <Card className="auth-card shadow-lg">
           <Card.Body className="p-4 p-md-5">
             <div className="text-center mb-4">
-              <div className="auth-icon">🎟️</div>
-              <h2 className="fw-bold mb-1">Tạo tài khoản</h2>
-              <p className="text-muted">Đăng ký để bắt đầu đặt vé</p>
+              <div className="auth-icon">ðŸŽŸï¸</div>
+              <h2 className="fw-bold mb-1">Táº¡o tÃ i khoáº£n</h2>
+              <p className="text-muted">ÄÄƒng kÃ½ Ä‘á»ƒ báº¯t Ä‘áº§u Ä‘áº·t vÃ©</p>
             </div>
             {error && <Alert variant="danger" className="py-2">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Họ và tên <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Há» vÃ  tÃªn <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="fullName"
                   name="fullName"
                   type="text"
-                  placeholder="Nguyễn Văn A"
+                  placeholder="Nguyá»…n VÄƒn A"
                   value={form.fullName}
                   onChange={handleChange}
                   className="form-input-custom"
@@ -121,7 +121,7 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Số điện thoại <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Sá»‘ Ä‘iá»‡n thoáº¡i <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="reg-phone"
                   name="phone"
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Tên đăng nhập <span className="text-danger">*</span></Form.Label>
+                <Form.Label>TÃªn Ä‘Äƒng nháº­p <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="reg-username"
                   name="username"
@@ -147,12 +147,12 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Mật khẩu <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Máº­t kháº©u <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="reg-password"
                   name="password"
                   type="password"
-                  placeholder="Ít nhất 6 ký tự"
+                  placeholder="Ãt nháº¥t 6 kÃ½ tá»±"
                   value={form.password}
                   onChange={handleChange}
                   className="form-input-custom"
@@ -160,12 +160,12 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-4">
-                <Form.Label>Xác nhận mật khẩu <span className="text-danger">*</span></Form.Label>
+                <Form.Label>XÃ¡c nháº­n máº­t kháº©u <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  placeholder="Nhập lại mật khẩu"
+                  placeholder="Nháº­p láº¡i máº­t kháº©u"
                   value={form.confirmPassword}
                   onChange={handleChange}
                   className="form-input-custom"
@@ -178,12 +178,12 @@ export default function RegisterPage() {
                 className="w-100 btn-primary-custom"
                 disabled={loading}
               >
-                {loading ? <Spinner size="sm" /> : 'Đăng ký'}
+                {loading ? <Spinner size="sm" /> : 'ÄÄƒng kÃ½'}
               </Button>
             </Form>
             <div className="text-center mt-3">
-              <span className="text-muted">Đã có tài khoản? </span>
-              <Link to="/login" className="text-warning fw-semibold">Đăng nhập</Link>
+              <span className="text-muted">ÄÃ£ cÃ³ tÃ i khoáº£n? </span>
+              <Link to="/login" className="text-warning fw-semibold">ÄÄƒng nháº­p</Link>
             </div>
           </Card.Body>
         </Card>

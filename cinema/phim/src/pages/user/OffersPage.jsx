@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Badge, Button, Modal, Alert } from 'react-bootstrap'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
-import { VoucherValidator } from '../utils/voucherValidation'
+import { useAuth } from '../../contexts/AuthContext'
+import { VoucherValidator } from '../../utils/voucherValidation'
 import './StaticPages.css'
 
 export default function OffersPage() {
@@ -31,7 +31,7 @@ export default function OffersPage() {
           setVouchers(activeVouchers.map(v => VoucherValidator.getVoucherDisplayInfo(v)))
         }
       } catch (err) {
-        console.error('Lỗi tải voucher:', err)
+        console.error('L?i t?i voucher:', err)
       } finally {
         setLoading(false)
       }
@@ -52,7 +52,7 @@ export default function OffersPage() {
   }
 
   const getVoucherIcon = (type) => {
-    return type === 'percentage' ? '📊' : '💰'
+    return type === 'percentage' ? '??' : '??'
   }
 
   const getDiscountText = (voucher) => {
@@ -71,10 +71,10 @@ export default function OffersPage() {
       <div className="static-page-header offers-header">
         <Container>
           <div className="text-center">
-            <div className="static-page-icon">🎁</div>
-            <h1 className="static-page-title">Ưu đãi đặc biệt</h1>
+            <div className="static-page-icon">??</div>
+            <h1 className="static-page-title">Uu dãi d?c bi?t</h1>
             <p className="static-page-subtitle">
-              Khám phá các voucher giảm giá hấp dẫn và tiết kiệm chi phí xem phim
+              Khám phá các voucher gi?m giá h?p d?n và ti?t ki?m chi phí xem phim
             </p>
           </div>
         </Container>
@@ -85,8 +85,8 @@ export default function OffersPage() {
         <Row className="mb-5">
           <Col xs={12}>
             <div className="section-header text-center mb-4">
-              <h2 className="section-title">🔥 Ưu đãi nổi bật</h2>
-              <p className="text-muted">Những voucher được yêu thích nhất</p>
+              <h2 className="section-title">?? Uu dãi n?i b?t</h2>
+              <p className="text-muted">Nh?ng voucher du?c yêu thích nh?t</p>
             </div>
           </Col>
         </Row>
@@ -94,13 +94,13 @@ export default function OffersPage() {
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-warning" style={{ width: '3rem', height: '3rem' }}></div>
-            <p className="mt-3 text-muted">Đang tải ưu đãi...</p>
+            <p className="mt-3 text-muted">Ðang t?i uu dãi...</p>
           </div>
         ) : vouchers.length === 0 ? (
           <div className="text-center py-5">
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>😔</div>
-            <h4>Hiện tại chưa có ưu đãi nào</h4>
-            <p className="text-muted">Vui lòng quay lại sau để xem các ưu đãi mới nhất!</p>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>??</div>
+            <h4>Hi?n t?i chua có uu dãi nào</h4>
+            <p className="text-muted">Vui lòng quay l?i sau d? xem các uu dãi m?i nh?t!</p>
           </div>
         ) : (
           <>
@@ -125,7 +125,7 @@ export default function OffersPage() {
                           ></div>
                         </div>
                         <small className="usage-text">
-                          Còn {voucher.usageLimit - (voucher.usedCount || 0)} lượt
+                          Còn {voucher.usageLimit - (voucher.usedCount || 0)} lu?t
                         </small>
                       </div>
                     </div>
@@ -137,7 +137,7 @@ export default function OffersPage() {
                       
                       {voucher.restricted && (
                         <Alert variant="warning" className="restriction-alert mb-3">
-                          <small>⚠️ {voucher.restrictionReason}</small>
+                          <small>?? {voucher.restrictionReason}</small>
                         </Alert>
                       )}
                       
@@ -145,7 +145,7 @@ export default function OffersPage() {
                       {voucher.restrictionText && (
                         <div className="offer-restrictions mb-3">
                           <small className="text-info">
-                            📋 {voucher.restrictionText}
+                            ?? {voucher.restrictionText}
                           </small>
                         </div>
                       )}
@@ -153,24 +153,24 @@ export default function OffersPage() {
                       <div className="offer-conditions mb-3">
                         {voucher.minSeats > 0 && (
                           <Badge bg="info" className="condition-badge">
-                            🪑 Tối thiểu {voucher.minSeats} ghế
+                            ?? T?i thi?u {voucher.minSeats} gh?
                           </Badge>
                         )}
                         {voucher.minOrderValue > 0 && (
                           <Badge bg="warning" className="condition-badge">
-                            💵 Tối thiểu {voucher.minOrderValue.toLocaleString()}đ
+                            ?? T?i thi?u {voucher.minOrderValue.toLocaleString()}d
                           </Badge>
                         )}
                         {voucher.maxDiscount && (
                           <Badge bg="success" className="condition-badge">
-                            🎯 Tối đa {voucher.maxDiscount.toLocaleString()}đ
+                            ?? T?i da {voucher.maxDiscount.toLocaleString()}d
                           </Badge>
                         )}
                       </div>
                       
                       <div className="offer-validity mb-3">
                         <small className="text-muted">
-                          📅 Có hiệu lực đến: {new Date(voucher.validTo).toLocaleDateString('vi-VN')}
+                          ?? Có hi?u l?c d?n: {new Date(voucher.validTo).toLocaleDateString('vi-VN')}
                         </small>
                       </div>
                       
@@ -184,11 +184,11 @@ export default function OffersPage() {
                             className="copy-btn"
                             disabled={voucher.restricted}
                           >
-                            {copiedCode === voucher.code ? '✅' : '📋'}
+                            {copiedCode === voucher.code ? '?' : '??'}
                           </Button>
                         </div>
                         {copiedCode === voucher.code && (
-                          <small className="text-success">Đã sao chép!</small>
+                          <small className="text-success">Ðã sao chép!</small>
                         )}
                       </div>
                       
@@ -199,7 +199,7 @@ export default function OffersPage() {
                             onClick={() => handleViewDetails(voucher)}
                             className={voucher.restricted ? "" : "btn-primary-custom"}
                           >
-                            📖 Xem chi tiết
+                            ?? Xem chi ti?t
                           </Button>
                         </div>
                       </div>
@@ -214,29 +214,29 @@ export default function OffersPage() {
               <Col xs={12}>
                 <Card className="how-to-use-card">
                   <Card.Header className="text-center">
-                    <h4 className="mb-0">📝 Cách sử dụng voucher</h4>
+                    <h4 className="mb-0">?? Cách s? d?ng voucher</h4>
                   </Card.Header>
                   <Card.Body>
                     <Row className="g-4">
                       <Col md={3} className="text-center">
-                        <div className="step-icon">1️⃣</div>
-                        <h6>Chọn phim</h6>
-                        <p className="small text-muted">Chọn phim và suất chiếu yêu thích</p>
+                        <div className="step-icon">1??</div>
+                        <h6>Ch?n phim</h6>
+                        <p className="small text-muted">Ch?n phim và su?t chi?u yêu thích</p>
                       </Col>
                       <Col md={3} className="text-center">
-                        <div className="step-icon">2️⃣</div>
-                        <h6>Chọn ghế</h6>
-                        <p className="small text-muted">Chọn ghế ngồi phù hợp</p>
+                        <div className="step-icon">2??</div>
+                        <h6>Ch?n gh?</h6>
+                        <p className="small text-muted">Ch?n gh? ng?i phù h?p</p>
                       </Col>
                       <Col md={3} className="text-center">
-                        <div className="step-icon">3️⃣</div>
-                        <h6>Áp dụng voucher</h6>
-                        <p className="small text-muted">Nhập mã voucher tại trang thanh toán</p>
+                        <div className="step-icon">3??</div>
+                        <h6>Áp d?ng voucher</h6>
+                        <p className="small text-muted">Nh?p mã voucher t?i trang thanh toán</p>
                       </Col>
                       <Col md={3} className="text-center">
-                        <div className="step-icon">4️⃣</div>
+                        <div className="step-icon">4??</div>
                         <h6>Thanh toán</h6>
-                        <p className="small text-muted">Hoàn tất thanh toán và nhận vé</p>
+                        <p className="small text-muted">Hoàn t?t thanh toán và nh?n vé</p>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -251,7 +251,7 @@ export default function OffersPage() {
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered className="offers-modal">
         <Modal.Header closeButton>
           <Modal.Title>
-            {getVoucherIcon(selectedVoucher?.type)} Chi tiết ưu đãi
+            {getVoucherIcon(selectedVoucher?.type)} Chi ti?t uu dãi
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -270,7 +270,7 @@ export default function OffersPage() {
                 <Row className="g-3">
                   <Col sm={6}>
                     <div className="info-item">
-                      <strong>📋 Mã voucher:</strong>
+                      <strong>?? Mã voucher:</strong>
                       <div className="code-display mt-1">
                         <span className="code-text">{selectedVoucher.code}</span>
                         <Button 
@@ -278,56 +278,56 @@ export default function OffersPage() {
                           variant="outline-primary"
                           onClick={() => handleCopyCode(selectedVoucher.code)}
                         >
-                          {copiedCode === selectedVoucher.code ? '✅' : '📋'}
+                          {copiedCode === selectedVoucher.code ? '?' : '??'}
                         </Button>
                       </div>
                     </div>
                   </Col>
                   <Col sm={6}>
                     <div className="info-item">
-                      <strong>💰 Giá trị giảm:</strong>
-                      <p>{selectedVoucher.type === 'percentage' ? `${selectedVoucher.value}%` : `${selectedVoucher.value.toLocaleString()}đ`}</p>
+                      <strong>?? Giá tr? gi?m:</strong>
+                      <p>{selectedVoucher.type === 'percentage' ? `${selectedVoucher.value}%` : `${selectedVoucher.value.toLocaleString()}d`}</p>
                     </div>
                   </Col>
                   {selectedVoucher.minOrderValue > 0 && (
                     <Col sm={6}>
                       <div className="info-item">
-                        <strong>💵 Đơn hàng tối thiểu:</strong>
-                        <p>{selectedVoucher.minOrderValue.toLocaleString()}đ</p>
+                        <strong>?? Ðon hàng t?i thi?u:</strong>
+                        <p>{selectedVoucher.minOrderValue.toLocaleString()}d</p>
                       </div>
                     </Col>
                   )}
                   {selectedVoucher.minSeats > 0 && (
                     <Col sm={6}>
                       <div className="info-item">
-                        <strong>🪑 Số ghế tối thiểu:</strong>
-                        <p>{selectedVoucher.minSeats} ghế</p>
+                        <strong>?? S? gh? t?i thi?u:</strong>
+                        <p>{selectedVoucher.minSeats} gh?</p>
                       </div>
                     </Col>
                   )}
                   {selectedVoucher.maxDiscount && (
                     <Col sm={6}>
                       <div className="info-item">
-                        <strong>🎯 Giảm tối đa:</strong>
-                        <p>{selectedVoucher.maxDiscount.toLocaleString()}đ</p>
+                        <strong>?? Gi?m t?i da:</strong>
+                        <p>{selectedVoucher.maxDiscount.toLocaleString()}d</p>
                       </div>
                     </Col>
                   )}
                   <Col sm={6}>
                     <div className="info-item">
-                      <strong>📊 Lượt sử dụng:</strong>
+                      <strong>?? Lu?t s? d?ng:</strong>
                       <p>{selectedVoucher.usedCount || 0}/{selectedVoucher.usageLimit}</p>
                     </div>
                   </Col>
                   <Col sm={6}>
                     <div className="info-item">
-                      <strong>📅 Hiệu lực từ:</strong>
+                      <strong>?? Hi?u l?c t?:</strong>
                       <p>{new Date(selectedVoucher.validFrom).toLocaleDateString('vi-VN')}</p>
                     </div>
                   </Col>
                   <Col sm={6}>
                     <div className="info-item">
-                      <strong>📅 Hiệu lực đến:</strong>
+                      <strong>?? Hi?u l?c d?n:</strong>
                       <p>{new Date(selectedVoucher.validTo).toLocaleDateString('vi-VN')}</p>
                     </div>
                   </Col>
@@ -338,7 +338,7 @@ export default function OffersPage() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Đóng
+            Ðóng
           </Button>
           <Button 
             variant="primary" 
@@ -348,7 +348,7 @@ export default function OffersPage() {
             }}
             className="btn-primary-custom"
           >
-            📋 Sao chép mã
+            ?? Sao chép mã
           </Button>
         </Modal.Footer>
       </Modal>
