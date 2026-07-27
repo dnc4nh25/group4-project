@@ -216,7 +216,7 @@ public class PaymentController {
             // Xử lý voucher (nếu có)
             Voucher voucher = null;
             long discount = 0L;
-            long subtotal = request.getSubtotal() != null ? request.getSubtotal() : 0L;
+            long subtotal = calculateSubtotal(selectedSeats, showtime.getPrice());
 
             if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
                 voucher = voucherRepository.findByCode(request.getVoucherCode().trim())
@@ -318,6 +318,30 @@ public class PaymentController {
             discount = voucher.getValue();
         }
         return Math.min((long) discount, subtotal);
+    }
+
+    private long calculateSubtotal(List<String> seats, long basePrice) {
+        long total = 0;
+        for (String seat : seats) {
+            if (seat == null || seat.length() < 2) {
+                total += basePrice;
+                continue;
+            }
+            char row = Character.toUpperCase(seat.charAt(0));
+            int num = 0;
+            try {
+                num = Integer.parseInt(seat.substring(1));
+            } catch (NumberFormatException e) {}
+
+            if ((row == 'E' || row == 'F' || row == 'G' || row == 'H') && num >= 3 && num <= 8) {
+                total += (basePrice + 20000);
+            } else if (row == 'J') {
+                total += (basePrice * 2 + 20000);
+            } else {
+                total += basePrice;
+            }
+        }
+        return total;
     }
 
     private List<String> parseSeats(String seatsJson) {

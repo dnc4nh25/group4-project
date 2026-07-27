@@ -637,8 +637,11 @@ export default function AdminShowtimesPage() {
             </div>
             <div className="row g-3 mb-3">
               <div className="col-md-12">
-                <Form.Label>Giá vé (đ)</Form.Label>
-                <Form.Control name="price" type="number" value={form.price} onChange={handleChange} />
+                <Form.Label>Giá vé cơ bản (đ) <span className="text-danger">*</span></Form.Label>
+                <Form.Control name="price" type="number" value={form.price} onChange={handleChange} required />
+                <Form.Text className="text-muted fst-italic">
+                  Hệ thống sẽ tự động phụ thu khi khách đặt: VIP (+20.000đ), Ghế đôi (x2 + 20.000đ).
+                </Form.Text>
               </div>
             </div>
           </Modal.Body>
