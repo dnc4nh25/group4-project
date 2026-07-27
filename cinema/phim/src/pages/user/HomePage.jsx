@@ -1,13 +1,13 @@
 ﻿import { Link } from 'react-router-dom'
 import { Container, Button, Row, Col, Badge } from 'react-bootstrap'
 import { useState, useEffect } from 'react'
-import MovieCard from '../components/MovieCard'
-import { useAuth } from '../contexts/AuthContext'
-import { MovieGridSkeleton } from '../components/LoadingSkeleton'
-import { VoucherValidator } from '../utils/voucherValidation'
-import { movieApi, voucherApi } from '../services/api'
-import '../components/HeroBannerV2.css'
-import '../components/VoucherCard.css'
+import MovieCard from '../../components/MovieCard'
+import { useAuth } from '../../contexts/AuthContext'
+import { MovieGridSkeleton } from '../../components/LoadingSkeleton'
+import { VoucherValidator } from '../../utils/voucherValidation'
+import { movieApi, voucherApi } from '../../services/api'
+import '../../components/HeroBannerV2.css'
+import '../../components/VoucherCard.css'
 
 export default function HomePage() {
   const { currentUser } = useAuth()
@@ -15,7 +15,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   const [currentSlide, setCurrentSlide] = useState(0)
-  
+
   const [vouchers, setVouchers] = useState([])
   const [vouchersLoading, setVouchersLoading] = useState(true)
 
@@ -31,12 +31,12 @@ export default function HomePage() {
         setLoading(false)
       }
     }
-    
+
     loadMovies()
   }, [])
 
-  const hotMovies = movies 
-    ? [...movies].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)).slice(0, 5) 
+  const hotMovies = movies
+    ? [...movies].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)).slice(0, 5)
     : []
 
   useEffect(() => {
@@ -60,19 +60,19 @@ export default function HomePage() {
         setVouchersLoading(false)
       }
     }
-    
+
     loadVouchers()
   }, [])
 
-  const featuredMovies = movies 
-    ? [...movies].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)).slice(0, 4) 
+  const featuredMovies = movies
+    ? [...movies].sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)).slice(0, 4)
     : []
 
   const currentMovie = hotMovies[currentSlide]
 
   return (
     <div className="home-page">
-      
+
       <section
         className="cinemaXP-cinematic-banner"
         style={{
@@ -157,7 +157,7 @@ export default function HomePage() {
         </Container>
       </section>
 
-      
+
       <section className="featured-section py-5">
         <Container>
           <div className="section-header d-flex justify-content-between align-items-center mb-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
@@ -190,7 +190,7 @@ export default function HomePage() {
         </Container>
       </section>
 
-      
+
       <section className="hot-deals-section py-5">
         <Container>
           <div className="text-center mb-4">
@@ -206,10 +206,10 @@ export default function HomePage() {
             <Row xs={1} sm={2} lg={4} className="g-3">
               {vouchers.map((voucher, index) => {
                 const remainingUses = voucher.usageLimit - (voucher.usedCount || 0)
-                const discountText = voucher.type === 'percentage' 
-                  ? `${voucher.value}%` 
+                const discountText = voucher.type === 'percentage'
+                  ? `${voucher.value}%`
                   : `${voucher.value / 1000}K`
-                
+
                 return (
                   <Col key={voucher.id}>
                     <div className="voucher-card animate-float" style={{ animationDelay: `${0.1 + index * 0.1}s` }}>
@@ -227,9 +227,9 @@ export default function HomePage() {
                           </Badge>
                         </div>
                       </div>
-                      <Button 
-                        size="sm" 
-                        className="voucher-btn" 
+                      <Button
+                        size="sm"
+                        className="voucher-btn"
                         onClick={() => navigator.clipboard.writeText(voucher.code)}
                       >
                         📋 Sao chép mã
@@ -240,7 +240,7 @@ export default function HomePage() {
               })}
             </Row>
           )}
-          
+
           {!vouchersLoading && vouchers.length === 0 && (
             <div className="text-center py-4">
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>😔</div>
@@ -248,7 +248,7 @@ export default function HomePage() {
               <p className="text-muted">Vui lòng quay lại sau để xem các ưu đãi mới nhất!</p>
             </div>
           )}
-          
+
           <div className="text-center mt-4">
             <Button
               as={Link}
@@ -262,7 +262,7 @@ export default function HomePage() {
         </Container>
       </section>
 
-      
+
       <section className="cta-section py-5" style={{
         background: 'linear-gradient(135deg, #1a0533 0%, #0a1628 100%)',
         borderTop: '1px solid rgba(255,255,255,0.05)'

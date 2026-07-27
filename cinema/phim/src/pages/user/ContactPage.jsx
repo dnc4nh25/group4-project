@@ -2,7 +2,7 @@
 import { Container, Row, Col, Card, Form, Button, Alert, Badge, Spinner } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import './StaticPages.css'
 
 export default function ContactPage() {
@@ -125,7 +125,7 @@ export default function ContactPage() {
 
   return (
     <div className="page-wrapper static-page contact-page">
-      
+
       <div className="static-page-header">
         <Container>
           <div className="text-center">
@@ -140,7 +140,7 @@ export default function ContactPage() {
 
       <Container className="py-5">
         <Row className="g-5">
-          
+
           <Col lg={8}>
             <Card className="contact-form-card">
               <Card.Header className="contact-form-header">
@@ -251,7 +251,7 @@ export default function ContactPage() {
             </Card>
           </Col>
 
-          
+
           <Col lg={4}>
             <Card className="contact-info-card mb-4">
               <Card.Header className="contact-info-header">
@@ -297,7 +297,7 @@ export default function ContactPage() {
               </Card.Body>
             </Card>
 
-            
+
             <Card className="business-hours-card">
               <Card.Header className="contact-info-header">
                 <h5 className="mb-0">🕒 Giờ làm việc</h5>
@@ -322,7 +322,7 @@ export default function ContactPage() {
           </Col>
         </Row>
 
-        
+
         {currentUser && (
           <Row className="mt-5">
             <Col xs={12}>
@@ -413,7 +413,7 @@ export default function ContactPage() {
           </Row>
         )}
 
-        
+
         <Row className="mt-5">
           <Col xs={12}>
             <h3 className="text-center mb-4">🏢 Hệ thống rạp CinemaXP</h3>

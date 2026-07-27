@@ -5,16 +5,17 @@ import com.example.backend.entity.User;
 import com.example.backend.enums.UserRole;
 import com.example.backend.enums.UserStatus;
 import com.example.backend.repository.UserRepository;
-import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,31 +29,56 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ─── GET ALL (có filter + phân trang) ────────────────────────────────────
+    // ─── GET ALL (có filter + pagination) ────────────────────────────────────
+    /**
+     * GET /api/users?search=...&role=admin&status=active&page=0&size=10
+     * Trả về Page<UserDto> để frontend có thể dùng .content, .totalPages, .totalElements
+     */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllUsers(
-            @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "") String role,
-            @RequestParam(defaultValue = "") String status,
+    public ResponseEntity<Page<UserDto>> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Specification<User> spec = buildSpec(search, role, status);
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<User> userPage = userRepository.findAll(spec, pageable);
+            @RequestParam(defaultValue = "10") int size) {
 
-        List<UserDto> dtos = userPage.getContent().stream()
+        // Lấy tất cả user rồi filter in-memory (đơn giản, không cần JpaSpecificationExecutor)
+        List<User> all = userRepository.findAll();
+
+        List<UserDto> filtered = all.stream()
+                .filter(u -> {
+                    // Filter theo search (username hoặc fullName)
+                    if (search != null && !search.isBlank()) {
+                        String q = search.trim().toLowerCase();
+                        boolean matchUsername = u.getUsername() != null && u.getUsername().toLowerCase().contains(q);
+                        boolean matchFullName = u.getFullName() != null && u.getFullName().toLowerCase().contains(q);
+                        if (!matchUsername && !matchFullName) return false;
+                    }
+                    // Filter theo role
+                    if (role != null && !role.isBlank()) {
+                        UserRole roleEnum = parseRole(role);
+                        if (u.getRole() != roleEnum) return false;
+                    }
+                    // Filter theo status
+                    if (status != null && !status.isBlank()) {
+                        UserStatus statusEnum = parseStatus(status);
+                        if (u.getStatus() != statusEnum) return false;
+                    }
+                    return true;
+                })
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("content", dtos);
-        response.put("totalElements", userPage.getTotalElements());
-        response.put("totalPages", userPage.getTotalPages());
-        response.put("currentPage", userPage.getNumber());
-        response.put("size", userPage.getSize());
+        // Phân trang thủ công
+        int total = filtered.size();
+        int fromIndex = Math.min(page * size, total);
+        int toIndex   = Math.min(fromIndex + size, total);
+        List<UserDto> pageContent = filtered.subList(fromIndex, toIndex);
 
-        return ResponseEntity.ok(response);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDto> result = new PageImpl<>(pageContent, pageable, total);
+
+        return ResponseEntity.ok(result);
     }
 
     // ─── GET BY ID ───────────────────────────────────────────────────────────
@@ -90,6 +116,7 @@ public class UserController {
     // ─── CREATE ──────────────────────────────────────────────────────────────
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
+        // Kiểm tra username đã tồn tại chưa
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().build();
         }
@@ -99,10 +126,12 @@ public class UserController {
                 .fullName(userDto.getFullName())
                 .email(userDto.getEmail())
                 .phone(userDto.getPhone())
-                .role(UserRole.ADMIN) // Force ADMIN khi tạo qua trang quản lý
+                // Force ADMIN khi tạo qua trang quản lý admin
+                .role(UserRole.ADMIN)
                 .status(parseStatus(userDto.getStatus()))
                 .build();
 
+        // Mã hóa mật khẩu
         if (userDto.getPassword() != null && !userDto.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
@@ -116,24 +145,61 @@ public class UserController {
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
         return userRepository.findById(id)
                 .map(existing -> {
-                    if (userDto.getFullName() != null) existing.setFullName(userDto.getFullName());
-                    if (userDto.getEmail()    != null) existing.setEmail(userDto.getEmail());
-                    if (userDto.getPhone()    != null) existing.setPhone(userDto.getPhone());
-                    if (userDto.getRole()     != null) existing.setRole(parseRole(userDto.getRole()));
-                    if (userDto.getStatus()   != null) existing.setStatus(parseStatus(userDto.getStatus()));
+                    if (userDto.getFullName() != null)  existing.setFullName(userDto.getFullName());
+                    if (userDto.getEmail()    != null)  existing.setEmail(userDto.getEmail());
+                    if (userDto.getPhone()    != null)  existing.setPhone(userDto.getPhone());
+                    if (userDto.getRole()     != null)  existing.setRole(parseRole(userDto.getRole()));
+                    if (userDto.getStatus()   != null)  existing.setStatus(parseStatus(userDto.getStatus()));
 
-                    // Chỉ encode nếu là plain text mới; giữ nguyên nếu là bcrypt hash cũ
+                    // Cập nhật mật khẩu nếu client gửi lên password mới (plain text)
+                    // Nếu gửi lên bcrypt hash cũ (bắt đầu $2a$ hoặc $2b$) thì giữ nguyên
                     if (userDto.getPassword() != null && !userDto.getPassword().isBlank()) {
                         String pwd = userDto.getPassword();
                         if (pwd.startsWith("$2a$") || pwd.startsWith("$2b$")) {
-                            existing.setPassword(pwd);
+                            existing.setPassword(pwd); // Giữ nguyên hash cũ
                         } else {
-                            existing.setPassword(passwordEncoder.encode(pwd));
+                            existing.setPassword(passwordEncoder.encode(pwd)); // Encode password mới
                         }
                     }
 
                     User updated = userRepository.save(existing);
                     return ResponseEntity.ok(convertToDto(updated));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ─── CHANGE PASSWORD ─────────────────────────────────────────────────────
+    /**
+     * POST /api/users/{id}/change-password
+     * Body: { "currentPassword": "...", "newPassword": "..." }
+     * Verify currentPassword bằng BCrypt rồi lưu hash mới.
+     */
+    @PostMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+
+        String currentPassword = body.get("currentPassword");
+        String newPassword     = body.get("newPassword");
+
+        if (currentPassword == null || currentPassword.isBlank() ||
+            newPassword     == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body("Vui lòng nhập đầy đủ mật khẩu.");
+        }
+
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body("Mật khẩu mới phải có ít nhất 6 ký tự.");
+        }
+
+        return userRepository.findById(id)
+                .map(user -> {
+                    // Verify mật khẩu hiện tại bằng BCrypt
+                    if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                        return ResponseEntity.status(401).body("Mật khẩu hiện tại không đúng.");
+                    }
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    userRepository.save(user);
+                    return ResponseEntity.ok().body("Đổi mật khẩu thành công.");
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -150,59 +216,46 @@ public class UserController {
 
     // ─── HELPERS ─────────────────────────────────────────────────────────────
 
-    /** Xây dựng Specification động theo search / role / status */
-    private Specification<User> buildSpec(String search, String role, String status) {
-        return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (search != null && !search.isBlank()) {
-                String like = "%" + search.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("username")), like),
-                        cb.like(cb.lower(root.get("fullName")), like)
-                ));
-            }
-
-            if (role != null && !role.isBlank()) {
-                try {
-                    predicates.add(cb.equal(root.get("role"), UserRole.valueOf(role.toUpperCase())));
-                } catch (IllegalArgumentException ignored) {}
-            }
-
-            if (status != null && !status.isBlank()) {
-                try {
-                    predicates.add(cb.equal(root.get("status"), UserStatus.valueOf(status.toUpperCase())));
-                } catch (IllegalArgumentException ignored) {}
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    /** Chuyển User entity → UserDto (role/status trả về lowercase để khớp React) */
+    /**
+     * Chuyển User entity → UserDto (trả về frontend).
+     * role/status trả về lowercase để khớp với React ("admin", "active", ...).
+     * password trả về bcrypt hash để admin có thể xem.
+     */
     private UserDto convertToDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .password(user.getPassword())
+                .password(user.getPassword())              // bcrypt hash
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
-                .role(user.getRole() != null ? user.getRole().name().toLowerCase() : "user")
-                .status(user.getStatus() != null ? user.getStatus().name().toLowerCase() : "active")
+                .role(user.getRole() != null
+                        ? user.getRole().name().toLowerCase()   // "ADMIN" → "admin"
+                        : "user")
+                .status(user.getStatus() != null
+                        ? user.getStatus().name().toLowerCase() // "ACTIVE" → "active"
+                        : "active")
                 .createdAt(user.getCreatedAt())
                 .build();
     }
 
+    /** Parse role string → UserRole enum (case-insensitive) */
     private UserRole parseRole(String roleStr) {
         if (roleStr == null) return UserRole.USER;
-        try { return UserRole.valueOf(roleStr.toUpperCase()); }
-        catch (IllegalArgumentException e) { return UserRole.USER; }
+        try {
+            return UserRole.valueOf(roleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return UserRole.USER;
+        }
     }
 
+    /** Parse status string → UserStatus enum (case-insensitive) */
     private UserStatus parseStatus(String statusStr) {
         if (statusStr == null) return UserStatus.ACTIVE;
-        try { return UserStatus.valueOf(statusStr.toUpperCase()); }
-        catch (IllegalArgumentException e) { return UserStatus.ACTIVE; }
+        try {
+            return UserStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return UserStatus.ACTIVE;
+        }
     }
 }

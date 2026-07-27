@@ -4,7 +4,7 @@ import './StaticPages.css'
 export default function PrivacyPage() {
   return (
     <div className="page-wrapper static-page privacy-page">
-      
+
       <div className="static-page-header">
         <Container>
           <div className="text-center">
@@ -27,15 +27,15 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>1. Giới thiệu</h3>
                     <p>
-                      CinemaXP cam kết bảo vệ quyền riêng tư và thông tin cá nhân của bạn. Chính sách này 
-                      giải thích cách chúng tôi thu thập, sử dụng, lưu trữ và bảo vệ thông tin của bạn 
+                      CinemaXP cam kết bảo vệ quyền riêng tư và thông tin cá nhân của bạn. Chính sách này
+                      giải thích cách chúng tôi thu thập, sử dụng, lưu trữ và bảo vệ thông tin của bạn
                       khi sử dụng dịch vụ của chúng tôi.
                     </p>
                   </section>
 
                   <section className="privacy-section">
                     <h3>2. Thông tin chúng tôi thu thập</h3>
-                    
+
                     <h4>2.1 Thông tin bạn cung cấp</h4>
                     <ul>
                       <li><strong>Thông tin tài khoản:</strong> Họ tên, email, số điện thoại, mật khẩu</li>
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>3. Cách chúng tôi sử dụng thông tin</h3>
                     <p>Chúng tôi sử dụng thông tin của bạn để:</p>
-                    
+
                     <h4>3.1 Cung cấp dịch vụ</h4>
                     <ul>
                       <li>Tạo và quản lý tài khoản</li>
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>4. Chia sẻ thông tin</h3>
                     <p>Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ trong các trường hợp:</p>
-                    
+
                     <h4>4.1 Với sự đồng ý của bạn</h4>
                     <p>Khi bạn cho phép chia sẻ thông tin cho mục đích cụ thể.</p>
 
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>5. Bảo mật thông tin</h3>
                     <p>Chúng tôi áp dụng các biện pháp bảo mật kỹ thuật và tổ chức:</p>
-                    
+
                     <h4>5.1 Bảo mật kỹ thuật</h4>
                     <ul>
                       <li>Mã hóa SSL/TLS cho tất cả dữ liệu truyền tải</li>
@@ -138,7 +138,7 @@ export default function PrivacyPage() {
 
                   <section className="privacy-section">
                     <h3>6. Lưu trữ và xóa dữ liệu</h3>
-                    
+
                     <h4>6.1 Thời gian lưu trữ</h4>
                     <ul>
                       <li><strong>Thông tin tài khoản:</strong> Cho đến khi bạn xóa tài khoản</li>
@@ -149,7 +149,7 @@ export default function PrivacyPage() {
 
                     <h4>6.2 Xóa dữ liệu</h4>
                     <p>
-                      Bạn có thể yêu cầu xóa dữ liệu cá nhân. Chúng tôi sẽ xóa trong vòng 30 ngày, 
+                      Bạn có thể yêu cầu xóa dữ liệu cá nhân. Chúng tôi sẽ xóa trong vòng 30 ngày,
                       trừ khi cần giữ lại theo quy định pháp luật.
                     </p>
                   </section>
@@ -157,7 +157,7 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>7. Quyền của bạn</h3>
                     <p>Bạn có các quyền sau đối với thông tin cá nhân:</p>
-                    
+
                     <ul>
                       <li><strong>Quyền truy cập:</strong> Yêu cầu xem thông tin chúng tôi có về bạn</li>
                       <li><strong>Quyền chỉnh sửa:</strong> Cập nhật thông tin không chính xác</li>
@@ -172,7 +172,7 @@ export default function PrivacyPage() {
 
                   <section className="privacy-section">
                     <h3>8. Cookies và công nghệ theo dõi</h3>
-                    
+
                     <h4>8.1 Loại cookies chúng tôi sử dụng</h4>
                     <ul>
                       <li><strong>Cookies cần thiết:</strong> Để website hoạt động bình thường</li>
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
 
                     <h4>8.2 Quản lý cookies</h4>
                     <p>
-                      Bạn có thể quản lý cookies qua cài đặt trình duyệt. Tuy nhiên, việc tắt cookies 
+                      Bạn có thể quản lý cookies qua cài đặt trình duyệt. Tuy nhiên, việc tắt cookies
                       có thể ảnh hưởng đến trải nghiệm sử dụng website.
                     </p>
                   </section>
@@ -191,8 +191,8 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>9. Trẻ em</h3>
                     <p>
-                      Dịch vụ của chúng tôi không dành cho trẻ em dưới 13 tuổi. Chúng tôi không cố ý 
-                      thu thập thông tin từ trẻ em dưới 13 tuổi. Nếu phát hiện, chúng tôi sẽ xóa 
+                      Dịch vụ của chúng tôi không dành cho trẻ em dưới 13 tuổi. Chúng tôi không cố ý
+                      thu thập thông tin từ trẻ em dưới 13 tuổi. Nếu phát hiện, chúng tôi sẽ xóa
                       thông tin đó ngay lập tức.
                     </p>
                   </section>
@@ -200,7 +200,7 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>10. Chuyển giao dữ liệu quốc tế</h3>
                     <p>
-                      Dữ liệu của bạn có thể được xử lý tại các quốc gia khác có luật bảo mật khác biệt. 
+                      Dữ liệu của bạn có thể được xử lý tại các quốc gia khác có luật bảo mật khác biệt.
                       Chúng tôi đảm bảo áp dụng các biện pháp bảo vệ phù hợp.
                     </p>
                   </section>
@@ -208,7 +208,7 @@ export default function PrivacyPage() {
                   <section className="privacy-section">
                     <h3>11. Thay đổi chính sách</h3>
                     <p>
-                      Chúng tôi có thể cập nhật chính sách này. Thay đổi quan trọng sẽ được thông báo 
+                      Chúng tôi có thể cập nhật chính sách này. Thay đổi quan trọng sẽ được thông báo
                       qua email hoặc thông báo trên website trước khi có hiệu lực.
                     </p>
                   </section>

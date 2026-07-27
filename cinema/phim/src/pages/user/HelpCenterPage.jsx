@@ -15,7 +15,7 @@ export default function HelpCenterPage() {
         },
         {
           question: "Tôi có thể hủy vé đã đặt không?",
-          answer: "Có, bạn có thể hủy vé trước giờ chiếu ít nhất 2 tiếng. Vào 'Vé của tôi' và chọn 'Hủy vé'. Tiền sẽ được hoàn lại trong 3-5 ngày làm việc."
+          answer: "Có, bạn có thể hủy vé trước giờ chiếu ít nhất 6 tiếng. Vào 'Vé của tôi' và chọn 'Hủy vé'. Nếu vé đủ điều kiện, nút 'Hủy vé' sẽ hiển thị. Tiền sẽ được hoàn lại trong 3-5 ngày làm việc."
         },
         {
           question: "Tại sao tôi không thể chọn ghế mong muốn?",
@@ -80,13 +80,13 @@ export default function HelpCenterPage() {
     ...category,
     questions: category.questions.filter(
       q => q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           q.answer.toLowerCase().includes(searchQuery.toLowerCase())
+        q.answer.toLowerCase().includes(searchQuery.toLowerCase())
     )
   })).filter(category => category.questions.length > 0)
 
   return (
     <div className="page-wrapper static-page help-page">
-      
+
       <div className="static-page-header">
         <Container>
           <div className="text-center">
@@ -100,7 +100,7 @@ export default function HelpCenterPage() {
       </div>
 
       <Container className="py-5">
-        
+
         <Row className="justify-content-center mb-5">
           <Col lg={6}>
             <Card className="search-card">
@@ -123,7 +123,7 @@ export default function HelpCenterPage() {
           </Col>
         </Row>
 
-        
+
         <Row>
           <Col lg={8} className="mx-auto">
             {filteredFAQ.length === 0 ? (
@@ -166,7 +166,7 @@ export default function HelpCenterPage() {
           </Col>
         </Row>
 
-        
+
         <Row className="justify-content-center mt-5">
           <Col lg={8}>
             <Card className="contact-support-card">

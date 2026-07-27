@@ -2,9 +2,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Container, Card, Button, Alert, Spinner, Row, Col, Badge } from 'react-bootstrap'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
-import SeatMap from '../components/SeatMap'
-
+import { useAuth } from '../../contexts/AuthContext'
+import SeatMap from '../../components/SeatMap'
 export default function BookingPage() {
   const { showtimeId } = useParams()
   const { currentUser } = useAuth()
@@ -53,12 +52,12 @@ export default function BookingPage() {
     )
   }
 
-  const parsedBookedSeats = showtime?.bookedSeatNums 
-    ? (typeof showtime.bookedSeatNums === 'string' 
-        ? JSON.parse(showtime.bookedSeatNums) 
-        : showtime.bookedSeatNums)
+  const parsedBookedSeats = showtime?.bookedSeatNums
+    ? (typeof showtime.bookedSeatNums === 'string'
+      ? JSON.parse(showtime.bookedSeatNums)
+      : showtime.bookedSeatNums)
     : []
-  
+
   const bookedCount = showtime ? parsedBookedSeats.length : 0
   const available = showtime ? showtime.totalSeats - bookedCount : 0
   const totalPrice = selectedSeats.length * (showtime?.price || 0)
@@ -170,7 +169,7 @@ export default function BookingPage() {
         {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
 
         <Row className="g-4">
-          
+
           <Col lg={8}>
             <Card className="booking-info-card">
               <Card.Body className="p-3 p-md-4">
@@ -189,11 +188,11 @@ export default function BookingPage() {
             </Card>
           </Col>
 
-          
+
           <Col lg={4}>
             <Card className="booking-form-card sticky-top" style={{ top: 90 }}>
               <Card.Body className="p-3 p-md-4">
-                
+
                 {movie && (
                   <div className="d-flex gap-3 mb-3">
                     <img
@@ -215,7 +214,7 @@ export default function BookingPage() {
                 <div className="booking-detail-row"><span>💰 Giá/ghế:</span><strong className="text-warning">{showtime?.price?.toLocaleString()}đ</strong></div>
                 <hr />
 
-                
+
                 <div className="mb-3">
                   <div className="text-muted small mb-2">Ghế đã chọn:</div>
                   {selectedSeats.length === 0 ? (
@@ -237,7 +236,7 @@ export default function BookingPage() {
                   )}
                 </div>
 
-                
+
                 <div className="total-price-box p-3 rounded mb-3">
                   <div className="d-flex justify-content-between small">
                     <span>Số ghế đã chọn:</span><span>{selectedSeats.length}</span>

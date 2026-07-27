@@ -1,17 +1,18 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
+
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ 
-    username: '', 
-    password: '', 
-    confirmPassword: '', 
-    fullName: '', 
-    email: '', 
-    phone: '' 
+  const [form, setForm] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    email: '',
+    phone: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,32 +34,32 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     if (!form.username || !form.password || !form.fullName || !form.email || !form.phone) {
       setError('Vui lòng điền đầy đủ thông tin.')
       return
     }
-    
+
     if (!validateEmail(form.email)) {
       setError('Email không hợp lệ.')
       return
     }
-    
+
     if (!validatePhone(form.phone)) {
       setError('Số điện thoại phải có 10-11 chữ số.')
       return
     }
-    
+
     if (form.password !== form.confirmPassword) {
       setError('Mật khẩu xác nhận không khớp.')
       return
     }
-    
+
     if (form.password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự.')
       return
     }
-    
+
     setLoading(true)
     try {
       const res = await axios.post('http://localhost:8080/api/auth/register', {

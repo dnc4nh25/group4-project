@@ -1,8 +1,9 @@
 ﻿import { useState, useEffect } from 'react'
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col, Badge } from 'react-bootstrap'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import './ProfilePage.css'
+
 
 export default function ProfilePage() {
   const { currentUser, login } = useAuth()
@@ -130,11 +131,11 @@ export default function ProfilePage() {
       }
 
       const response = await axios.put(`http://localhost:8080/api/users/${currentUser.id}`, updateData)
-      
+
       login(response.data)
-      
+
       setSuccess('Cập nhật thông tin thành công!')
-      
+
       if (showPasswordFields) {
         setForm({
           ...form,
@@ -158,9 +159,9 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <Container className="profile-container">
-        
+
         <div className="text-center mb-4">
-          <div 
+          <div
             className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
             style={{
               width: '80px',
@@ -177,7 +178,7 @@ export default function ProfilePage() {
           <p className="text-muted">Quản lý thông tin tài khoản của bạn</p>
         </div>
 
-        
+
         {missingInfo.length > 0 && (
           <Alert variant="warning" className="mb-4">
             <div className="d-flex align-items-center gap-2 mb-2">
@@ -193,19 +194,19 @@ export default function ProfilePage() {
           </Alert>
         )}
 
-        
+
         <Card style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Card.Body className="p-4">
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
 
             <Form onSubmit={handleSubmit}>
-              
+
               <div className="mb-4">
                 <h5 className="text-light mb-3 d-flex align-items-center gap-2">
                   📋 Thông tin cơ bản
                 </h5>
-                
+
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group>
@@ -248,12 +249,12 @@ export default function ProfilePage() {
                 </Row>
               </div>
 
-              
+
               <div className="mb-4">
                 <h5 className="text-light mb-3 d-flex align-items-center gap-2">
                   📞 Thông tin liên hệ
                 </h5>
-                
+
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group>
@@ -304,7 +305,7 @@ export default function ProfilePage() {
                 </Row>
               </div>
 
-              
+
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="text-light mb-0 d-flex align-items-center gap-2">
@@ -376,7 +377,7 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              
+
               <div className="text-center">
                 <Button
                   type="submit"
@@ -397,7 +398,7 @@ export default function ProfilePage() {
           </Card.Body>
         </Card>
 
-        
+
         <Card className="mt-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Card.Body className="p-4">
             <h5 className="text-light mb-3 d-flex align-items-center gap-2">

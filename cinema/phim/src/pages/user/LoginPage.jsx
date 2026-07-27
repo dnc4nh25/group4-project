@@ -1,8 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Container, Form, Button, Card, Alert, Spinner } from "react-bootstrap";
 import axios from "axios";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+
+
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -29,7 +31,7 @@ export default function LoginPage() {
       });
       // Thành công
       login(res.data);
-      
+
       // Phân quyền: Nếu là ADMIN thì ưu tiên vào trang admin (trừ khi họ đang có link redirect cụ thể khác '/')
       if (res.data.role === 'admin' && from === '/') {
         navigate('/admin', { replace: true });

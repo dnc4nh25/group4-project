@@ -1,9 +1,10 @@
 ﻿import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Badge, Button, Modal, Alert } from 'react-bootstrap'
 import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
-import { VoucherValidator } from '../utils/voucherValidation'
+import { useAuth } from '../../contexts/AuthContext'
+import { VoucherValidator } from '../../utils/voucherValidation'
 import './StaticPages.css'
+
 
 export default function OffersPage() {
   const { currentUser } = useAuth()
@@ -36,7 +37,7 @@ export default function OffersPage() {
         setLoading(false)
       }
     }
-    
+
     loadVouchers()
   }, [currentUser])
 
@@ -56,8 +57,8 @@ export default function OffersPage() {
   }
 
   const getDiscountText = (voucher) => {
-    return voucher.type === 'percentage' 
-      ? `${voucher.value}%` 
+    return voucher.type === 'percentage'
+      ? `${voucher.value}%`
       : `${(voucher.value / 1000)}K`
   }
 
@@ -67,7 +68,7 @@ export default function OffersPage() {
 
   return (
     <div className="page-wrapper static-page offers-page">
-      
+
       <div className="static-page-header offers-header">
         <Container>
           <div className="text-center">
@@ -81,7 +82,7 @@ export default function OffersPage() {
       </div>
 
       <Container className="py-5">
-        
+
         <Row className="mb-5">
           <Col xs={12}>
             <div className="section-header text-center mb-4">
@@ -104,7 +105,7 @@ export default function OffersPage() {
           </div>
         ) : (
           <>
-            
+
             <Row className="g-4 mb-5">
               {vouchers.map((voucher) => (
                 <Col key={voucher.id} lg={6} xl={4}>
@@ -119,8 +120,8 @@ export default function OffersPage() {
                       </div>
                       <div className="offer-usage">
                         <div className="usage-bar">
-                          <div 
-                            className="usage-fill" 
+                          <div
+                            className="usage-fill"
                             style={{ width: `${getUsageProgress(voucher)}%` }}
                           ></div>
                         </div>
@@ -129,19 +130,19 @@ export default function OffersPage() {
                         </small>
                       </div>
                     </div>
-                    
+
                     <Card.Body className="d-flex flex-column">
                       <h5 className="offer-title">{voucher.title}</h5>
                       <p className="offer-description">{voucher.description}</p>
-                      
-                      
+
+
                       {voucher.restricted && (
                         <Alert variant="warning" className="restriction-alert mb-3">
                           <small>⚠️ {voucher.restrictionReason}</small>
                         </Alert>
                       )}
-                      
-                      
+
+
                       {voucher.restrictionText && (
                         <div className="offer-restrictions mb-3">
                           <small className="text-info">
@@ -149,7 +150,7 @@ export default function OffersPage() {
                           </small>
                         </div>
                       )}
-                      
+
                       <div className="offer-conditions mb-3">
                         {voucher.minSeats > 0 && (
                           <Badge bg="info" className="condition-badge">
@@ -167,18 +168,18 @@ export default function OffersPage() {
                           </Badge>
                         )}
                       </div>
-                      
+
                       <div className="offer-validity mb-3">
                         <small className="text-muted">
                           📅 Có hiệu lực đến: {new Date(voucher.validTo).toLocaleDateString('vi-VN')}
                         </small>
                       </div>
-                      
+
                       <div className="offer-code mb-3">
                         <div className="code-display">
                           <span className="code-text">{voucher.code}</span>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={voucher.restricted ? "outline-secondary" : "outline-primary"}
                             onClick={() => handleCopyCode(voucher.code)}
                             className="copy-btn"
@@ -191,10 +192,10 @@ export default function OffersPage() {
                           <small className="text-success">Đã sao chép!</small>
                         )}
                       </div>
-                      
+
                       <div className="mt-auto">
                         <div className="d-grid gap-2">
-                          <Button 
+                          <Button
                             variant={voucher.restricted ? "outline-secondary" : "primary"}
                             onClick={() => handleViewDetails(voucher)}
                             className={voucher.restricted ? "" : "btn-primary-custom"}
@@ -209,7 +210,7 @@ export default function OffersPage() {
               ))}
             </Row>
 
-            
+
             <Row>
               <Col xs={12}>
                 <Card className="how-to-use-card">
@@ -247,7 +248,7 @@ export default function OffersPage() {
         )}
       </Container>
 
-      
+
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered className="offers-modal">
         <Modal.Header closeButton>
           <Modal.Title>
@@ -265,7 +266,7 @@ export default function OffersPage() {
                 <h4 className="mt-3">{selectedVoucher.title}</h4>
                 <p className="text-muted">{selectedVoucher.description}</p>
               </div>
-              
+
               <div className="voucher-info">
                 <Row className="g-3">
                   <Col sm={6}>
@@ -273,8 +274,8 @@ export default function OffersPage() {
                       <strong>📋 Mã voucher:</strong>
                       <div className="code-display mt-1">
                         <span className="code-text">{selectedVoucher.code}</span>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline-primary"
                           onClick={() => handleCopyCode(selectedVoucher.code)}
                         >
@@ -340,8 +341,8 @@ export default function OffersPage() {
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Đóng
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={() => {
               handleCopyCode(selectedVoucher?.code)
               setShowModal(false)

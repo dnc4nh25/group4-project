@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.ShowtimeDto;
 import com.example.backend.entity.Movie;
 import com.example.backend.entity.Showtime;
+import com.example.backend.enums.BookingStatus;
 import com.example.backend.repository.MovieRepository;
 import com.example.backend.repository.ShowtimeRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +28,9 @@ public class ShowtimeController {
 
     @Autowired
     private MovieRepository movieRepository;
+    
+    @Autowired
+    private com.example.backend.repository.BookingRepository bookingRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -80,12 +84,39 @@ public class ShowtimeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteShowtime(@PathVariable Long id) {
-        if (showtimeRepository.existsById(id)) {
-            showtimeRepository.deleteById(id);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteShowtime(@PathVariable Long id) {
+        if (!showtimeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        
+        // Chỉ kiểm tra bookings có status CONFIRMED (bỏ qua các booking đã CANCELLED)
+        boolean hasConfirmedBookings = bookingRepository.existsByShowtimeIdAndStatus(
+            id, 
+            BookingStatus.CONFIRMED
+        );
+        
+        // Debug logging
+        System.out.println("🔍 DELETE Showtime ID: " + id);
+        System.out.println("🔍 Has CONFIRMED bookings: " + hasConfirmedBookings);
+        
+        // Thêm debug chi tiết
+        java.util.List<com.example.backend.entity.Booking> allBookings = bookingRepository.findByShowtimeId(id);
+        System.out.println("🔍 Total bookings: " + allBookings.size());
+        allBookings.forEach(b -> {
+            System.out.println("  - Booking ID: " + b.getId() + ", Status: " + b.getStatus());
+        });
+        
+        if (hasConfirmedBookings) {
+            return ResponseEntity.badRequest()
+                .body(java.util.Map.of(
+                    "error", "Không thể xóa suất chiếu này vì vẫn còn vé đang được giữ (chưa hủy)",
+                    "message", "Suất chiếu đã có booking đang CONFIRMED không thể xóa"
+                ));
+        }
+        
+        System.out.println("✅ Deleting showtime " + id + " - All bookings are cancelled or no bookings exist");
+        showtimeRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     private ShowtimeDto convertToDto(Showtime showtime) {

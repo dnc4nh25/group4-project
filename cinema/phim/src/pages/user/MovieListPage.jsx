@@ -1,8 +1,8 @@
 ﻿import { useState, useMemo, useRef, useEffect } from 'react'
 import { Container, Row, Col, Form, InputGroup, Button, Spinner, Alert, Badge, Pagination } from 'react-bootstrap'
-import { useFetch } from '../hooks/useFetch'
-import MovieCard from '../components/MovieCard'
-import { MovieGridSkeleton } from '../components/LoadingSkeleton'
+import { useFetch } from '../../hooks/useFetch'
+import MovieCard from '../../components/MovieCard'
+import { MovieGridSkeleton } from '../../components/LoadingSkeleton'
 
 const GENRES = [
   { key: 'all', label: 'Tất cả', icon: '🎬' },
@@ -88,9 +88,9 @@ export default function MovieListPage() {
     <div className="page-wrapper movie-list-page">
 
       <Container className="py-4">
-        
+
         <div className="search-filter-section mb-4 animate-fade-in-up">
-          
+
           <div className={`advanced-search-bar p-1 rounded-4 mb-3 ${searchFocus ? 'search-focused' : ''}`}>
             <div className="search-wrapper d-flex align-items-center p-2">
               <div className="search-icon-wrapper me-3">
@@ -122,7 +122,7 @@ export default function MovieListPage() {
                 </button>
               )}
             </div>
-            
+
             {searchFocus && search && movies && (
               <div className="search-suggestions">
                 {(() => {
@@ -152,7 +152,7 @@ export default function MovieListPage() {
             )}
           </div>
 
-          
+
           <div className="filter-controls-card rounded-4 p-3">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div className="filter-tabs d-flex gap-2 flex-wrap">
@@ -202,7 +202,7 @@ export default function MovieListPage() {
                   </div>
                 </div>
 
-                
+
                 {(search || genre !== 'all') && (
                   <div className="active-filters d-flex gap-2 align-items-center flex-wrap ms-auto">
                     <span className="filter-info-text text-muted">Bộ lọc đang áp dụng:</span>
@@ -228,7 +228,7 @@ export default function MovieListPage() {
           </div>
         </div>
 
-        
+
         <div className="results-info mb-4 animate-fade-in-up">
           {!loading && (
             <div className="results-count-badge">
@@ -244,7 +244,7 @@ export default function MovieListPage() {
           )}
         </div>
 
-        
+
         {loading ? (
           <MovieGridSkeleton count={8} />
         ) : error ? (
@@ -274,7 +274,7 @@ export default function MovieListPage() {
               ))}
             </Row>
 
-            
+
             {totalPages > 1 && (
               <div className="d-flex justify-content-center mt-5 animate-fade-in-up">
                 <Pagination className="custom-pagination">
@@ -287,7 +287,7 @@ export default function MovieListPage() {
                     disabled={currentPage === 1}
                   />
 
-                  
+
                   {(() => {
                     const pages = []
                     const maxVisiblePages = 5
@@ -324,7 +324,7 @@ export default function MovieListPage() {
               </div>
             )}
 
-            
+
             {totalPages > 1 && (
               <div className="text-center mt-3 animate-fade-in-up">
                 <small className="text-muted">
