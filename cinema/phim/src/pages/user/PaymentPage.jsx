@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { paymentApi } from '../../services/api'
@@ -85,11 +85,11 @@ export default function PaymentPage() {
     const result = await paymentApi.validateVoucher({
       voucherCode: voucher.code,
       userId: currentUser?.id,
-      subtotal: bookingData?.subtotal,
-      seatCount: bookingData?.seatCount,
-    }).then(r => r.data).catch(() => ({
+      subtotal: Math.floor(bookingData?.subtotal || 0),
+      seatCount: Math.floor(bookingData?.seatCount || 0),
+    }).then(r => r.data).catch((err) => ({
       valid: false,
-      message: 'Lỗi kết nối, vui lòng thử lại'
+      message: err.response?.data?.message || 'Lỗi kết nối, vui lòng thử lại'
     }))
 
     if (result.valid) {
@@ -311,6 +311,14 @@ export default function PaymentPage() {
                       Bỏ chọn
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Thông báo lỗi validation */}
+              {voucherValidation && !voucherValidation.valid && (
+                <div className="pay-error-banner" style={{ marginBottom: '1rem' }}>
+                  <span>⚠️ {voucherValidation.message}</span>
+                  <button onClick={() => setVoucherValidation(null)}>✕</button>
                 </div>
               )}
 
