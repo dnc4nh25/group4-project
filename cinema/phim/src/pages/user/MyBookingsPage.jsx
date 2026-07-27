@@ -213,7 +213,7 @@ export default function MyBookingsPage() {
         ) : (
           <Row className="g-4">
             {bookings.map((booking) => (
-              <Col lg={6} key={booking.id}>
+              <Col xs={12} lg={8} xl={7} key={booking.id}>
                 <Card className={`booking-card h-100 bg-transparent border-0 ${booking.status === 'CANCELLED' ? 'booking-cancelled' : ''}`}>
                   <div className="d-flex flex-column flex-sm-row h-100 booking-card-inner">
                     {/* Poster Section */}
