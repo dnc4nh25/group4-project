@@ -7,19 +7,19 @@ export default function HelpCenterPage() {
 
   const faqData = [
     {
-      category: "Ð?t vé",
+      category: "Đặt vé",
       questions: [
         {
-          question: "Làm th? nào d? d?t vé xem phim?",
-          answer: "B?n có th? d?t vé b?ng cách: 1) Ch?n phim mu?n xem, 2) Ch?n su?t chi?u phù h?p, 3) Ch?n gh? ng?i, 4) Thanh toán và nh?n vé di?n t?."
+          question: "Làm thế nào để đặt vé xem phim?",
+          answer: "Bạn có thể đặt vé bằng cách: 1) Chọn phim muốn xem, 2) Chọn suất chiếu phù hợp, 3) Chọn ghế ngồi, 4) Thanh toán và nhận vé điện tử."
         },
         {
-          question: "Tôi có th? h?y vé dã d?t không?",
-          answer: "Có, b?n có th? h?y vé tru?c gi? chi?u ít nh?t 2 ti?ng. Vào 'Vé c?a tôi' và ch?n 'H?y vé'. Ti?n s? du?c hoàn l?i trong 3-5 ngày làm vi?c."
+          question: "Tôi có thể hủy vé đã đặt không?",
+          answer: "Có, bạn có thể hủy vé trước giờ chiếu ít nhất 6 tiếng. Vào 'Vé của tôi' và chọn 'Hủy vé'. Nếu vé đủ điều kiện, nút 'Hủy vé' sẽ hiển thị. Tiền sẽ được hoàn lại trong 3-5 ngày làm việc."
         },
         {
-          question: "T?i sao tôi không th? ch?n gh? mong mu?n?",
-          answer: "Gh? có th? dã du?c d?t b?i khách hàng khác ho?c dang du?c gi? ch? t?m th?i. Vui lòng ch?n gh? khác ho?c th? l?i sau vài phút."
+          question: "Tại sao tôi không thể chọn ghế mong muốn?",
+          answer: "Ghế có thể đã được đặt bởi khách hàng khác hoặc đang được giữ chỗ tạm thời. Vui lòng chọn ghế khác hoặc thử lại sau vài phút."
         }
       ]
     },
@@ -27,50 +27,50 @@ export default function HelpCenterPage() {
       category: "Thanh toán",
       questions: [
         {
-          question: "CinemaXP ch?p nh?n nh?ng phuong th?c thanh toán nào?",
-          answer: "Chúng tôi ch?p nh?n th? tín d?ng/ghi n? (Visa, MasterCard), ví di?n t? (MoMo, ZaloPay), và chuy?n kho?n ngân hàng."
+          question: "CinemaXP chấp nhận những phương thức thanh toán nào?",
+          answer: "Chúng tôi chấp nhận thẻ tín dụng/ghi nợ (Visa, MasterCard), ví điện tử (MoMo, ZaloPay), và chuyển khoản ngân hàng."
         },
         {
-          question: "Làm th? nào d? s? d?ng voucher gi?m giá?",
-          answer: "T?i trang thanh toán, nh?p mã voucher vào ô 'Mã gi?m giá' và nh?n 'Áp d?ng'. H? th?ng s? t? d?ng tính toán gi?m giá n?u voucher h?p l?."
+          question: "Làm thế nào để sử dụng voucher giảm giá?",
+          answer: "Tại trang thanh toán, nhập mã voucher vào ô 'Mã giảm giá' và nhấn 'Áp dụng'. Hệ thống sẽ tự động tính toán giảm giá nếu voucher hợp lệ."
         },
         {
-          question: "T?i sao giao d?ch c?a tôi b? t? ch?i?",
-          answer: "Có th? do: s? du không d?, thông tin th? không chính xác, ho?c ngân hàng t? ch?i giao d?ch. Vui lòng ki?m tra l?i ho?c th? phuong th?c thanh toán khác."
+          question: "Tại sao giao dịch của tôi bị từ chối?",
+          answer: "Có thể do: số dư không đủ, thông tin thẻ không chính xác, hoặc ngân hàng từ chối giao dịch. Vui lòng kiểm tra lại hoặc thử phương thức thanh toán khác."
         }
       ]
     },
     {
-      category: "Tài kho?n",
+      category: "Tài khoản",
       questions: [
         {
-          question: "Làm th? nào d? t?o tài kho?n?",
-          answer: "Nh?n 'Ðang ký' ? góc trên bên ph?i, di?n thông tin c?n thi?t và xác nh?n email. B?n s? nh?n du?c email kích ho?t tài kho?n."
+          question: "Làm thế nào để tạo tài khoản?",
+          answer: "Nhấn 'Đăng ký' ở góc trên bên phải, điền thông tin cần thiết và xác nhận email. Bạn sẽ nhận được email kích hoạt tài khoản."
         },
         {
-          question: "Tôi quên m?t kh?u, ph?i làm sao?",
-          answer: "T?i trang dang nh?p, nh?n 'Quên m?t kh?u', nh?p email dã dang ký. Chúng tôi s? g?i link d?t l?i m?t kh?u qua email."
+          question: "Tôi quên mật khẩu, phải làm sao?",
+          answer: "Tại trang đăng nhập, nhấn 'Quên mật khẩu', nhập email đã đăng ký. Chúng tôi sẽ gửi link đặt lại mật khẩu qua email."
         },
         {
-          question: "Làm th? nào d? c?p nh?t thông tin cá nhân?",
-          answer: "Ðang nh?p và vào 'Thông tin cá nhân', b?n có th? ch?nh s?a tên, email, s? di?n tho?i và các thông tin khác."
+          question: "Làm thế nào để cập nhật thông tin cá nhân?",
+          answer: "Đăng nhập và vào 'Thông tin cá nhân', bạn có thể chỉnh sửa tên, email, số điện thoại và các thông tin khác."
         }
       ]
     },
     {
-      category: "R?p chi?u",
+      category: "Rạp chiếu",
       questions: [
         {
-          question: "CinemaXP có nh?ng r?p nào?",
-          answer: "Hi?n t?i CinemaXP có 5 r?p t?i TP.HCM và Hà N?i v?i trang thi?t b? hi?n d?i, âm thanh Dolby Atmos và màn hình 4K."
+          question: "CinemaXP có những rạp nào?",
+          answer: "Hiện tại CinemaXP có 5 rạp tại TP.HCM và Hà Nội với trang thiết bị hiện đại, âm thanh Dolby Atmos và màn hình 4K."
         },
         {
-          question: "Tôi có th? mang d? an t? bên ngoài vào r?p không?",
-          answer: "Ð? d?m b?o v? sinh và ch?t lu?ng d?ch v?, chúng tôi không cho phép mang d? an t? bên ngoài. R?p có qu?y bán d? an nh? và nu?c u?ng."
+          question: "Tôi có thể mang đồ ăn từ bên ngoài vào rạp không?",
+          answer: "Để đảm bảo vệ sinh và chất lượng dịch vụ, chúng tôi không cho phép mang đồ ăn từ bên ngoài. Rạp có quầy bán đồ ăn nhẹ và nước uống."
         },
         {
-          question: "R?p có ch? d?u xe không?",
-          answer: "T?t c? r?p CinemaXP d?u có bãi d?u xe mi?n phí cho khách hàng. M?t s? r?p trong trung tâm thuong m?i có th? tính phí theo gi?."
+          question: "Rạp có chỗ đậu xe không?",
+          answer: "Tất cả rạp CinemaXP đều có bãi đậu xe miễn phí cho khách hàng. Một số rạp trong trung tâm thương mại có thể tính phí theo giờ."
         }
       ]
     }
@@ -80,42 +80,42 @@ export default function HelpCenterPage() {
     ...category,
     questions: category.questions.filter(
       q => q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           q.answer.toLowerCase().includes(searchQuery.toLowerCase())
+        q.answer.toLowerCase().includes(searchQuery.toLowerCase())
     )
   })).filter(category => category.questions.length > 0)
 
   return (
     <div className="page-wrapper static-page help-page">
-      
+
       <div className="static-page-header">
         <Container>
           <div className="text-center">
-            <div className="static-page-icon">??</div>
-            <h1 className="static-page-title">Trung tâm tr? giúp</h1>
+            <div className="static-page-icon">🆘</div>
+            <h1 className="static-page-title">Trung tâm trợ giúp</h1>
             <p className="static-page-subtitle">
-              Tìm câu tr? l?i cho các câu h?i thu?ng g?p và nh?n h? tr? nhanh chóng
+              Tìm câu trả lời cho các câu hỏi thường gặp và nhận hỗ trợ nhanh chóng
             </p>
           </div>
         </Container>
       </div>
 
       <Container className="py-5">
-        
+
         <Row className="justify-content-center mb-5">
           <Col lg={6}>
             <Card className="search-card">
               <Card.Body className="p-4">
-                <h5 className="text-center mb-3">?? Tìm ki?m câu h?i</h5>
+                <h5 className="text-center mb-3">🔍 Tìm kiếm câu hỏi</h5>
                 <InputGroup>
                   <Form.Control
                     type="text"
-                    placeholder="Nh?p t? khóa d? tìm ki?m..."
+                    placeholder="Nhập từ khóa để tìm kiếm..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="search-input"
                   />
                   <Button variant="outline-primary">
-                    Tìm ki?m
+                    Tìm kiếm
                   </Button>
                 </InputGroup>
               </Card.Body>
@@ -123,14 +123,14 @@ export default function HelpCenterPage() {
           </Col>
         </Row>
 
-        
+
         <Row>
           <Col lg={8} className="mx-auto">
             {filteredFAQ.length === 0 ? (
               <Card className="text-center p-5">
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>??</div>
-                <h5>Không tìm th?y k?t qu?</h5>
-                <p className="text-muted">Th? tìm ki?m v?i t? khóa khác ho?c liên h? v?i chúng tôi d? du?c h? tr?.</p>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🤔</div>
+                <h5>Không tìm thấy kết quả</h5>
+                <p className="text-muted">Thử tìm kiếm với từ khóa khác hoặc liên hệ với chúng tôi để được hỗ trợ.</p>
               </Card>
             ) : (
               filteredFAQ.map((category, categoryIndex) => (
@@ -138,10 +138,10 @@ export default function HelpCenterPage() {
                   <Card.Header className="faq-category-header">
                     <h4 className="mb-0">
                       <span className="category-icon">
-                        {category.category === 'Ð?t vé' && '??'}
-                        {category.category === 'Thanh toán' && '??'}
-                        {category.category === 'Tài kho?n' && '??'}
-                        {category.category === 'R?p chi?u' && '??'}
+                        {category.category === 'Đặt vé' && '🎫'}
+                        {category.category === 'Thanh toán' && '💳'}
+                        {category.category === 'Tài khoản' && '👤'}
+                        {category.category === 'Rạp chiếu' && '🏢'}
                       </span>
                       {category.category}
                     </h4>
@@ -166,22 +166,22 @@ export default function HelpCenterPage() {
           </Col>
         </Row>
 
-        
+
         <Row className="justify-content-center mt-5">
           <Col lg={8}>
             <Card className="contact-support-card">
               <Card.Body className="text-center p-5">
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>??</div>
-                <h4>Không tìm th?y câu tr? l?i?</h4>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
+                <h4>Không tìm thấy câu trả lời?</h4>
                 <p className="text-muted mb-4">
-                  Ð?i ngu h? tr? c?a chúng tôi luôn s?n sàng giúp d? b?n 24/7
+                  Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn 24/7
                 </p>
                 <div className="d-flex gap-3 justify-content-center flex-wrap">
                   <Button variant="primary" size="lg">
-                    ?? G?i hotline: 1900 1234
+                    📞 Gọi hotline: 1900 1234
                   </Button>
                   <Button variant="outline-primary" size="lg">
-                    ?? Email: support@cinemaxp.vn
+                    ✉️ Email: support@cinemaxp.vn
                   </Button>
                 </div>
               </Card.Body>

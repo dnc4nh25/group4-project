@@ -22,26 +22,26 @@ export default function ContactPage() {
 
   const loadFeedbacks = async () => {
     if (!currentUser) {
-      console.log('?? No current user, skipping load')
+      console.log('⚠️ No current user, skipping load')
       return
     }
     setLoadingFeedbacks(true)
     try {
-      console.log('?? Fetching all contactMessages, will filter by userId:', currentUser.id)
+      console.log('🔍 Fetching all contactMessages, will filter by userId:', currentUser.id)
       const res = await axios.get('http://localhost:8080/api/contact-messages')
-      console.log('?? Raw response (total):', res.data.length, 'items')
+      console.log('📦 Raw response (total):', res.data.length, 'items')
 
       const userMessages = res.data.filter(msg =>
         String(msg.userId) === String(currentUser.id)
       )
-      console.log('?? After filter for userId', currentUser.id, ':', userMessages.length, 'items')
+      console.log('🎯 After filter for userId', currentUser.id, ':', userMessages.length, 'items')
 
       const sortedData = userMessages.sort((a, b) =>
         new Date(b.createdAt) - new Date(a.createdAt)
       )
       setFeedbacks(sortedData)
     } catch (err) {
-      console.error('? L?i t?i l?ch s? liên h?:', err)
+      console.error('❌ Lỗi tải lịch sử liên hệ:', err)
     } finally {
       setLoadingFeedbacks(false)
     }
@@ -75,10 +75,10 @@ export default function ContactPage() {
         createdAt: new Date().toISOString()
       }
 
-      console.log('?? Sending feedback:', newMessage)
-      console.log('?? Current User ID:', currentUser?.id)
+      console.log('📤 Sending feedback:', newMessage)
+      console.log('👤 Current User ID:', currentUser?.id)
       const response = await axios.post('http://localhost:8080/api/contact-messages', newMessage)
-      console.log('? Feedback saved:', response.data)
+      console.log('✅ Feedback saved:', response.data)
 
       setShowAlert(true)
 
@@ -94,11 +94,11 @@ export default function ContactPage() {
 
       await new Promise(resolve => setTimeout(resolve, 300))
 
-      console.log('?? Reloading feedbacks for userId:', currentUser?.id)
+      console.log('🔄 Reloading feedbacks for userId:', currentUser?.id)
       await loadFeedbacks()
     } catch (err) {
-      console.error('L?i g?i tin nh?n:', err)
-      alert('Có l?i x?y ra khi g?i tin nh?n, vui lòng th? l?i sau.')
+      console.error('Lỗi gửi tin nhắn:', err)
+      alert('Có lỗi xảy ra khi gửi tin nhắn, vui lòng thử lại sau.')
     } finally {
       setIsSubmitting(false)
     }
@@ -106,33 +106,33 @@ export default function ContactPage() {
 
   const locations = [
     {
-      name: "CinemaXP Hà N?i",
-      address: "Nhà anh Minh, Th?ch Hoà, Th?ch Th?t, Hà N?i",
+      name: "CinemaXP Hà Nội",
+      address: "Nhà anh Minh, Thạch Hoà, Thạch Thất, Hà Nội",
       phone: "(024) 3851 9012",
       hours: "8:00 - 23:00 (Hàng ngày)",
       email: "hanoi@cinemaxp.vn",
-      manager: "Nguy?n Van Minh"
+      manager: "Nguyễn Văn Minh"
     },
     {
       name: "CinemaXP TP.HCM",
-      address: "123 Ðu?ng Nguy?n Hu?, Qu?n 1, TP. H? Chí Minh",
+      address: "123 Đường Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
       phone: "(028) 3822 1234",
       hours: "8:00 - 23:00 (Hàng ngày)",
       email: "hcm@cinemaxp.vn",
-      manager: "Tr?n Th? Lan"
+      manager: "Trần Thị Lan"
     }
   ]
 
   return (
     <div className="page-wrapper static-page contact-page">
-      
+
       <div className="static-page-header">
         <Container>
           <div className="text-center">
-            <div className="static-page-icon">??</div>
-            <h1 className="static-page-title">Liên h? v?i chúng tôi</h1>
+            <div className="static-page-icon">📞</div>
+            <h1 className="static-page-title">Liên hệ với chúng tôi</h1>
             <p className="static-page-subtitle">
-              Chúng tôi luôn s?n sàng l?ng nghe và h? tr? b?n
+              Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn
             </p>
           </div>
         </Container>
@@ -140,27 +140,27 @@ export default function ContactPage() {
 
       <Container className="py-5">
         <Row className="g-5">
-          
+
           <Col lg={8}>
             <Card className="contact-form-card">
               <Card.Header className="contact-form-header">
-                <h4 className="mb-0">?? G?i tin nh?n cho chúng tôi</h4>
+                <h4 className="mb-0">📝 Gửi tin nhắn cho chúng tôi</h4>
               </Card.Header>
               <Card.Body className="p-4">
                 {!currentUser ? (
                   <div className="text-center py-5">
-                    <div className="mb-4" style={{ fontSize: '48px' }}>??</div>
-                    <h5>Yêu c?u dang nh?p</h5>
-                    <p className="text-muted mb-4">B?n vui lòng dang nh?p d? có th? g?i góp ý, báo l?i ho?c liên h? v?i chúng tôi.</p>
+                    <div className="mb-4" style={{ fontSize: '48px' }}>🔐</div>
+                    <h5>Yêu cầu đăng nhập</h5>
+                    <p className="text-muted mb-4">Bạn vui lòng đăng nhập để có thể gửi góp ý, báo lỗi hoặc liên hệ với chúng tôi.</p>
                     <Button as={Link} to="/login" variant="primary" className="btn-primary-custom px-4">
-                      Ðang nh?p ngay
+                      Đăng nhập ngay
                     </Button>
                   </div>
                 ) : (
                   <>
                     {showAlert && (
                       <Alert variant="success" className="mb-4">
-                        ? C?m on b?n dã liên h?! Chúng tôi dã nh?n du?c tin nh?n và s? ph?n h?i trong vòng 24 gi?.
+                        ✅ Cảm ơn bạn đã liên hệ! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi trong vòng 24 giờ.
                       </Alert>
                     )}
 
@@ -168,13 +168,13 @@ export default function ContactPage() {
                       <Row className="g-3">
                         <Col md={6}>
                           <Form.Group>
-                            <Form.Label>H? và tên *</Form.Label>
+                            <Form.Label>Họ và tên *</Form.Label>
                             <Form.Control
                               type="text"
                               name="name"
                               value={formData.name}
                               onChange={handleChange}
-                              placeholder="Nh?p h? và tên"
+                              placeholder="Nhập họ và tên"
                               required
                             />
                           </Form.Group>
@@ -187,52 +187,52 @@ export default function ContactPage() {
                               name="email"
                               value={formData.email}
                               onChange={handleChange}
-                              placeholder="Nh?p d?a ch? email"
+                              placeholder="Nhập địa chỉ email"
                               required
                             />
                           </Form.Group>
                         </Col>
                         <Col md={6}>
                           <Form.Group>
-                            <Form.Label>S? di?n tho?i</Form.Label>
+                            <Form.Label>Số điện thoại</Form.Label>
                             <Form.Control
                               type="tel"
                               name="phone"
                               value={formData.phone}
                               onChange={handleChange}
-                              placeholder="Nh?p s? di?n tho?i"
+                              placeholder="Nhập số điện thoại"
                             />
                           </Form.Group>
                         </Col>
                         <Col md={6}>
                           <Form.Group>
-                            <Form.Label>Ch? d? *</Form.Label>
+                            <Form.Label>Chủ đề *</Form.Label>
                             <Form.Select
                               name="subject"
                               value={formData.subject}
                               onChange={handleChange}
                               required
                             >
-                              <option value="">Ch?n ch? d?</option>
-                              <option value="booking">V?n d? d?t vé</option>
-                              <option value="payment">V?n d? thanh toán</option>
-                              <option value="technical">L?i k? thu?t</option>
-                              <option value="feedback">Góp ý d?ch v?</option>
-                              <option value="partnership">H?p tác kinh doanh</option>
+                              <option value="">Chọn chủ đề</option>
+                              <option value="booking">Vấn đề đặt vé</option>
+                              <option value="payment">Vấn đề thanh toán</option>
+                              <option value="technical">Lỗi kỹ thuật</option>
+                              <option value="feedback">Góp ý dịch vụ</option>
+                              <option value="partnership">Hợp tác kinh doanh</option>
                               <option value="other">Khác</option>
                             </Form.Select>
                           </Form.Group>
                         </Col>
                         <Col xs={12}>
                           <Form.Group>
-                            <Form.Label>N?i dung tin nh?n *</Form.Label>
+                            <Form.Label>Nội dung tin nhắn *</Form.Label>
                             <Form.Control
                               as="textarea"
                               rows={5}
                               name="message"
                               value={formData.message}
                               onChange={handleChange}
-                              placeholder="Nh?p n?i dung tin nh?n c?a b?n..."
+                              placeholder="Nhập nội dung tin nhắn của bạn..."
                               required
                             />
                           </Form.Group>
@@ -241,7 +241,7 @@ export default function ContactPage() {
 
                       <div className="text-center mt-4">
                         <Button type="submit" size="lg" className="btn-primary-custom" disabled={isSubmitting}>
-                          {isSubmitting ? <Spinner size="sm" /> : '?? G?i tin nh?n'}
+                          {isSubmitting ? <Spinner size="sm" /> : '📤 Gửi tin nhắn'}
                         </Button>
                       </div>
                     </Form>
@@ -251,16 +251,16 @@ export default function ContactPage() {
             </Card>
           </Col>
 
-          
+
           <Col lg={4}>
             <Card className="contact-info-card mb-4">
               <Card.Header className="contact-info-header">
-                <h5 className="mb-0">?? Thông tin liên h?</h5>
+                <h5 className="mb-0">📍 Thông tin liên hệ</h5>
               </Card.Header>
               <Card.Body className="p-4">
                 <div className="contact-methods">
                   <div className="contact-method">
-                    <div className="method-icon">??</div>
+                    <div className="method-icon">📞</div>
                     <div className="method-info">
                       <strong>Hotline</strong>
                       <p>1900 1234 (24/7)</p>
@@ -268,7 +268,7 @@ export default function ContactPage() {
                   </div>
 
                   <div className="contact-method">
-                    <div className="method-icon">??</div>
+                    <div className="method-icon">✉️</div>
                     <div className="method-info">
                       <strong>Email</strong>
                       <p>info@cinemaxp.vn</p>
@@ -276,15 +276,15 @@ export default function ContactPage() {
                   </div>
 
                   <div className="contact-method">
-                    <div className="method-icon">??</div>
+                    <div className="method-icon">💬</div>
                     <div className="method-info">
                       <strong>Live Chat</strong>
-                      <p>H? tr? tr?c tuy?n 24/7</p>
+                      <p>Hỗ trợ trực tuyến 24/7</p>
                     </div>
                   </div>
 
                   <div className="contact-method">
-                    <div className="method-icon">??</div>
+                    <div className="method-icon">📱</div>
                     <div className="method-info">
                       <strong>Social Media</strong>
                       <div className="social-links">
@@ -297,19 +297,19 @@ export default function ContactPage() {
               </Card.Body>
             </Card>
 
-            
+
             <Card className="business-hours-card">
               <Card.Header className="contact-info-header">
-                <h5 className="mb-0">?? Gi? làm vi?c</h5>
+                <h5 className="mb-0">🕒 Giờ làm việc</h5>
               </Card.Header>
               <Card.Body className="p-4">
                 <div className="hours-list">
                   <div className="hours-item">
-                    <span>Th? 2 - Th? 6</span>
+                    <span>Thứ 2 - Thứ 6</span>
                     <span>8:00 - 22:00</span>
                   </div>
                   <div className="hours-item">
-                    <span>Th? 7 - Ch? nh?t</span>
+                    <span>Thứ 7 - Chủ nhật</span>
                     <span>8:00 - 23:00</span>
                   </div>
                   <div className="hours-item special">
@@ -322,54 +322,54 @@ export default function ContactPage() {
           </Col>
         </Row>
 
-        
+
         {currentUser && (
           <Row className="mt-5">
             <Col xs={12}>
               <div className="ch-wrapper">
                 <div className="ch-header">
-                  <div className="ch-header-icon">??</div>
+                  <div className="ch-header-icon">📋</div>
                   <div>
-                    <h5 className="ch-title">L?ch s? liên h? c?a b?n</h5>
-                    <p className="ch-subtitle">Theo dõi các tin nh?n và ph?n h?i t? CinemaXP</p>
+                    <h5 className="ch-title">Lịch sử liên hệ của bạn</h5>
+                    <p className="ch-subtitle">Theo dõi các tin nhắn và phản hồi từ CinemaXP</p>
                   </div>
                 </div>
 
                 {loadingFeedbacks ? (
                   <div className="ch-loading">
                     <Spinner animation="border" size="sm" />
-                    <span>Ðang t?i l?ch s?...</span>
+                    <span>Đang tải lịch sử...</span>
                   </div>
                 ) : feedbacks.length === 0 ? (
                   <div className="ch-empty">
-                    <div className="ch-empty-icon">??</div>
-                    <h6>Chua có tin nh?n nào</h6>
-                    <p>B?n chua có tin nh?n liên h? nào v?i chúng tôi</p>
+                    <div className="ch-empty-icon">📭</div>
+                    <h6>Chưa có tin nhắn nào</h6>
+                    <p>Bạn chưa có tin nhắn liên hệ nào với chúng tôi</p>
                   </div>
                 ) : (
                   <div className="ch-timeline">
                     {feedbacks.map((feedback) => {
                       const isReplied = feedback.status === 'replied';
                       const subjectLabels = {
-                        booking: 'V?n d? d?t vé',
-                        payment: 'V?n d? thanh toán',
-                        technical: 'L?i k? thu?t',
-                        feedback: 'Góp ý d?ch v?',
-                        partnership: 'H?p tác kinh doanh',
+                        booking: 'Vấn đề đặt vé',
+                        payment: 'Vấn đề thanh toán',
+                        technical: 'Lỗi kỹ thuật',
+                        feedback: 'Góp ý dịch vụ',
+                        partnership: 'Hợp tác kinh doanh',
                         other: 'Khác'
                       };
 
                       return (
                         <div key={feedback.id} className="ch-item">
                           <div className={`ch-dot ${isReplied ? 'ch-dot--replied' : 'ch-dot--pending'}`}>
-                            {isReplied ? '?' : '?'}
+                            {isReplied ? '✓' : '⏱'}
                           </div>
 
                           <div className={`ch-card ${isReplied ? 'ch-card--replied' : 'ch-card--pending'}`}>
                             <div className="ch-card-top">
                               <div className="ch-card-badges">
                                 <span className={`ch-badge-status ${isReplied ? 'replied' : 'pending'}`}>
-                                  {isReplied ? '? Ðã ph?n h?i' : '? Ch? ph?n h?i'}
+                                  {isReplied ? '✓ Đã phản hồi' : '⏱ Chờ phản hồi'}
                                 </span>
                                 <span className="ch-badge-subject">
                                   {subjectLabels[feedback.subject] || 'Khác'}
@@ -385,19 +385,19 @@ export default function ContactPage() {
                             </div>
 
                             <div className="ch-message">
-                              <div className="ch-message-label">Tin nh?n c?a b?n</div>
+                              <div className="ch-message-label">Tin nhắn của bạn</div>
                               <p className="ch-message-text">{feedback.message}</p>
                             </div>
 
                             {isReplied && feedback.adminReply && (
                               <div className="ch-reply">
                                 <div className="ch-reply-header">
-                                  <strong>Ph?n h?i t? CinemaXP</strong>
+                                  <strong>Phản hồi từ CinemaXP</strong>
                                 </div>
                                 <p className="ch-reply-text">{feedback.adminReply}</p>
                                 {feedback.repliedAt && (
                                   <span className="ch-reply-time">
-                                    Ph?n h?i lúc: {new Date(feedback.repliedAt).toLocaleString('vi-VN')}
+                                    Phản hồi lúc: {new Date(feedback.repliedAt).toLocaleString('vi-VN')}
                                   </span>
                                 )}
                               </div>
@@ -413,10 +413,10 @@ export default function ContactPage() {
           </Row>
         )}
 
-        
+
         <Row className="mt-5">
           <Col xs={12}>
-            <h3 className="text-center mb-4">?? H? th?ng r?p CinemaXP</h3>
+            <h3 className="text-center mb-4">🏢 Hệ thống rạp CinemaXP</h3>
             <Row className="g-4 justify-content-center">
               {locations.map((location, index) => (
                 <Col key={index} lg={5} md={6}>
@@ -425,24 +425,24 @@ export default function ContactPage() {
                       <h5 className="location-name">{location.name}</h5>
                       <div className="location-info">
                         <div className="info-item">
-                          <span className="info-icon">??</span>
+                          <span className="info-icon">📍</span>
                           <span>{location.address}</span>
                         </div>
                         <div className="info-item">
-                          <span className="info-icon">??</span>
+                          <span className="info-icon">📞</span>
                           <span>{location.phone}</span>
                         </div>
                         <div className="info-item">
-                          <span className="info-icon">??</span>
+                          <span className="info-icon">✉️</span>
                           <span>{location.email}</span>
                         </div>
                         <div className="info-item">
-                          <span className="info-icon">??</span>
+                          <span className="info-icon">🕒</span>
                           <span>{location.hours}</span>
                         </div>
                         <div className="info-item">
-                          <span className="info-icon">??</span>
-                          <span>Qu?n lý: {location.manager}</span>
+                          <span className="info-icon">👤</span>
+                          <span>Quản lý: {location.manager}</span>
                         </div>
                       </div>
                     </Card.Body>

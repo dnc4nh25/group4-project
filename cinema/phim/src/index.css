@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
   --primary: #f5a623;
@@ -749,7 +749,7 @@ table th {
   font-size: 0.8rem;
 }
 
-/* ── FEATURED / SECTIONS ── */
+/* â”€â”€ FEATURED / SECTIONS â”€â”€ */
 .featured-section {
   background: var(--bg-dark);
 }
@@ -1737,7 +1737,7 @@ table th {
 }
 
 .brand-logo {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--primary) !important;
@@ -2021,7 +2021,7 @@ table th {
 }
 
 .page-header-banner h1 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 2.5rem;
   font-weight: 800;
   color: #ffffff !important;
@@ -2145,7 +2145,7 @@ table th {
 }
 
 .showtime-time {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.6rem;
   font-weight: 800;
   color: var(--primary);
@@ -3301,7 +3301,7 @@ table th {
 }
 
 .hero-title-v2 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 800;
   line-height: 1.1;
@@ -3734,7 +3734,7 @@ table th {
 }
 
 .trailer-modal .modal-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--text-light) !important;
@@ -4034,7 +4034,7 @@ table th {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 900;
   font-size: 1.8rem;
   letter-spacing: -1px;
@@ -4241,3 +4241,4 @@ table th {
   align-items: center;
   justify-content: center;
 }
+

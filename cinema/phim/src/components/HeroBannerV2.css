@@ -266,7 +266,7 @@
 }
 
 .movie-title {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: clamp(1.45rem, 2.7vw, 2rem);
   font-weight: 900;
   color: #ffffff;
@@ -664,3 +664,5 @@
     transform: scale(1.2);
   }
 }
+
+

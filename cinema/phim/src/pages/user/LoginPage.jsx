@@ -4,6 +4,8 @@ import { Container, Form, Button, Card, Alert, Spinner } from "react-bootstrap";
 import axios from "axios";
 import { useAuth } from "../../contexts/AuthContext";
 
+
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +20,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     if (!username || !password) {
-      setError("Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ thÃ´ng tin.");
+      setError("Vui lòng nhập đầy đủ thông tin.");
       return;
     }
     setLoading(true);
@@ -27,10 +29,10 @@ export default function LoginPage() {
         username,
         password
       });
-      // ThÃ nh cÃ´ng
+      // Thành công
       login(res.data);
-      
-      // PhÃ¢n quyá»n: Náº¿u lÃ  ADMIN thÃ¬ Æ°u tiÃªn vÃ o trang admin (trá»« khi há» Ä‘ang cÃ³ link redirect cá»¥ thá»ƒ khÃ¡c '/')
+
+      // Phân quyền: Nếu là ADMIN thì ưu tiên vào trang admin (trừ khi họ đang có link redirect cụ thể khác '/')
       if (res.data.role === 'admin' && from === '/') {
         navigate('/admin', { replace: true });
       } else {
@@ -40,7 +42,7 @@ export default function LoginPage() {
       if (err.response && err.response.data) {
         setError(err.response.data);
       } else {
-        setError("KhÃ´ng thá»ƒ káº¿t ná»‘i Ä‘áº¿n mÃ¡y chá»§. Vui lÃ²ng thá»­ láº¡i.");
+        setError("Không thể kết nối đến máy chủ. Vui lòng thử lại.");
       }
     } finally {
       setLoading(false);
@@ -53,9 +55,9 @@ export default function LoginPage() {
         <Card className="auth-card shadow-lg">
           <Card.Body className="p-4 p-md-5">
             <div className="text-center mb-4">
-              <div className="auth-icon">ðŸŽ¬</div>
-              <h2 className="fw-bold mb-1">ChÃ o má»«ng trá»Ÿ láº¡i</h2>
-              <p className="text-muted">ÄÄƒng nháº­p Ä‘á»ƒ Ä‘áº·t vÃ© xem phim</p>
+              <div className="auth-icon">🎬</div>
+              <h2 className="fw-bold mb-1">Chào mừng trở lại</h2>
+              <p className="text-muted">Đăng nhập để đặt vé xem phim</p>
             </div>
             {error && (
               <Alert variant="danger" className="py-2">
@@ -64,22 +66,22 @@ export default function LoginPage() {
             )}
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>TÃªn Ä‘Äƒng nháº­p</Form.Label>
+                <Form.Label>Tên đăng nhập</Form.Label>
                 <Form.Control
                   id="username"
                   type="text"
-                  placeholder="Nháº­p tÃªn Ä‘Äƒng nháº­p"
+                  placeholder="Nhập tên đăng nhập"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="form-input-custom"
                 />
               </Form.Group>
               <Form.Group className="mb-4">
-                <Form.Label>Máº­t kháº©u</Form.Label>
+                <Form.Label>Mật khẩu</Form.Label>
                 <Form.Control
                   id="password"
                   type="password"
-                  placeholder="Nháº­p máº­t kháº©u"
+                  placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="form-input-custom"
@@ -91,7 +93,7 @@ export default function LoginPage() {
                 className="w-100 btn-primary-custom"
                 disabled={loading}
               >
-                {loading ? <Spinner size="sm" /> : "ÄÄƒng nháº­p"}
+                {loading ? <Spinner size="sm" /> : "Đăng nhập"}
               </Button>
             </Form>
           </Card.Body>

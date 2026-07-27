@@ -4,6 +4,7 @@ import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
 import './ProfilePage.css'
 
+
 export default function ProfilePage() {
   const { currentUser, login } = useAuth()
   const [form, setForm] = useState({
@@ -56,35 +57,35 @@ export default function ProfilePage() {
     setSuccess('')
 
     if (!form.fullName || !form.email || !form.phone) {
-      setError('Vui lòng di?n d?y d? thông tin b?t bu?c.')
+      setError('Vui lòng điền đầy đủ thông tin bắt buộc.')
       return
     }
 
     if (!validateEmail(form.email)) {
-      setError('Email không h?p l?.')
+      setError('Email không hợp lệ.')
       return
     }
 
     if (!validatePhone(form.phone)) {
-      setError('S? di?n tho?i ph?i có 10-11 ch? s?.')
+      setError('Số điện thoại phải có 10-11 chữ số.')
       return
     }
 
     if (showPasswordFields) {
       if (!form.password) {
-        setError('Vui lòng nh?p m?t kh?u hi?n t?i.')
+        setError('Vui lòng nhập mật khẩu hiện tại.')
         return
       }
       if (!form.newPassword || form.newPassword.length < 6) {
-        setError('M?t kh?u m?i ph?i có ít nh?t 6 ký t?.')
+        setError('Mật khẩu mới phải có ít nhất 6 ký tự.')
         return
       }
       if (form.newPassword !== form.confirmPassword) {
-        setError('M?t kh?u xác nh?n không kh?p.')
+        setError('Mật khẩu xác nhận không khớp.')
         return
       }
       if (form.password !== currentUser.password) {
-        setError('M?t kh?u hi?n t?i không dúng.')
+        setError('Mật khẩu hiện tại không đúng.')
         return
       }
     }
@@ -96,7 +97,7 @@ export default function ProfilePage() {
         try {
           const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
           if (emailCheck.data && emailCheck.data.id !== currentUser.id) {
-            setError('Email dã du?c s? d?ng b?i tài kho?n khác.')
+            setError('Email đã được sử dụng bởi tài khoản khác.')
             setLoading(false)
             return
           }
@@ -110,7 +111,7 @@ export default function ProfilePage() {
         try {
           const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
           if (phoneCheck.data && phoneCheck.data.id !== currentUser.id) {
-            setError('S? di?n tho?i dã du?c s? d?ng b?i tài kho?n khác.')
+            setError('Số điện thoại đã được sử dụng bởi tài khoản khác.')
             setLoading(false)
             return
           }
@@ -130,11 +131,11 @@ export default function ProfilePage() {
       }
 
       const response = await axios.put(`http://localhost:8080/api/users/${currentUser.id}`, updateData)
-      
+
       login(response.data)
-      
-      setSuccess('C?p nh?t thông tin thành công!')
-      
+
+      setSuccess('Cập nhật thông tin thành công!')
+
       if (showPasswordFields) {
         setForm({
           ...form,
@@ -145,7 +146,7 @@ export default function ProfilePage() {
         setShowPasswordFields(false)
       }
     } catch (err) {
-      setError('Có l?i x?y ra khi c?p nh?t thông tin.')
+      setError('Có lỗi xảy ra khi cập nhật thông tin.')
     } finally {
       setLoading(false)
     }
@@ -153,14 +154,14 @@ export default function ProfilePage() {
 
   const missingInfo = []
   if (!currentUser?.email) missingInfo.push('Email')
-  if (!currentUser?.phone) missingInfo.push('S? di?n tho?i')
+  if (!currentUser?.phone) missingInfo.push('Số điện thoại')
 
   return (
     <div className="profile-page">
       <Container className="profile-container">
-        
+
         <div className="text-center mb-4">
-          <div 
+          <div
             className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
             style={{
               width: '80px',
@@ -173,43 +174,43 @@ export default function ProfilePage() {
           >
             {(currentUser?.fullName?.charAt(0) || currentUser?.username?.charAt(0) || 'U').toUpperCase()}
           </div>
-          <h2 className="fw-bold text-light mb-1">?? Thông tin cá nhân</h2>
-          <p className="text-muted">Qu?n lý thông tin tài kho?n c?a b?n</p>
+          <h2 className="fw-bold text-light mb-1">👤 Thông tin cá nhân</h2>
+          <p className="text-muted">Quản lý thông tin tài khoản của bạn</p>
         </div>
 
-        
+
         {missingInfo.length > 0 && (
           <Alert variant="warning" className="mb-4">
             <div className="d-flex align-items-center gap-2 mb-2">
-              <span style={{ fontSize: '1.2rem' }}>??</span>
-              <strong>Thông tin tài kho?n chua d?y d?</strong>
+              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+              <strong>Thông tin tài khoản chưa đầy đủ</strong>
             </div>
             <div className="mb-2">
-              B?n chua c?p nh?t: <strong>{missingInfo.join(', ')}</strong>
+              Bạn chưa cập nhật: <strong>{missingInfo.join(', ')}</strong>
             </div>
             <small className="text-muted">
-              ?? Vui lòng c?p nh?t d?y d? thông tin d? d?m b?o nh?n du?c thông báo và h? tr? t?t nh?t t? CinemaXP.
+              💡 Vui lòng cập nhật đầy đủ thông tin để đảm bảo nhận được thông báo và hỗ trợ tốt nhất từ CinemaXP.
             </small>
           </Alert>
         )}
 
-        
+
         <Card style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Card.Body className="p-4">
             {error && <Alert variant="danger">{error}</Alert>}
             {success && <Alert variant="success">{success}</Alert>}
 
             <Form onSubmit={handleSubmit}>
-              
+
               <div className="mb-4">
                 <h5 className="text-light mb-3 d-flex align-items-center gap-2">
-                  ?? Thông tin co b?n
+                  📋 Thông tin cơ bản
                 </h5>
-                
+
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label className="text-light">Tên dang nh?p</Form.Label>
+                      <Form.Label className="text-light">Tên đăng nhập</Form.Label>
                       <Form.Control
                         type="text"
                         value={form.username}
@@ -221,19 +222,19 @@ export default function ProfilePage() {
                         }}
                       />
                       <Form.Text className="text-muted">
-                        Tên dang nh?p không th? thay d?i
+                        Tên đăng nhập không thể thay đổi
                       </Form.Text>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="text-light">
-                        H? và tên <span className="text-danger">*</span>
+                        Họ và tên <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         name="fullName"
                         type="text"
-                        placeholder="Nguy?n Van A"
+                        placeholder="Nguyễn Văn A"
                         value={form.fullName}
                         onChange={handleChange}
                         required
@@ -248,19 +249,19 @@ export default function ProfilePage() {
                 </Row>
               </div>
 
-              
+
               <div className="mb-4">
                 <h5 className="text-light mb-3 d-flex align-items-center gap-2">
-                  ?? Thông tin liên h?
+                  📞 Thông tin liên hệ
                 </h5>
-                
+
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="text-light d-flex align-items-center gap-2">
                         Email <span className="text-danger">*</span>
                         {!currentUser?.email && (
-                          <Badge bg="danger" className="px-2 py-1">Thi?u</Badge>
+                          <Badge bg="danger" className="px-2 py-1">Thiếu</Badge>
                         )}
                       </Form.Label>
                       <Form.Control
@@ -281,9 +282,9 @@ export default function ProfilePage() {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label className="text-light d-flex align-items-center gap-2">
-                        S? di?n tho?i <span className="text-danger">*</span>
+                        Số điện thoại <span className="text-danger">*</span>
                         {!currentUser?.phone && (
-                          <Badge bg="danger" className="px-2 py-1">Thi?u</Badge>
+                          <Badge bg="danger" className="px-2 py-1">Thiếu</Badge>
                         )}
                       </Form.Label>
                       <Form.Control
@@ -304,18 +305,18 @@ export default function ProfilePage() {
                 </Row>
               </div>
 
-              
+
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="text-light mb-0 d-flex align-items-center gap-2">
-                    ?? B?o m?t
+                    🔒 Bảo mật
                   </h5>
                   <Button
                     variant="outline-warning"
                     size="sm"
                     onClick={() => setShowPasswordFields(!showPasswordFields)}
                   >
-                    {showPasswordFields ? 'H?y d?i m?t kh?u' : 'Ð?i m?t kh?u'}
+                    {showPasswordFields ? 'Hủy đổi mật khẩu' : 'Đổi mật khẩu'}
                   </Button>
                 </div>
 
@@ -323,11 +324,11 @@ export default function ProfilePage() {
                   <Row className="g-3">
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className="text-light">M?t kh?u hi?n t?i</Form.Label>
+                        <Form.Label className="text-light">Mật khẩu hiện tại</Form.Label>
                         <Form.Control
                           name="password"
                           type="password"
-                          placeholder="Nh?p m?t kh?u hi?n t?i"
+                          placeholder="Nhập mật khẩu hiện tại"
                           value={form.password}
                           onChange={handleChange}
                           style={{
@@ -340,11 +341,11 @@ export default function ProfilePage() {
                     </Col>
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className="text-light">M?t kh?u m?i</Form.Label>
+                        <Form.Label className="text-light">Mật khẩu mới</Form.Label>
                         <Form.Control
                           name="newPassword"
                           type="password"
-                          placeholder="Ít nh?t 6 ký t?"
+                          placeholder="Ít nhất 6 ký tự"
                           value={form.newPassword}
                           onChange={handleChange}
                           style={{
@@ -357,11 +358,11 @@ export default function ProfilePage() {
                     </Col>
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className="text-light">Xác nh?n m?t kh?u m?i</Form.Label>
+                        <Form.Label className="text-light">Xác nhận mật khẩu mới</Form.Label>
                         <Form.Control
                           name="confirmPassword"
                           type="password"
-                          placeholder="Nh?p l?i m?t kh?u m?i"
+                          placeholder="Nhập lại mật khẩu mới"
                           value={form.confirmPassword}
                           onChange={handleChange}
                           style={{
@@ -376,7 +377,7 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              
+
               <div className="text-center">
                 <Button
                   type="submit"
@@ -386,10 +387,10 @@ export default function ProfilePage() {
                   {loading ? (
                     <>
                       <Spinner size="sm" className="me-2" />
-                      Ðang c?p nh?t...
+                      Đang cập nhật...
                     </>
                   ) : (
-                    '?? Luu thay d?i'
+                    '💾 Lưu thay đổi'
                   )}
                 </Button>
               </div>
@@ -397,26 +398,26 @@ export default function ProfilePage() {
           </Card.Body>
         </Card>
 
-        
+
         <Card className="mt-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Card.Body className="p-4">
             <h5 className="text-light mb-3 d-flex align-items-center gap-2">
-              ?? Thông tin tài kho?n
+              ℹ️ Thông tin tài khoản
             </h5>
             <Row className="g-3">
               <Col md={6}>
                 <div className="d-flex justify-content-between">
                   <span className="text-muted">Vai trò:</span>
                   <Badge bg={currentUser?.role === 'admin' ? 'warning' : 'secondary'}>
-                    {currentUser?.role === 'admin' ? '?? Admin' : '?? User'}
+                    {currentUser?.role === 'admin' ? '👑 Admin' : '👤 User'}
                   </Badge>
                 </div>
               </Col>
               <Col md={6}>
                 <div className="d-flex justify-content-between">
-                  <span className="text-muted">Tr?ng thái:</span>
+                  <span className="text-muted">Trạng thái:</span>
                   <Badge bg={currentUser?.status === 'active' ? 'success' : 'warning'}>
-                    {currentUser?.status === 'active' ? '? Ho?t d?ng' : '? Ch? duy?t'}
+                    {currentUser?.status === 'active' ? '✅ Hoạt động' : '⏳ Chờ duyệt'}
                   </Badge>
                 </div>
               </Col>

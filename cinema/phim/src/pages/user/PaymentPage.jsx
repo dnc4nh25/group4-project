@@ -5,24 +5,19 @@ import { paymentApi } from '../../services/api'
 import VoucherValidator from '../../utils/voucherValidation'
 import './PaymentPage.css'
 
+
 const PAYMENT_METHODS = [
   {
     id: 'QR',
-    label: 'VÃ­ Ä‘iá»‡n tá»­ / QR',
-    icon: 'ðŸ“±',
+    label: 'Ví điện tử / QR',
+    icon: '📱',
     desc: 'MoMo, ZaloPay, VNPay, QR Banking',
   },
   {
     id: 'CARD',
-    label: 'Tháº» ngÃ¢n hÃ ng',
-    icon: 'ðŸ’³',
-    desc: 'Visa, Mastercard, ATM ná»™i Ä‘á»‹a',
-  },
-  {
-    id: 'CASH',
-    label: 'Tiá»n máº·t táº¡i quáº§y',
-    icon: 'ðŸ§',
-    desc: 'Thanh toÃ¡n trá»±c tiáº¿p táº¡i ráº¡p',
+    label: 'Thẻ ngân hàng',
+    icon: '💳',
+    desc: 'Visa, Mastercard, ATM nội địa',
   },
 ]
 
@@ -33,10 +28,9 @@ export default function PaymentPage() {
 
   const bookingData = location.state
 
-  // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── State ───────────────────────────────────────────────
   const [vouchers, setVouchers] = useState([])
   const [selectedVoucher, setSelectedVoucher] = useState(null)
-  const [voucherCode, setVoucherCode] = useState('')
   const [voucherValidation, setVoucherValidation] = useState(null) // { valid, message, discountAmount }
   const [applyingVoucher, setApplyingVoucher] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('QR')
@@ -46,7 +40,7 @@ export default function PaymentPage() {
   const [success, setSuccess] = useState(false)
   const [successData, setSuccessData] = useState(null)
 
-  // â”€â”€â”€ Redirect náº¿u khÃ´ng cÃ³ data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Redirect nếu không có data ──────────────────────────
   useEffect(() => {
     if (!bookingData) {
       navigate('/movies')
@@ -62,7 +56,7 @@ export default function PaymentPage() {
         )
         setVouchers(list)
       } catch (err) {
-        console.error('Lá»—i táº£i voucher:', err)
+        console.error('Lỗi tải voucher:', err)
       } finally {
         setLoading(false)
       }
@@ -70,47 +64,14 @@ export default function PaymentPage() {
     loadVouchers()
   }, [bookingData, navigate, currentUser])
 
-  // â”€â”€â”€ TÃ­nh giáº£m giÃ¡ preview (client-side) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Tính giảm giá preview (client-side) ─────────────────
   const previewDiscount = selectedVoucher
     ? VoucherValidator.calculateDiscount(selectedVoucher, bookingData?.subtotal || 0)
     : (voucherValidation?.valid ? (voucherValidation.discountAmount || 0) : 0)
 
   const finalTotal = (bookingData?.subtotal || 0) - previewDiscount
 
-  // â”€â”€â”€ Apply voucher tá»« input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const handleApplyVoucher = useCallback(async () => {
-    if (!voucherCode.trim()) return
-    setApplyingVoucher(true)
-    setVoucherValidation(null)
-
-    const result = await paymentApi.validateVoucher({
-      voucherCode: voucherCode.trim().toUpperCase(),
-      userId: currentUser?.id,
-      subtotal: bookingData?.subtotal,
-      seatCount: bookingData?.seatCount,
-    }).then(r => r.data).catch(() => ({
-      valid: false,
-      message: 'Lá»—i káº¿t ná»‘i, vui lÃ²ng thá»­ láº¡i'
-    }))
-
-    setVoucherValidation(result)
-    if (result.valid) {
-      // TÃ¬m trong danh sÃ¡ch hoáº·c táº¡o object táº¡m
-      const found = vouchers.find(v =>
-        v.code?.toUpperCase() === voucherCode.trim().toUpperCase()
-      )
-      setSelectedVoucher(found || {
-        id: result.voucherId,
-        code: result.voucherCode,
-        title: result.voucherTitle,
-        discountAmount: result.discountAmount,
-      })
-      setVoucherCode('')
-    }
-    setApplyingVoucher(false)
-  }, [voucherCode, currentUser, bookingData, vouchers])
-
-  // â”€â”€â”€ Click chá»n voucher tá»« danh sÃ¡ch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Click chọn voucher từ danh sách ─────────────────────
   const handleSelectVoucher = async (voucher) => {
     if (!voucher.canUse) return
     if (selectedVoucher?.id === voucher.id) {
@@ -128,7 +89,7 @@ export default function PaymentPage() {
       seatCount: bookingData?.seatCount,
     }).then(r => r.data).catch(() => ({
       valid: false,
-      message: 'Lá»—i káº¿t ná»‘i, vui lÃ²ng thá»­ láº¡i'
+      message: 'Lỗi kết nối, vui lòng thử lại'
     }))
 
     if (result.valid) {
@@ -143,10 +104,9 @@ export default function PaymentPage() {
   const handleRemoveVoucher = () => {
     setSelectedVoucher(null)
     setVoucherValidation(null)
-    setVoucherCode('')
   }
 
-  // â”€â”€â”€ Checkout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Checkout ─────────────────────────────────────────────
   const handleCheckout = async () => {
     setSubmitting(true)
     setError('')
@@ -166,58 +126,58 @@ export default function PaymentPage() {
       setSuccessData(res.data)
       setSuccess(true)
     } catch (err) {
-      const msg = err.response?.data || 'Thanh toÃ¡n tháº¥t báº¡i. Vui lÃ²ng thá»­ láº¡i.'
-      setError(typeof msg === 'string' ? msg : 'Thanh toÃ¡n tháº¥t báº¡i. Vui lÃ²ng thá»­ láº¡i.')
+      const msg = err.response?.data || 'Thanh toán thất bại. Vui lòng thử lại.'
+      setError(typeof msg === 'string' ? msg : 'Thanh toán thất bại. Vui lòng thử lại.')
       console.error('Payment error:', err)
     } finally {
       setSubmitting(false)
     }
   }
 
-  // â”€â”€â”€ Guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Guard ────────────────────────────────────────────────
   if (!bookingData) return null
 
   if (loading) {
     return (
       <div className="pay-loading">
         <div className="pay-spinner" />
-        <p>Äang táº£i thÃ´ng tin thanh toÃ¡nâ€¦</p>
+        <p>Đang tải thông tin thanh toán…</p>
       </div>
     )
   }
 
-  // â”€â”€â”€ SUCCESS SCREEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── SUCCESS SCREEN ───────────────────────────────────────
   if (success) {
     const { selectedSeats, showtime, movie } = bookingData
     return (
       <div className="pay-success-wrapper">
         <div className="pay-success-card">
-          <div className="pay-success-icon">ðŸŽ‰</div>
-          <h2>Thanh toÃ¡n thÃ nh cÃ´ng!</h2>
-          <p className="pay-success-sub">ChÃºc báº¡n xem phim vui váº»! VÃ© Ä‘Ã£ Ä‘Æ°á»£c ghi nháº­n.</p>
+          <div className="pay-success-icon">🎉</div>
+          <h2>Thanh toán thành công!</h2>
+          <p className="pay-success-sub">Chúc bạn xem phim vui vẻ! Vé đã được ghi nhận.</p>
 
           <div className="pay-ticket">
             <div className="pay-ticket-movie">{movie?.title}</div>
             <div className="pay-ticket-grid">
-              <div><span>ðŸ“… NgÃ y</span><strong>{showtime?.date}</strong></div>
-              <div><span>â° Giá»</span><strong>{showtime?.time}</strong></div>
-              <div><span>ðŸŸï¸ PhÃ²ng</span><strong>{showtime?.room}</strong></div>
+              <div><span>📅 Ngày</span><strong>{showtime?.date}</strong></div>
+              <div><span>⏰ Giờ</span><strong>{showtime?.time}</strong></div>
+              <div><span>🏟️ Phòng</span><strong>{showtime?.room}</strong></div>
               <div>
-                <span>ðŸ’º Gháº¿</span>
+                <span>💺 Ghế</span>
                 <strong className="pay-ticket-seats">{selectedSeats.join(', ')}</strong>
               </div>
               {selectedVoucher && (
                 <div>
-                  <span>ðŸŽ« Voucher</span>
-                  <strong className="pay-ticket-discount">-{previewDiscount.toLocaleString()}Ä‘</strong>
+                  <span>🎫 Voucher</span>
+                  <strong className="pay-ticket-discount">-{previewDiscount.toLocaleString()}đ</strong>
                 </div>
               )}
               <div>
-                <span>ðŸ’° Tá»•ng tiá»n</span>
-                <strong className="pay-ticket-total">{finalTotal.toLocaleString()}Ä‘</strong>
+                <span>💰 Tổng tiền</span>
+                <strong className="pay-ticket-total">{finalTotal.toLocaleString()}đ</strong>
               </div>
               <div>
-                <span>ðŸ’³ PhÆ°Æ¡ng thá»©c</span>
+                <span>💳 Phương thức</span>
                 <strong>{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}</strong>
               </div>
             </div>
@@ -225,10 +185,10 @@ export default function PaymentPage() {
 
           <div className="pay-success-actions">
             <button className="pay-btn-primary" onClick={() => navigate('/my-bookings')}>
-              ðŸŽ« Xem vÃ© cá»§a tÃ´i
+              🎫 Xem vé của tôi
             </button>
             <button className="pay-btn-outline" onClick={() => navigate('/movies')}>
-              Äáº·t vÃ© khÃ¡c
+              Đặt vé khác
             </button>
           </div>
         </div>
@@ -236,7 +196,7 @@ export default function PaymentPage() {
     )
   }
 
-  // â”€â”€â”€ MAIN PAYMENT PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── MAIN PAYMENT PAGE ────────────────────────────────────
   const { selectedSeats, subtotal, seatCount, showtime, movie } = bookingData
 
   return (
@@ -244,28 +204,28 @@ export default function PaymentPage() {
       {/* Header */}
       <div className="pay-header">
         <div className="pay-header-inner">
-          <h1>ðŸ’³ Thanh ToÃ¡n</h1>
-          <p>XÃ¡c nháº­n thÃ´ng tin vÃ  hoÃ n táº¥t Ä‘áº·t vÃ©</p>
+          <h1>💳 Thanh Toán</h1>
+          <p>Xác nhận thông tin và hoàn tất đặt vé</p>
         </div>
       </div>
 
       <div className="pay-container">
         {error && (
           <div className="pay-error-banner">
-            <span>âš ï¸ {error}</span>
-            <button onClick={() => setError('')}>âœ•</button>
+            <span>⚠️ {error}</span>
+            <button onClick={() => setError('')}>✕</button>
           </div>
         )}
 
         <div className="pay-grid">
-          {/* â”€â”€â”€ LEFT COLUMN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* ─── LEFT COLUMN ─────────────────────────────────── */}
           <div className="pay-left">
 
-            {/* ThÃ´ng tin Ä‘áº·t vÃ© */}
+            {/* Thông tin đặt vé */}
             <div className="pay-card">
               <div className="pay-card-header">
-                <span className="pay-card-icon">ðŸŽ¬</span>
-                <h3>ThÃ´ng tin Ä‘áº·t vÃ©</h3>
+                <span className="pay-card-icon">🎬</span>
+                <h3>Thông tin đặt vé</h3>
               </div>
               <div className="pay-movie-info">
                 <img
@@ -278,16 +238,16 @@ export default function PaymentPage() {
                   <h4>{movie?.title}</h4>
                   <div className="pay-meta">
                     {movie?.genres && Array.isArray(movie.genres)
-                      ? movie.genres.slice(0, 2).join(' Â· ')
+                      ? movie.genres.slice(0, 2).join(' · ')
                       : movie?.genre}
-                    {movie?.duration ? ` Â· ${movie.duration} phÃºt` : ''}
+                    {movie?.duration ? ` · ${movie.duration} phút` : ''}
                   </div>
-                  <div className="pay-meta">ðŸ“… {showtime?.date} Â· â° {showtime?.time}</div>
-                  <div className="pay-meta">ðŸŸï¸ {showtime?.room}</div>
+                  <div className="pay-meta">📅 {showtime?.date} · ⏰ {showtime?.time}</div>
+                  <div className="pay-meta">🏟️ {showtime?.room}</div>
                 </div>
               </div>
               <div className="pay-seats-row">
-                <span>ðŸ’º Gháº¿ Ä‘Ã£ chá»n:</span>
+                <span>💺 Ghế đã chọn:</span>
                 <div className="pay-seat-badges">
                   {selectedSeats.map(seat => (
                     <span key={seat} className="pay-seat-badge">{seat}</span>
@@ -296,11 +256,11 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            {/* PhÆ°Æ¡ng thá»©c thanh toÃ¡n */}
+            {/* Phương thức thanh toán */}
             <div className="pay-card">
               <div className="pay-card-header">
-                <span className="pay-card-icon">ðŸ’³</span>
-                <h3>PhÆ°Æ¡ng thá»©c thanh toÃ¡n</h3>
+                <span className="pay-card-icon">💳</span>
+                <h3>Phương thức thanh toán</h3>
               </div>
               <div className="pay-methods">
                 {PAYMENT_METHODS.map(m => (
@@ -324,67 +284,40 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            {/* MÃ£ giáº£m giÃ¡ */}
+            {/* Mã giảm giá */}
             <div className="pay-card">
               <div className="pay-card-header">
-                <span className="pay-card-icon">ðŸŽ«</span>
-                <h3>MÃ£ giáº£m giÃ¡</h3>
+                <span className="pay-card-icon">🎫</span>
+                <h3>Mã giảm giá</h3>
               </div>
 
-              {/* Voucher input */}
-              <div className="pay-voucher-input-row">
-                <input
-                  type="text"
-                  placeholder="Nháº­p mÃ£ voucher (VD: WELCOME20)..."
-                  value={voucherCode}
-                  onChange={e => setVoucherCode(e.target.value.toUpperCase())}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyVoucher()}
-                  className="pay-voucher-input"
-                  disabled={!!selectedVoucher || applyingVoucher}
-                />
-                <button
-                  className="pay-voucher-btn"
-                  onClick={handleApplyVoucher}
-                  disabled={!voucherCode.trim() || !!selectedVoucher || applyingVoucher}
-                >
-                  {applyingVoucher ? <span className="pay-btn-spinner" /> : 'Ãp dá»¥ng'}
-                </button>
-              </div>
-
-              {/* Validation message (tá»« server) */}
-              {voucherValidation && !voucherValidation.valid && (
-                <div className="pay-voucher-error">
-                  âŒ {voucherValidation.message}
-                </div>
-              )}
-
-              {/* Voucher Ä‘ang Ã¡p dá»¥ng */}
+              {/* Voucher đang áp dụng */}
               {selectedVoucher && (
                 <div className="pay-voucher-applied">
                   <div className="pay-voucher-applied-left">
-                    <div className="pay-voucher-applied-icon">âœ…</div>
+                    <div className="pay-voucher-applied-icon">✅</div>
                     <div>
                       <div className="pay-voucher-applied-title">{selectedVoucher.title || selectedVoucher.code}</div>
                       <div className="pay-voucher-applied-code">
-                        MÃ£: <strong>{selectedVoucher.code}</strong>
+                        Mã: <strong>{selectedVoucher.code}</strong>
                       </div>
                     </div>
                   </div>
                   <div className="pay-voucher-applied-right">
                     <div className="pay-voucher-applied-discount">
-                      -{previewDiscount.toLocaleString()}Ä‘
+                      -{previewDiscount.toLocaleString()}đ
                     </div>
                     <button className="pay-voucher-remove" onClick={handleRemoveVoucher}>
-                      Bá» chá»n
+                      Bỏ chọn
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Danh sÃ¡ch voucher cÃ³ sáºµn */}
+              {/* Danh sách voucher có sẵn */}
               {vouchers.length > 0 && (
                 <div className="pay-voucher-list">
-                  <div className="pay-voucher-list-title">Voucher kháº£ dá»¥ng:</div>
+                  <div className="pay-voucher-list-title">Voucher khả dụng:</div>
                   <div className="pay-voucher-grid">
                     {vouchers.slice(0, 6).map(voucher => (
                       <div
@@ -409,35 +342,35 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {/* â”€â”€â”€ RIGHT COLUMN (Sticky Summary) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* ─── RIGHT COLUMN (Sticky Summary) ───────────────── */}
           <div className="pay-right">
             <div className="pay-summary-card">
               <div className="pay-card-header">
-                <span className="pay-card-icon">ðŸ’°</span>
-                <h3>Tá»•ng káº¿t Ä‘Æ¡n hÃ ng</h3>
+                <span className="pay-card-icon">💰</span>
+                <h3>Tổng kết đơn hàng</h3>
               </div>
 
               <div className="pay-summary-rows">
                 <div className="pay-summary-row">
-                  <span>Sá»‘ gháº¿</span>
-                  <span>{seatCount} gháº¿</span>
+                  <span>Số ghế</span>
+                  <span>{seatCount} ghế</span>
                 </div>
                 <div className="pay-summary-row">
-                  <span>GiÃ¡/gháº¿</span>
-                  <span>{showtime?.price?.toLocaleString()}Ä‘</span>
+                  <span>Giá/ghế</span>
+                  <span>{showtime?.price?.toLocaleString()}đ</span>
                 </div>
                 <div className="pay-summary-row">
-                  <span>Táº¡m tÃ­nh</span>
-                  <span>{subtotal.toLocaleString()}Ä‘</span>
+                  <span>Tạm tính</span>
+                  <span>{subtotal.toLocaleString()}đ</span>
                 </div>
                 {selectedVoucher && previewDiscount > 0 && (
                   <div className="pay-summary-row discount">
-                    <span>ðŸŽ« Giáº£m giÃ¡ ({selectedVoucher.code})</span>
-                    <span>-{previewDiscount.toLocaleString()}Ä‘</span>
+                    <span>🎫 Giảm giá ({selectedVoucher.code})</span>
+                    <span>-{previewDiscount.toLocaleString()}đ</span>
                   </div>
                 )}
                 <div className="pay-summary-row method">
-                  <span>PhÆ°Æ¡ng thá»©c</span>
+                  <span>Phương thức</span>
                   <span>{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.icon} {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}</span>
                 </div>
               </div>
@@ -445,13 +378,13 @@ export default function PaymentPage() {
               <div className="pay-summary-divider" />
 
               <div className="pay-summary-total">
-                <span>Tá»•ng cá»™ng</span>
-                <span className="pay-total-amount">{finalTotal.toLocaleString()}Ä‘</span>
+                <span>Tổng cộng</span>
+                <span className="pay-total-amount">{finalTotal.toLocaleString()}đ</span>
               </div>
 
               {selectedVoucher && previewDiscount > 0 && (
                 <div className="pay-saving-badge">
-                  ðŸŽ‰ Báº¡n tiáº¿t kiá»‡m Ä‘Æ°á»£c {previewDiscount.toLocaleString()}Ä‘
+                  🎉 Bạn tiết kiệm được {previewDiscount.toLocaleString()}đ
                 </div>
               )}
 
@@ -462,14 +395,14 @@ export default function PaymentPage() {
                 id="checkout-btn"
               >
                 {submitting
-                  ? <><span className="pay-btn-spinner" /> Äang xá»­ lÃ½â€¦</>
-                  : `ðŸ’³ Thanh toÃ¡n ${finalTotal.toLocaleString()}Ä‘`
+                  ? <><span className="pay-btn-spinner" /> Đang xử lý…</>
+                  : `💳 Thanh toán ${finalTotal.toLocaleString()}đ`
                 }
               </button>
 
               <p className="pay-terms-note">
-                Báº±ng cÃ¡ch thanh toÃ¡n, báº¡n Ä‘á»“ng Ã½ vá»›i{' '}
-                <a href="/terms" target="_blank">Ä‘iá»u khoáº£n sá»­ dá»¥ng</a> cá»§a CinemaXP.
+                Bằng cách thanh toán, bạn đồng ý với{' '}
+                <a href="/terms" target="_blank">điều khoản sử dụng</a> của CinemaXP.
               </p>
             </div>
           </div>
