@@ -4,14 +4,15 @@ import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap'
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
 
+
 export default function RegisterPage() {
-  const [form, setForm] = useState({ 
-    username: '', 
-    password: '', 
-    confirmPassword: '', 
-    fullName: '', 
-    email: '', 
-    phone: '' 
+  const [form, setForm] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    email: '',
+    phone: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,32 +34,32 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     if (!form.username || !form.password || !form.fullName || !form.email || !form.phone) {
-      setError('Vui lÃ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ thÃ´ng tin.')
+      setError('Vui lòng điền đầy đủ thông tin.')
       return
     }
-    
+
     if (!validateEmail(form.email)) {
-      setError('Email khÃ´ng há»£p lá»‡.')
+      setError('Email không hợp lệ.')
       return
     }
-    
+
     if (!validatePhone(form.phone)) {
-      setError('Sá»‘ Ä‘iá»‡n thoáº¡i pháº£i cÃ³ 10-11 chá»¯ sá»‘.')
+      setError('Số điện thoại phải có 10-11 chữ số.')
       return
     }
-    
+
     if (form.password !== form.confirmPassword) {
-      setError('Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»›p.')
+      setError('Mật khẩu xác nhận không khớp.')
       return
     }
-    
+
     if (form.password.length < 6) {
-      setError('Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.')
+      setError('Mật khẩu phải có ít nhất 6 ký tự.')
       return
     }
-    
+
     setLoading(true)
     try {
       const res = await axios.post('http://localhost:8080/api/auth/register', {
@@ -68,14 +69,14 @@ export default function RegisterPage() {
         email: form.email,
         phone: form.phone
       })
-      // ÄÄƒng kÃ½ thÃ nh cÃ´ng â†’ Backend tráº£ vá» JWT, tá»± Ä‘á»™ng Ä‘Äƒng nháº­p
+      // Đăng ký thành công → Backend trả về JWT, tự động đăng nhập
       login(res.data)
       navigate('/')
     } catch (err) {
       if (err.response && err.response.data) {
         setError(err.response.data)
       } else {
-        setError('KhÃ´ng thá»ƒ káº¿t ná»‘i Ä‘áº¿n mÃ¡y chá»§.')
+        setError('Không thể kết nối đến máy chủ.')
       }
     } finally {
       setLoading(false)
@@ -88,19 +89,19 @@ export default function RegisterPage() {
         <Card className="auth-card shadow-lg">
           <Card.Body className="p-4 p-md-5">
             <div className="text-center mb-4">
-              <div className="auth-icon">ðŸŽŸï¸</div>
-              <h2 className="fw-bold mb-1">Táº¡o tÃ i khoáº£n</h2>
-              <p className="text-muted">ÄÄƒng kÃ½ Ä‘á»ƒ báº¯t Ä‘áº§u Ä‘áº·t vÃ©</p>
+              <div className="auth-icon">🎟️</div>
+              <h2 className="fw-bold mb-1">Tạo tài khoản</h2>
+              <p className="text-muted">Đăng ký để bắt đầu đặt vé</p>
             </div>
             {error && <Alert variant="danger" className="py-2">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Há» vÃ  tÃªn <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Họ và tên <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="fullName"
                   name="fullName"
                   type="text"
-                  placeholder="Nguyá»…n VÄƒn A"
+                  placeholder="Nguyễn Văn A"
                   value={form.fullName}
                   onChange={handleChange}
                   className="form-input-custom"
@@ -121,7 +122,7 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Sá»‘ Ä‘iá»‡n thoáº¡i <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Số điện thoại <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="reg-phone"
                   name="phone"
@@ -134,7 +135,7 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>TÃªn Ä‘Äƒng nháº­p <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Tên đăng nhập <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="reg-username"
                   name="username"
@@ -147,12 +148,12 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Máº­t kháº©u <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Mật khẩu <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="reg-password"
                   name="password"
                   type="password"
-                  placeholder="Ãt nháº¥t 6 kÃ½ tá»±"
+                  placeholder="Ít nhất 6 ký tự"
                   value={form.password}
                   onChange={handleChange}
                   className="form-input-custom"
@@ -160,12 +161,12 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-4">
-                <Form.Label>XÃ¡c nháº­n máº­t kháº©u <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Xác nhận mật khẩu <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  placeholder="Nháº­p láº¡i máº­t kháº©u"
+                  placeholder="Nhập lại mật khẩu"
                   value={form.confirmPassword}
                   onChange={handleChange}
                   className="form-input-custom"
@@ -178,12 +179,12 @@ export default function RegisterPage() {
                 className="w-100 btn-primary-custom"
                 disabled={loading}
               >
-                {loading ? <Spinner size="sm" /> : 'ÄÄƒng kÃ½'}
+                {loading ? <Spinner size="sm" /> : 'Đăng ký'}
               </Button>
             </Form>
             <div className="text-center mt-3">
-              <span className="text-muted">ÄÃ£ cÃ³ tÃ i khoáº£n? </span>
-              <Link to="/login" className="text-warning fw-semibold">ÄÄƒng nháº­p</Link>
+              <span className="text-muted">Đã có tài khoản? </span>
+              <Link to="/login" className="text-warning fw-semibold">Đăng nhập</Link>
             </div>
           </Card.Body>
         </Card>

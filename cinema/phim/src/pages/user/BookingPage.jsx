@@ -4,7 +4,6 @@ import { Container, Card, Button, Alert, Spinner, Row, Col, Badge } from 'react-
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
 import SeatMap from '../../components/SeatMap'
-
 export default function BookingPage() {
   const { showtimeId } = useParams()
   const { currentUser } = useAuth()
@@ -29,7 +28,7 @@ export default function BookingPage() {
         const now = new Date()
 
         if (showtimeDateTime < now) {
-          setError('? Su?t chi?u này dã qua. Không th? d?t vé.')
+          setError('❌ Suất chiếu này đã qua. Không thể đặt vé.')
           setShowtime(showtimeData)
           setLoading(false)
           return
@@ -39,7 +38,7 @@ export default function BookingPage() {
         const mvRes = await axios.get(`http://localhost:8080/api/movies/${showtimeData.movieId}`)
         setMovie(mvRes.data)
       } catch {
-        setError('Không tìm th?y su?t chi?u.')
+        setError('Không tìm thấy suất chiếu.')
       } finally {
         setLoading(false)
       }
@@ -53,19 +52,19 @@ export default function BookingPage() {
     )
   }
 
-  const parsedBookedSeats = showtime?.bookedSeatNums 
-    ? (typeof showtime.bookedSeatNums === 'string' 
-        ? JSON.parse(showtime.bookedSeatNums) 
-        : showtime.bookedSeatNums)
+  const parsedBookedSeats = showtime?.bookedSeatNums
+    ? (typeof showtime.bookedSeatNums === 'string'
+      ? JSON.parse(showtime.bookedSeatNums)
+      : showtime.bookedSeatNums)
     : []
-  
+
   const bookedCount = showtime ? parsedBookedSeats.length : 0
   const available = showtime ? showtime.totalSeats - bookedCount : 0
   const totalPrice = selectedSeats.length * (showtime?.price || 0)
 
   const handleConfirm = async () => {
     if (selectedSeats.length === 0) {
-      setError('Vui lòng ch?n ít nh?t 1 gh?.')
+      setError('Vui lòng chọn ít nhất 1 ghế.')
       return
     }
 
@@ -73,7 +72,7 @@ export default function BookingPage() {
     const now = new Date()
 
     if (showtimeDateTime < now) {
-      setError('? Su?t chi?u này dã qua. Không th? d?t vé.')
+      setError('❌ Suất chiếu này đã qua. Không thể đặt vé.')
       return
     }
 
@@ -103,16 +102,16 @@ export default function BookingPage() {
     <div className="page-wrapper d-flex align-items-center min-vh-100">
       <Container style={{ maxWidth: 500 }} className="mx-auto">
         <Card className="booking-info-card text-center p-5">
-          <div style={{ fontSize: 64 }}>?</div>
-          <h4 className="fw-bold mt-3 mb-2">Su?t chi?u dã qua</h4>
-          <p className="text-muted">Su?t chi?u này dã k?t thúc. Vui lòng ch?n su?t chi?u khác.</p>
+          <div style={{ fontSize: 64 }}>⏰</div>
+          <h4 className="fw-bold mt-3 mb-2">Suất chiếu đã qua</h4>
+          <p className="text-muted">Suất chiếu này đã kết thúc. Vui lòng chọn suất chiếu khác.</p>
           <div className="mt-3">
             <div className="mb-2"><strong>Phim:</strong> {movie?.title || 'N/A'}</div>
-            <div className="mb-2"><strong>Ngày gi?:</strong> {showtime?.date} {showtime?.time}</div>
+            <div className="mb-2"><strong>Ngày giờ:</strong> {showtime?.date} {showtime?.time}</div>
             <div className="mb-2"><strong>Phòng:</strong> {showtime?.room}</div>
           </div>
           <Button className="btn-primary-custom mt-3" onClick={() => navigate('/movies')}>
-            ? Ch?n su?t chi?u khác
+            ← Chọn suất chiếu khác
           </Button>
         </Card>
       </Container>
@@ -123,10 +122,10 @@ export default function BookingPage() {
     <div className="page-wrapper d-flex align-items-center min-vh-100">
       <Container style={{ maxWidth: 500 }} className="mx-auto">
         <Card className="booking-info-card text-center p-5">
-          <div style={{ fontSize: 64 }}>??</div>
-          <h4 className="fw-bold mt-3 mb-2">Tài kho?n admin không th? d?t vé</h4>
-          <p className="text-muted">Vui lòng s? d?ng tài kho?n ngu?i dùng thông thu?ng d? d?t vé.</p>
-          <Button className="btn-primary-custom mt-3" onClick={() => navigate('/admin')}>? V? trang Admin</Button>
+          <div style={{ fontSize: 64 }}>🚫</div>
+          <h4 className="fw-bold mt-3 mb-2">Tài khoản admin không thể đặt vé</h4>
+          <p className="text-muted">Vui lòng sử dụng tài khoản người dùng thông thường để đặt vé.</p>
+          <Button className="btn-primary-custom mt-3" onClick={() => navigate('/admin')}>← Về trang Admin</Button>
         </Card>
       </Container>
     </div>
@@ -137,19 +136,19 @@ export default function BookingPage() {
       <div className="page-wrapper d-flex align-items-center min-vh-100">
         <Container style={{ maxWidth: 500 }} className="mx-auto">
           <Card className="booking-success-card text-center p-5">
-            <div style={{ fontSize: 64 }}>??</div>
-            <h3 className="fw-bold mt-3 mb-2">Ð?t vé thành công!</h3>
-            <p className="text-muted">Chúc b?n xem phim vui v?!</p>
+            <div style={{ fontSize: 64 }}>🎉</div>
+            <h3 className="fw-bold mt-3 mb-2">Đặt vé thành công!</h3>
+            <p className="text-muted">Chúc bạn xem phim vui vẻ!</p>
             <div className="booking-confirm-info my-3 p-3 rounded text-start">
               <div><strong>Phim:</strong> {movie?.title}</div>
-              <div><strong>Ngày chi?u:</strong> {showtime?.date} lúc {showtime?.time}</div>
+              <div><strong>Ngày chiếu:</strong> {showtime?.date} lúc {showtime?.time}</div>
               <div><strong>Phòng:</strong> {showtime?.room}</div>
-              <div><strong>Gh?:</strong> <span className="text-warning fw-bold">{selectedSeats.join(', ')}</span></div>
-              <div><strong>T?ng ti?n:</strong> <span className="text-warning fw-bold">{totalPrice.toLocaleString()}d</span></div>
+              <div><strong>Ghế:</strong> <span className="text-warning fw-bold">{selectedSeats.join(', ')}</span></div>
+              <div><strong>Tổng tiền:</strong> <span className="text-warning fw-bold">{totalPrice.toLocaleString()}đ</span></div>
             </div>
             <div className="d-flex gap-2 justify-content-center mt-3">
-              <Button className="btn-primary-custom" onClick={() => navigate('/my-bookings')}>?? Xem vé c?a tôi</Button>
-              <Button variant="outline-secondary" onClick={() => navigate('/movies')}>Ð?t vé khác</Button>
+              <Button className="btn-primary-custom" onClick={() => navigate('/my-bookings')}>🎫 Xem vé của tôi</Button>
+              <Button variant="outline-secondary" onClick={() => navigate('/movies')}>Đặt vé khác</Button>
             </div>
           </Card>
         </Container>
@@ -161,7 +160,7 @@ export default function BookingPage() {
     <div className="page-wrapper">
       <div className="page-header-banner py-4 text-center">
         <Container>
-          <h1 className="fw-bold">??? Ch?n Gh?</h1>
+          <h1 className="fw-bold">🎟️ Chọn Ghế</h1>
           {movie && <p className="text-muted mb-0">{movie.title} · {showtime?.date} · {showtime?.time} · {showtime?.room}</p>}
         </Container>
       </div>
@@ -170,13 +169,13 @@ export default function BookingPage() {
         {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
 
         <Row className="g-4">
-          
+
           <Col lg={8}>
             <Card className="booking-info-card">
               <Card.Body className="p-3 p-md-4">
-                <h5 className="fw-bold mb-3">So d? gh? ng?i</h5>
+                <h5 className="fw-bold mb-3">Sơ đồ ghế ngồi</h5>
                 <p className="text-muted small mb-3">
-                  Còn tr?ng: <strong className="text-success">{available} gh?</strong> · T?i da ch?n {available} gh?
+                  Còn trống: <strong className="text-success">{available} ghế</strong> · Tối đa chọn {available} ghế
                 </p>
                 <SeatMap
                   totalSeats={showtime?.totalSeats || 0}
@@ -189,11 +188,11 @@ export default function BookingPage() {
             </Card>
           </Col>
 
-          
+
           <Col lg={4}>
             <Card className="booking-form-card sticky-top" style={{ top: 90 }}>
               <Card.Body className="p-3 p-md-4">
-                
+
                 {movie && (
                   <div className="d-flex gap-3 mb-3">
                     <img
@@ -209,17 +208,17 @@ export default function BookingPage() {
                   </div>
                 )}
                 <hr />
-                <div className="booking-detail-row"><span>?? Ngày:</span><strong>{showtime?.date}</strong></div>
-                <div className="booking-detail-row"><span>? Gi?:</span><strong>{showtime?.time}</strong></div>
-                <div className="booking-detail-row"><span>??? Phòng:</span><strong>{showtime?.room}</strong></div>
-                <div className="booking-detail-row"><span>?? Giá/gh?:</span><strong className="text-warning">{showtime?.price?.toLocaleString()}d</strong></div>
+                <div className="booking-detail-row"><span>📅 Ngày:</span><strong>{showtime?.date}</strong></div>
+                <div className="booking-detail-row"><span>⏰ Giờ:</span><strong>{showtime?.time}</strong></div>
+                <div className="booking-detail-row"><span>🏟️ Phòng:</span><strong>{showtime?.room}</strong></div>
+                <div className="booking-detail-row"><span>💰 Giá/ghế:</span><strong className="text-warning">{showtime?.price?.toLocaleString()}đ</strong></div>
                 <hr />
 
-                
+
                 <div className="mb-3">
-                  <div className="text-muted small mb-2">Gh? dã ch?n:</div>
+                  <div className="text-muted small mb-2">Ghế đã chọn:</div>
                   {selectedSeats.length === 0 ? (
-                    <span className="text-muted fst-italic small">Chua ch?n gh? nào — click vào gh? trên so d?</span>
+                    <span className="text-muted fst-italic small">Chưa chọn ghế nào — click vào ghế trên sơ đồ</span>
                   ) : (
                     <div className="d-flex flex-wrap gap-1">
                       {selectedSeats.sort().map(s => (
@@ -228,24 +227,24 @@ export default function BookingPage() {
                           bg="danger"
                           style={{ cursor: 'pointer', fontSize: '0.8rem' }}
                           onClick={() => handleToggleSeat(s)}
-                          title="Click d? b? ch?n"
+                          title="Click để bỏ chọn"
                         >
-                          {s} ?
+                          {s} ✕
                         </Badge>
                       ))}
                     </div>
                   )}
                 </div>
 
-                
+
                 <div className="total-price-box p-3 rounded mb-3">
                   <div className="d-flex justify-content-between small">
-                    <span>S? gh? dã ch?n:</span><span>{selectedSeats.length}</span>
+                    <span>Số ghế đã chọn:</span><span>{selectedSeats.length}</span>
                   </div>
                   <hr className="my-2" />
                   <div className="d-flex justify-content-between fw-bold fs-5">
-                    <span>T?ng c?ng:</span>
-                    <span className="text-warning">{totalPrice.toLocaleString()}d</span>
+                    <span>Tổng cộng:</span>
+                    <span className="text-warning">{totalPrice.toLocaleString()}đ</span>
                   </div>
                 </div>
 
@@ -256,11 +255,11 @@ export default function BookingPage() {
                   onClick={handleConfirm}
                   size="lg"
                 >
-                  {submitting ? <Spinner size="sm" /> : `??? Ð?t ${selectedSeats.length} gh?`}
+                  {submitting ? <Spinner size="sm" /> : `🎟️ Đặt ${selectedSeats.length} ghế`}
                 </Button>
 
                 <div className="text-center mt-2">
-                  <small className="text-muted">Click vào gh? dang ch?n (d?) d? b? ch?n</small>
+                  <small className="text-muted">Click vào ghế đang chọn (đỏ) để bỏ chọn</small>
                 </div>
               </Card.Body>
             </Card>
