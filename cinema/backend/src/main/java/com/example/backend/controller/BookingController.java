@@ -74,6 +74,8 @@ public class BookingController {
                             .voucherCode(booking.getVoucherCode())
                             .status(booking.getStatus())
                             .createdAt(booking.getCreatedAt())
+                            .pointsEarned(booking.getPointsEarned())
+                            .pointsUsed(booking.getPointsUsed())
                             .build();
                 })
                 .sorted((com.example.backend.dto.MyBookingResponse b1, com.example.backend.dto.MyBookingResponse b2) -> b2.getCreatedAt().compareTo(b1.getCreatedAt())) // Mới nhất lên đầu
@@ -161,7 +163,23 @@ public class BookingController {
                     }
 
                     bookingRepository.save(booking);
-                    return ResponseEntity.ok().body("Hủy vé thành công.");
+
+                    // Hoàn điểm khi hủy vé
+                    User user = booking.getUser();
+                    Long pointsUsed = booking.getPointsUsed() != null ? booking.getPointsUsed() : 0L;
+                    Long pointsEarned = booking.getPointsEarned() != null ? booking.getPointsEarned() : 0L;
+                    Long totalPrice = booking.getTotalPrice() != null ? booking.getTotalPrice() : 0L;
+
+                    Long pointsRefund = totalPrice + pointsUsed - pointsEarned;
+                    long currentPoints = user.getPoints() != null ? user.getPoints() : 0L;
+                    if (currentPoints + pointsRefund >= 0) {
+                        user.setPoints(currentPoints + pointsRefund);
+                    } else {
+                        user.setPoints(0L);
+                    }
+                    userRepository.save(user);
+
+                    return ResponseEntity.ok().body("Hủy vé thành công. Đã hoàn " + pointsRefund + " điểm vào tài khoản.");
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -179,6 +197,8 @@ public class BookingController {
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt())
                 .cancelledAt(booking.getCancelledAt())
+                .pointsEarned(booking.getPointsEarned())
+                .pointsUsed(booking.getPointsUsed())
                 .build();
     }
 
@@ -193,6 +213,8 @@ public class BookingController {
                 .voucherCode(dto.getVoucherCode())
                 .status(dto.getStatus())
                 .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : LocalDateTime.now())
+                .pointsEarned(dto.getPointsEarned() != null ? dto.getPointsEarned() : 0L)
+                .pointsUsed(dto.getPointsUsed() != null ? dto.getPointsUsed() : 0L)
                 .build();
     }
 
@@ -202,6 +224,8 @@ public class BookingController {
         if (dto.getOriginalPrice() != null) booking.setOriginalPrice(dto.getOriginalPrice());
         if (dto.getDiscount() != null) booking.setDiscount(dto.getDiscount());
         if (dto.getVoucherCode() != null) booking.setVoucherCode(dto.getVoucherCode());
+        if (dto.getPointsEarned() != null) booking.setPointsEarned(dto.getPointsEarned());
+        if (dto.getPointsUsed() != null) booking.setPointsUsed(dto.getPointsUsed());
         if (dto.getStatus() != null) {
             booking.setStatus(dto.getStatus());
             if (dto.getStatus().name().equals("CANCELLED") && booking.getCancelledAt() == null) {

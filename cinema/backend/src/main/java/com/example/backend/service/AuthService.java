@@ -45,7 +45,7 @@ public class AuthService {
         // 5. Trả về AuthResponse
         String statusStr = user.getStatus().name().toLowerCase();
         return new AuthResponse(token, user.getId(), user.getUsername(), roleStr, user.getFullName(),
-                user.getEmail(), user.getPhone(), statusStr);
+                user.getEmail(), user.getPhone(), statusStr, user.getPoints());
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -84,6 +84,6 @@ public class AuthService {
         String token = jwtUtils.generateToken(newUser.getUsername(), roleStr);
 
         return new AuthResponse(token, newUser.getId(), newUser.getUsername(), roleStr, newUser.getFullName(),
-                newUser.getEmail(), newUser.getPhone(), UserStatus.ACTIVE.name().toLowerCase());
+                newUser.getEmail(), newUser.getPhone(), UserStatus.ACTIVE.name().toLowerCase(), newUser.getPoints());
     }
 }

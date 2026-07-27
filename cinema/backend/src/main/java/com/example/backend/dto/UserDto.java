@@ -24,4 +24,5 @@ public class UserDto {
     private String role;       // "admin" | "user"
     private String status;     // "active" | "banned" | "pending"
     private LocalDateTime createdAt;
+    private Long points;
 }

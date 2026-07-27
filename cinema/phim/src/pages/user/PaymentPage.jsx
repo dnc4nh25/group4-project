@@ -24,7 +24,7 @@ const PAYMENT_METHODS = [
 export default function PaymentPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { currentUser } = useAuth()
+  const { currentUser, updateUser } = useAuth()
 
   const bookingData = location.state
 
@@ -39,6 +39,9 @@ export default function PaymentPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [successData, setSuccessData] = useState(null)
+  
+  const [usePoints, setUsePoints] = useState(false)
+  const [pointsToUse, setPointsToUse] = useState(0)
 
   // ─── Redirect nếu không có data ──────────────────────────
   useEffect(() => {
@@ -69,7 +72,31 @@ export default function PaymentPage() {
     ? VoucherValidator.calculateDiscount(selectedVoucher, bookingData?.subtotal || 0)
     : (voucherValidation?.valid ? (voucherValidation.discountAmount || 0) : 0)
 
-  const finalTotal = (bookingData?.subtotal || 0) - previewDiscount
+  // ─── Xử lý Điểm tích lũy ─────────────────────────────────
+  const handlePointsChange = (val) => {
+    let pts = parseInt(val, 10)
+    if (isNaN(pts)) pts = 0
+    const maxUsable = Math.min(currentUser?.points || 0, (bookingData?.subtotal || 0) - previewDiscount)
+    if (pts > maxUsable) pts = maxUsable
+    if (pts < 0) pts = 0
+    setPointsToUse(pts)
+  }
+
+  useEffect(() => {
+    if (usePoints) {
+      const maxUsable = Math.min(currentUser?.points || 0, (bookingData?.subtotal || 0) - previewDiscount)
+      if (pointsToUse > maxUsable) {
+        setPointsToUse(maxUsable)
+      } else if (pointsToUse === 0 && maxUsable > 0) {
+        // Mặc định điền max điểm nếu bật switch mà đang là 0
+        setPointsToUse(maxUsable)
+      }
+    } else {
+      setPointsToUse(0)
+    }
+  }, [usePoints, previewDiscount, currentUser?.points, bookingData?.subtotal])
+
+  const finalTotal = Math.max(0, (bookingData?.subtotal || 0) - previewDiscount - pointsToUse)
 
   // ─── Click chọn voucher từ danh sách ─────────────────────
   const handleSelectVoucher = async (voucher) => {
@@ -121,9 +148,18 @@ export default function PaymentPage() {
         subtotal,
         voucherCode: selectedVoucher?.code || null,
         paymentMethod,
+        usePoints: usePoints ? pointsToUse : 0,
       })
 
       setSuccessData(res.data)
+      
+      // Cập nhật lại số điểm của user trong context để UI tự refresh
+      if (res.data.pointsEarned > 0 || res.data.pointsUsed > 0) {
+        updateUser({
+          points: Math.max(0, (currentUser?.points || 0) + (res.data.pointsEarned || 0) - (res.data.pointsUsed || 0))
+        })
+      }
+
       setSuccess(true)
     } catch (err) {
       const msg = err.response?.data || 'Thanh toán thất bại. Vui lòng thử lại.'
@@ -170,6 +206,18 @@ export default function PaymentPage() {
                 <div>
                   <span>🎫 Voucher</span>
                   <strong className="pay-ticket-discount">-{previewDiscount.toLocaleString()}đ</strong>
+                </div>
+              )}
+              {successData?.pointsUsed > 0 && (
+                <div>
+                  <span>⭐ Điểm đã dùng</span>
+                  <strong className="pay-ticket-discount">-{successData.pointsUsed.toLocaleString()}đ</strong>
+                </div>
+              )}
+              {successData?.pointsEarned > 0 && (
+                <div>
+                  <span>🎁 Điểm nhận được</span>
+                  <strong style={{ color: '#00b0ff' }}>+{successData.pointsEarned.toLocaleString()} điểm</strong>
                 </div>
               )}
               <div>
@@ -348,9 +396,52 @@ export default function PaymentPage() {
                 </div>
               )}
             </div>
+
+            {/* Điểm tích lũy */}
+            <div className="pay-card">
+              <div className="pay-card-header">
+                <span className="pay-card-icon">⭐</span>
+                <h3>Điểm tích lũy</h3>
+              </div>
+              <div className="pay-points-container" style={{ padding: '0 0.5rem' }}>
+                <p style={{ margin: '0 0 1rem 0' }}>Bạn đang có <strong style={{ color: '#00b0ff' }}>{currentUser?.points?.toLocaleString() || 0}</strong> điểm</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <input
+                    type="checkbox"
+                    id="usePointsCheckbox"
+                    checked={usePoints}
+                    onChange={(e) => setUsePoints(e.target.checked)}
+                    disabled={!currentUser?.points || currentUser.points <= 0}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="usePointsCheckbox" style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Dùng điểm để giảm giá
+                  </label>
+                </div>
+                {usePoints && (
+                  <div className="pay-points-input-box">
+                    <label>
+                      Số điểm muốn dùng:
+                    </label>
+                    <input
+                      type="number"
+                      className="pay-input"
+                      value={pointsToUse}
+                      onChange={(e) => handlePointsChange(e.target.value)}
+                      max={currentUser?.points || 0}
+                      min={0}
+                    />
+                    <div className="pay-points-hint">
+                      (Tối đa: {Math.min(currentUser?.points || 0, subtotal - previewDiscount).toLocaleString()} điểm = {Math.min(currentUser?.points || 0, subtotal - previewDiscount).toLocaleString()}đ)
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
           </div>
 
-          {/* ─── RIGHT COLUMN (Sticky Summary) ───────────────── */}
+          {/* ─── RIGHT COLUMN (SUMMARY) ──────────────────────── */}
           <div className="pay-right">
             <div className="pay-summary-card">
               <div className="pay-card-header">
@@ -371,10 +462,16 @@ export default function PaymentPage() {
                   <span>Tạm tính</span>
                   <span>{subtotal.toLocaleString()}đ</span>
                 </div>
-                {selectedVoucher && previewDiscount > 0 && (
+                {selectedVoucher && (
                   <div className="pay-summary-row discount">
-                    <span>🎫 Giảm giá ({selectedVoucher.code})</span>
+                    <span>Voucher ({selectedVoucher.code})</span>
                     <span>-{previewDiscount.toLocaleString()}đ</span>
+                  </div>
+                )}
+                {usePoints && pointsToUse > 0 && (
+                  <div className="pay-summary-row discount">
+                    <span>Dùng điểm</span>
+                    <span>-{pointsToUse.toLocaleString()}đ</span>
                   </div>
                 )}
                 <div className="pay-summary-row method">

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col, Badge } from 'react-bootstrap'
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
@@ -175,7 +175,12 @@ export default function ProfilePage() {
             {(currentUser?.fullName?.charAt(0) || currentUser?.username?.charAt(0) || 'U').toUpperCase()}
           </div>
           <h2 className="fw-bold text-light mb-1">👤 Thông tin cá nhân</h2>
-          <p className="text-muted">Quản lý thông tin tài khoản của bạn</p>
+          <p className="text-muted mb-2">Quản lý thông tin tài khoản của bạn</p>
+          <div className="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill" style={{ background: 'rgba(0, 176, 255, 0.1)', border: '1px solid rgba(0, 176, 255, 0.2)' }}>
+            <span style={{ fontSize: '1.2rem' }}>⭐</span>
+            <span className="text-light">Điểm tích lũy:</span>
+            <strong style={{ color: '#00b0ff', fontSize: '1.1rem' }}>{currentUser?.points?.toLocaleString() || 0}</strong>
+          </div>
         </div>
 
 

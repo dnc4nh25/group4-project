@@ -48,4 +48,8 @@ public class User {
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "points")
+    @Builder.Default
+    private Long points = 0L;
 }

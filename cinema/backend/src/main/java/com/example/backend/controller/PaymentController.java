@@ -232,6 +232,26 @@ public class PaymentController {
 
             long finalTotal = subtotal - discount;
 
+            // Xử lý dùng điểm
+            long usePoints = request.getUsePoints() != null ? request.getUsePoints() : 0L;
+            long currentPoints = user.getPoints() != null ? user.getPoints() : 0L;
+            
+            if (usePoints > 0) {
+                if (usePoints > currentPoints) {
+                    return ResponseEntity.badRequest().body("Số điểm sử dụng vượt quá số điểm hiện có");
+                }
+                if (usePoints > finalTotal) {
+                    return ResponseEntity.badRequest().body("Số điểm sử dụng không được vượt quá số tiền thanh toán");
+                }
+                finalTotal -= usePoints;
+                currentPoints -= usePoints;
+            }
+
+            // Tính điểm thưởng (5% của finalTotal)
+            long pointsEarned = finalTotal > 0 ? (long)(finalTotal * 0.05) : 0L;
+            user.setPoints(currentPoints + pointsEarned);
+            userRepository.save(user);
+
             // 1. Tạo Booking
             Booking booking = Booking.builder()
                     .user(user)
@@ -243,6 +263,8 @@ public class PaymentController {
                     .voucherCode(voucher != null ? voucher.getCode() : null)
                     .status(BookingStatus.CONFIRMED)
                     .createdAt(LocalDateTime.now())
+                    .pointsEarned(pointsEarned)
+                    .pointsUsed(usePoints)
                     .build();
             Booking saved = bookingRepository.save(booking);
 

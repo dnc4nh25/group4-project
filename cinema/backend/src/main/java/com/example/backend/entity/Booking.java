@@ -62,4 +62,12 @@ public class Booking {
 
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    @Column(name = "points_earned")
+    @Builder.Default
+    private Long pointsEarned = 0L;
+
+    @Column(name = "points_used")
+    @Builder.Default
+    private Long pointsUsed = 0L;
 }

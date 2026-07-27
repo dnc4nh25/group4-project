@@ -21,4 +21,6 @@ public class BookingDto {
     private BookingStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime cancelledAt;
+    private Long pointsEarned;
+    private Long pointsUsed;
 }

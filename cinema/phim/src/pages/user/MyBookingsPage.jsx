@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Badge, Spinner, Alert, Button, Modal } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -7,7 +7,7 @@ import './MyBookingsPage.css'
 
 
 export default function MyBookingsPage() {
-  const { currentUser } = useAuth()
+  const { currentUser, updateUser } = useAuth()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -54,14 +54,24 @@ export default function MyBookingsPage() {
     closeCancelModal()
     setCancellingId(bookingId)
     try {
-      await bookingApi.cancel(bookingId)
+      const res = await bookingApi.cancel(bookingId)
       // Cập nhật state local, không cần fetch lại
       setBookings(prev =>
         prev.map(b =>
           b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
         )
       )
-      showToast('Hủy vé thành công! Ghế đã được trả lại.', 'success')
+
+      // Cập nhật lại số dư điểm của user sau khi hủy vé
+      const targetBooking = bookings.find(b => b.id === bookingId)
+      if (targetBooking && updateUser && currentUser) {
+        const pointsRefund = (targetBooking.totalPrice || 0) + (targetBooking.pointsUsed || 0) - (targetBooking.pointsEarned || 0)
+        updateUser({
+          points: (currentUser.points || 0) + pointsRefund
+        })
+      }
+
+      showToast(res.data || 'Hủy vé thành công! Ghế đã được trả lại.', 'success')
     } catch (err) {
       const msg = err.response?.data || 'Không thể hủy vé. Vui lòng thử lại.'
       showToast(msg, 'error')
@@ -163,6 +173,10 @@ export default function MyBookingsPage() {
           <p className="text-warning fw-bold mb-3">"{confirmModal.movieName}"?</p>
           <p className="text-white-50 small">
             Hành động này không thể hoàn tác. Ghế sẽ được trả lại cho suất chiếu.
+            <br /><br />
+            <strong style={{ color: '#00b0ff' }}>
+              💡 Lưu ý: Số tiền bạn đã thanh toán sẽ được quy đổi thành Điểm tích lũy và hoàn trả đầy đủ vào tài khoản của bạn (1đ = 1 điểm). Điểm thưởng từ vé này sẽ bị thu hồi.
+            </strong>
           </p>
         </Modal.Body>
         <Modal.Footer className="cancel-modal-footer border-0">
@@ -254,6 +268,18 @@ export default function MyBookingsPage() {
                             </h5>
                           </div>
                         </div>
+
+                        {/* Thông tin Điểm */}
+                        {(booking.pointsUsed > 0 || booking.pointsEarned > 0) && (
+                          <div className="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25" style={{ fontSize: '0.85rem' }}>
+                            {booking.pointsUsed > 0 ? (
+                              <span className="text-warning">⭐ Đã dùng: {booking.pointsUsed.toLocaleString()}đ</span>
+                            ) : <span></span>}
+                            {booking.pointsEarned > 0 && booking.status !== 'CANCELLED' && (
+                              <span style={{ color: '#00b0ff' }}>🎁 Nhận: +{booking.pointsEarned.toLocaleString()} điểm</span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Cancel Button — chỉ hiện khi vé còn CONFIRMED và đủ thời gian */}
                         {canCancelBooking(booking) && (
