@@ -1,4 +1,4 @@
-﻿
+
 .admin-movies-header {
   background: linear-gradient(135deg, var(--bg-surface) 0%, #1a0533 50%, #0a1628 100%);
   border-bottom: 1px solid var(--border);
@@ -1134,6 +1134,77 @@ input[type="file"].form-input-custom:focus {
   font-size: 1.1rem;
 }
 
+/* ─── Inline Field Validation ──────────────────────────────────────────── */
+
+/* Input khi có lỗi: border đỏ + shake animation */
+.field-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.2) !important;
+  animation: fieldShake 0.35s ease;
+}
+
+/* Genres selection box khi không chọn thể loại */
+.field-invalid-box {
+  border: 1px solid #ef4444 !important;
+  border-radius: 8px;
+  padding: 0.5rem;
+  animation: fieldShake 0.35s ease;
+}
+
+/* Thông báo lỗi inline ngay dưới field */
+.field-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #f87171;
+  line-height: 1.4;
+  animation: fieldErrFadeIn 0.2s ease;
+}
+
+/* Banner lỗi server (thay thế Alert của Bootstrap) */
+.field-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-left: 3px solid #ef4444;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #fca5a5;
+}
+
+/* Animations */
+@keyframes fieldShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  40%       { transform: translateX(5px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+@keyframes fieldErrFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Light theme overrides */
+:root[data-theme='light'] .field-error-msg {
+  color: #dc2626;
+}
+
+:root[data-theme='light'] .field-error-banner {
+  background: rgba(239, 68, 68, 0.06);
+  color: #b91c1c;
+}
+
+
 :root[data-theme='light'] .genres-selection .form-check-label {
   color: #1f2937 !important;
 }
@@ -1158,6 +1229,10 @@ input[type="file"].form-input-custom:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: var(--text-body);
+  /* Override Bootstrap's default light modal color */
+  --bs-modal-color: var(--text-body);
+  --bs-modal-bg: var(--bg-card);
 }
 
 .movie-detail-modal .modal-header {
@@ -1176,12 +1251,18 @@ input[type="file"].form-input-custom:focus {
   padding: 1.5rem;
   max-height: 70vh;
   overflow-y: auto;
+  background: var(--bg-card);
+  color: var(--text-body);
 }
 
 .movie-detail-modal .modal-footer {
   background: var(--bg-surface);
   border-top: 1px solid var(--border);
   padding: 1rem 1.5rem;
+}
+
+.movie-detail-modal .modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 .movie-detail-content {

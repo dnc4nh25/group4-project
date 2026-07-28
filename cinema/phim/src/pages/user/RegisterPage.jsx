@@ -1,87 +1,93 @@
-﻿import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap'
-import axios from 'axios'
-import { useAuth } from '../../contexts/AuthContext'
-
+﻿import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Container, Form, Button, Card, Alert, Spinner } from "react-bootstrap";
+import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    fullName: '',
-    email: '',
-    phone: ''
-  })
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-  const navigate = useNavigate()
+    username: "",
+    password: "",
+    confirmPassword: "",
+    fullName: "",
+    email: "",
+    phone: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{10,11}$/
-    return phoneRegex.test(phone)
-  }
+    const phoneRegex = /^[0-9]{10,11}$/;
+    return phoneRegex.test(phone);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
-    if (!form.username || !form.password || !form.fullName || !form.email || !form.phone) {
-      setError('Vui lòng điền đầy đủ thông tin.')
-      return
+    if (
+      !form.username ||
+      !form.password ||
+      !form.fullName ||
+      !form.email ||
+      !form.phone
+    ) {
+      setError("Vui lòng điền đầy đủ thông tin.");
+      return;
     }
 
     if (!validateEmail(form.email)) {
-      setError('Email không hợp lệ.')
-      return
+      setError("Email không hợp lệ.");
+      return;
     }
 
     if (!validatePhone(form.phone)) {
-      setError('Số điện thoại phải có 10-11 chữ số.')
-      return
+      setError("Số điện thoại phải có 10-11 chữ số.");
+      return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.')
-      return
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
     }
 
     if (form.password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự.')
-      return
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/api/auth/register', {
+      const res = await axios.post("http://localhost:8080/api/auth/register", {
         username: form.username,
         password: form.password,
         fullName: form.fullName,
         email: form.email,
-        phone: form.phone
-      })
+        phone: form.phone,
+      });
       // Đăng ký thành công → Backend trả về JWT, tự động đăng nhập
-      login(res.data)
-      navigate('/')
+      login(res.data);
+      navigate("/");
     } catch (err) {
       if (err.response && err.response.data) {
-        setError(err.response.data)
+        setError(err.response.data);
       } else {
-        setError('Không thể kết nối đến máy chủ.')
+        setError("Không thể kết nối đến máy chủ.");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="auth-bg d-flex align-items-center justify-content-center min-vh-100">
@@ -93,10 +99,16 @@ export default function RegisterPage() {
               <h2 className="fw-bold mb-1">Tạo tài khoản</h2>
               <p className="text-muted">Đăng ký để bắt đầu đặt vé</p>
             </div>
-            {error && <Alert variant="danger" className="py-2">{error}</Alert>}
+            {error && (
+              <Alert variant="danger" className="py-2">
+                {error}
+              </Alert>
+            )}
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Họ và tên <span className="text-danger">*</span></Form.Label>
+                <Form.Label>
+                  Họ và tên <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   id="fullName"
                   name="fullName"
@@ -109,7 +121,9 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Email <span className="text-danger">*</span></Form.Label>
+                <Form.Label>
+                  Email <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   id="reg-email"
                   name="email"
@@ -122,7 +136,9 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Số điện thoại <span className="text-danger">*</span></Form.Label>
+                <Form.Label>
+                  Số điện thoại <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   id="reg-phone"
                   name="phone"
@@ -135,7 +151,9 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Tên đăng nhập <span className="text-danger">*</span></Form.Label>
+                <Form.Label>
+                  Tên đăng nhập <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   id="reg-username"
                   name="username"
@@ -148,7 +166,9 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Mật khẩu <span className="text-danger">*</span></Form.Label>
+                <Form.Label>
+                  Mật khẩu <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   id="reg-password"
                   name="password"
@@ -161,7 +181,9 @@ export default function RegisterPage() {
                 />
               </Form.Group>
               <Form.Group className="mb-4">
-                <Form.Label>Xác nhận mật khẩu <span className="text-danger">*</span></Form.Label>
+                <Form.Label>
+                  Xác nhận mật khẩu <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   id="confirmPassword"
                   name="confirmPassword"
@@ -179,16 +201,18 @@ export default function RegisterPage() {
                 className="w-100 btn-primary-custom"
                 disabled={loading}
               >
-                {loading ? <Spinner size="sm" /> : 'Đăng ký'}
+                {loading ? <Spinner size="sm" /> : "Đăng ký"}
               </Button>
             </Form>
             <div className="text-center mt-3">
               <span className="text-muted">Đã có tài khoản? </span>
-              <Link to="/login" className="text-warning fw-semibold">Đăng nhập</Link>
+              <Link to="/login" className="text-warning fw-semibold">
+                Đăng nhập
+              </Link>
             </div>
           </Card.Body>
         </Card>
       </Container>
     </div>
-  )
+  );
 }

@@ -5,14 +5,14 @@ import './AdminShowtimesPage.css'
 import './AdminCommon.css'
 import './AdminShowtimesEnhanced.css'
 
-const EMPTY_FORM = { movieId: '', date: '', time: '', room: '', totalSeats: 100, price: 80000 }
+const EMPTY_FORM = { movieId: '', date: '', time: '', room: '', totalSeats: '', price: '' }
 
 const AVAILABLE_ROOMS = [
-  { value: 'Phòng 1', label: 'Phòng 1', seats: 100 },
-  { value: 'Phòng 2', label: 'Phòng 2', seats: 80 },
-  { value: 'Phòng 3', label: 'Phòng 3', seats: 90 },
-  { value: 'Phòng 4', label: 'Phòng 4', seats: 60 },
-  { value: 'Phòng 5', label: 'Phòng 5', seats: 70 }
+  { value: 'Phòng 1', label: 'Phòng 1', seats: 60 },
+  { value: 'Phòng 2', label: 'Phòng 2', seats: 70 },
+  { value: 'Phòng 3', label: 'Phòng 3', seats: 80 },
+  { value: 'Phòng 4', label: 'Phòng 4', seats: 90 },
+  { value: 'Phòng 5', label: 'Phòng 5', seats: 100 }
 ]
 
 export default function AdminShowtimesPage() {
@@ -24,6 +24,7 @@ export default function AdminShowtimesPage() {
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
 
@@ -115,130 +116,151 @@ export default function AdminShowtimesPage() {
   }, [filteredShowtimes])
 
   const handleOpenAdd = () => {
-    setForm({ ...EMPTY_FORM, movieId: movies[0]?.id || '', bookedSeatNums: [] })
-    setEditingId(null); setError(''); setShowModal(true)
+    setForm({ ...EMPTY_FORM, bookedSeatNums: [] })
+    setEditingId(null); setError(''); setFieldErrors({}); setShowModal(true)
   }
   const handleOpenEdit = (st) => {
-    setForm({ 
+    setForm({
       movieId: st.movieId,
       date: st.date,
-      time: st.time.substring(0, 5), // Convert HH:MM:SS to HH:MM
+      time: st.time.substring(0, 5),
       room: st.room,
       totalSeats: st.totalSeats,
       bookedSeats: st.bookedSeats,
       price: st.price,
       bookedSeatNums: st.bookedSeatNums || []
     })
-    setEditingId(st.id); setError(''); setShowModal(true)
+    setEditingId(st.id); setError(''); setFieldErrors({}); setShowModal(true)
   }
   const handleChange = (e) => {
     const { name, value } = e.target
-    
+    // Xóa lỗi của field khi user bắt đầu sửa
+    if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: '' }))
+    // Xóa lỗi trùng lịch khi user thay đổi ngày, giờ hoặc phòng
+    if (['date', 'time', 'room'].includes(name) && fieldErrors.schedule) {
+      setFieldErrors(prev => ({ ...prev, schedule: '' }))
+    }
+
     if (name === 'room') {
       const selectedRoom = AVAILABLE_ROOMS.find(r => r.value === value)
       if (selectedRoom) {
-        setForm({ 
-          ...form, 
-          room: value,
-          totalSeats: selectedRoom.seats 
-        })
+        setForm(prev => ({ ...prev, room: value, totalSeats: selectedRoom.seats }))
+        if (fieldErrors.room) setFieldErrors(prev => ({ ...prev, room: '' }))
         return
       }
     }
-    
-    setForm({ ...form, [name]: value })
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSave = async (e) => {
     e.preventDefault()
     setError('')
-    
-    if (!form.movieId) {
-      setError('❌ Vui lòng chọn phim.'); return
-    }
-    
-    if (!form.date) {
-      setError('❌ Ngày chiếu không được để trống.'); return
-    }
-    
-    if (!form.time) {
-      setError('❌ Giờ chiếu không được để trống.'); return
-    }
-    
-    if (!form.room?.trim()) {
-      setError('❌ Vui lòng chọn phòng chiếu.'); return
-    }
-    
-    const isValidRoom = AVAILABLE_ROOMS.some(r => r.value === form.room)
-    if (!isValidRoom) {
-      setError('❌ Phòng chiếu không hợp lệ. Vui lòng chọn từ danh sách.'); return
-    }
-    
-    const showtimeDate = new Date(form.date)
+
+    // ── Validate tất cả fields cùng lúc ──
+    const errs = {}
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    
-    if (showtimeDate < today) {
-      setError('❌ Ngày chiếu không được là ngày trong quá khứ.'); return
+
+    // Phim
+    if (!form.movieId) {
+      errs.movieId = 'Vui lòng chọn phim muốn thêm xuất chiếu.'
     }
-    
-    const maxDate = new Date()
-    maxDate.setFullYear(maxDate.getFullYear() + 1)
-    
-    if (showtimeDate > maxDate) {
-      setError('❌ Ngày chiếu không được quá 1 năm trong tương lai.'); return
+
+    // Ngày chiếu
+    if (!form.date) {
+      errs.date = 'Ngày chiếu không được để trống.'
+    } else {
+      const showtimeDate = new Date(form.date)
+      showtimeDate.setHours(0, 0, 0, 0)
+      if (showtimeDate < today) {
+        errs.date = 'Ngày chiếu không được là ngày trong quá khứ.'
+      } else {
+        const maxDate = new Date()
+        maxDate.setFullYear(maxDate.getFullYear() + 1)
+        if (showtimeDate > maxDate) errs.date = 'Ngày chiếu không được quá 1 năm tới.'
+      }
     }
-    
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/
-    if (!timeRegex.test(form.time)) {
-      setError('❌ Giờ chiếu không hợp lệ (định dạng HH:MM hoặc HH:MM:SS).'); return
+
+    // Giờ chiếu
+    if (!form.time) {
+      errs.time = 'Giờ chiếu không được để trống.'
+    } else {
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/
+      if (!timeRegex.test(form.time)) {
+        errs.time = 'Giờ chiếu không hợp lệ (HH:MM).'
+      } else if (form.date) {
+        // Kiểm tra nếu là ngày hôm nay, thời gian không được trong quá khứ
+        const showtimeDate = new Date(form.date)
+        showtimeDate.setHours(0, 0, 0, 0)
+        const todayDate = new Date()
+        todayDate.setHours(0, 0, 0, 0)
+        
+        if (showtimeDate.getTime() === todayDate.getTime()) {
+          // Cùng ngày hôm nay - check thời gian
+          const [hours, minutes] = form.time.split(':').map(Number)
+          const showtimeDateTime = new Date()
+          showtimeDateTime.setHours(hours, minutes, 0, 0)
+          const now = new Date()
+          
+          if (showtimeDateTime <= now) {
+            errs.time = 'Giờ chiếu không được trong quá khứ. Vui lòng chọn thời gian sau hiện tại.'
+          }
+        }
+      }
     }
-    
-    const totalSeats = Number(form.totalSeats)
-    
-    if (isNaN(totalSeats) || totalSeats <= 0) {
-      setError('❌ Tổng số ghế phải là số dương.'); return
+
+    // Phòng chiếu
+    if (!form.room?.trim()) {
+      errs.room = 'Vui lòng chọn phòng chiếu.'
+    } else if (!AVAILABLE_ROOMS.some(r => r.value === form.room)) {
+      errs.room = 'Phòng chiếu không hợp lệ.'
     }
-    
-    if (totalSeats > 500) {
-      setError('❌ Tổng số ghế không được quá 500.'); return
+
+    // Giá vé
+    if (!form.price && form.price !== 0) {
+      errs.price = 'Giá vé không được để trống.'
+    } else {
+      const price = Number(form.price)
+      if (isNaN(price) || price < 0) {
+        errs.price = 'Giá vé phải là số không âm.'
+      } 
     }
-    
-    // Only validate bookedSeats if editing (not when adding new)
+
+    // Số ghế đã đặt (chỉ khi edit)
     if (editingId) {
       const bookedSeats = Number(form.bookedSeats)
-      
-      if (isNaN(bookedSeats) || bookedSeats < 0) {
-        setError('❌ Số ghế đã đặt không được âm.'); return
-      }
-      
-      if (bookedSeats > totalSeats) {
-        setError('❌ Số ghế đã đặt không được lớn hơn tổng số ghế.'); return
-      }
+      const totalSeats = Number(form.totalSeats)
+      if (isNaN(bookedSeats) || bookedSeats < 0) errs.bookedSeats = 'Số ghế đã đặt không được âm.'
+      else if (bookedSeats > totalSeats) errs.bookedSeats = 'Số ghế đã đặt không được lớn hơn tổng số ghế.'
     }
-    
-    const price = Number(form.price)
-    if (isNaN(price) || price < 0) {
-      setError('❌ Giá vé phải là số không âm.'); return
-    }
-    
-    if (price > 1000000) {
-      setError('❌ Giá vé không hợp lệ (tối đa 1,000,000đ).'); return
-    }
-    
-    if (!editingId) {
-      const duplicate = showtimes.find(st => 
+
+    // Kiểm tra trùng (chỉ khi thêm mới và không có lỗi field quan trọng)
+    if (!editingId && !errs.movieId && !errs.date && !errs.time && !errs.room) {
+      const duplicate = showtimes.find(st =>
         String(st.movieId) === String(form.movieId) &&
         st.date === form.date &&
         st.time === form.time &&
         st.room.toLowerCase() === form.room.trim().toLowerCase()
       )
-      
-      if (duplicate) {
-        setError('❌ Suất chiếu này đã tồn tại (trùng phim, ngày, giờ và phòng).'); return
-      }
+      if (duplicate) errs.movieId = 'Suất chiếu này đã tồn tại (trùng phim, ngày, giờ và phòng).'
     }
-    
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs)
+      
+      // Scroll đến field lỗi đầu tiên
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('.field-invalid, .form-input-custom.is-invalid')
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          firstErrorField.focus()
+        }
+      }, 100)
+      
+      return
+    }
+    setFieldErrors({})
+
     setSaving(true)
     try {
       const payload = {
@@ -250,16 +272,20 @@ export default function AdminShowtimesPage() {
         price: Number(form.price),
         bookedSeatNums: form.bookedSeatNums || []
       }
-      
       if (editingId) {
         await axios.put(`http://localhost:8080/api/showtimes/${editingId}`, payload)
       } else {
         await axios.post('http://localhost:8080/api/showtimes', payload)
       }
       setShowModal(false); load()
-    } catch (err) { 
-      setError('❌ Lưu thất bại. Vui lòng thử lại.')
+    } catch (err) {
       console.error('Save error:', err)
+      // Xử lý lỗi validation từ backend (HTTP 409 - trùng lịch hoặc khoảng cách không đủ)
+      if (err.response?.status === 409 && err.response?.data?.message) {
+        setFieldErrors(prev => ({ ...prev, schedule: err.response.data.message }))
+      } else {
+        setError('Lưu thất bại. Vui lòng thử lại.')
+      }
     }
     finally { setSaving(false) }
   }
@@ -570,75 +596,138 @@ export default function AdminShowtimesPage() {
         )}
       </Container>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg" className="admin-modal">
         <Modal.Header closeButton>
-          <Modal.Title>{editingId ? '✏️ Sửa suất chiếu' : '➕ Thêm suất chiếu'}</Modal.Title>
+          <Modal.Title>{editingId ? '✏️ Sửa xuất chiếu' : '➕ Thêm xuất chiếu'}</Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleSave}>
+        <Form onSubmit={handleSave} noValidate>
           <Modal.Body>
-            {error && <Alert variant="danger">{error}</Alert>}
+            {/* Lỗi server */}
+            {error && (
+              <div className="field-error-banner mb-3">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {/* Phim */}
             <Form.Group className="mb-3">
               <Form.Label>Phim <span className="text-danger">*</span></Form.Label>
-              <Form.Select name="movieId" value={form.movieId} onChange={handleChange} required>
-                <option value="">-- Chọn phim --</option>
+              <Form.Select
+                name="movieId"
+                value={form.movieId}
+                onChange={handleChange}
+                className={fieldErrors.movieId ? 'field-invalid' : ''}
+              >
+                <option value="">-- Vui lòng chọn phim --</option>
                 {movies.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
               </Form.Select>
+              {fieldErrors.movieId && <div className="field-error-msg">⚠ {fieldErrors.movieId}</div>}
             </Form.Group>
+
+            {/* Ngày - Giờ */}
             <div className="row g-3 mb-3">
               <div className="col-md-6">
                 <Form.Label>Ngày chiếu <span className="text-danger">*</span></Form.Label>
-                <Form.Control name="date" type="date" value={form.date} onChange={handleChange} required />
+                <Form.Control
+                  name="date"
+                  type="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  className={fieldErrors.date ? 'field-invalid' : ''}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+                {fieldErrors.date && <div className="field-error-msg">⚠ {fieldErrors.date}</div>}
               </div>
               <div className="col-md-6">
                 <Form.Label>Giờ chiếu <span className="text-danger">*</span></Form.Label>
-                <Form.Control name="time" type="time" value={form.time} onChange={handleChange} required />
+                <Form.Control
+                  name="time"
+                  type="time"
+                  value={form.time}
+                  onChange={handleChange}
+                  className={fieldErrors.time ? 'field-invalid' : ''}
+                />
+                {fieldErrors.time && <div className="field-error-msg">⚠ {fieldErrors.time}</div>}
               </div>
             </div>
+
+            {/* Lỗi trùng lịch từ backend */}
+            {fieldErrors.schedule && (
+              <div className="field-error-banner mb-3" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245,158,11,0.12)', color: '#fbbf24', padding: '10px 14px', borderRadius: '6px', fontSize: '0.92rem' }}>
+                ⏰ {fieldErrors.schedule}
+              </div>
+            )}
+
+            {/* Phòng chiếu */}
             <Form.Group className="mb-3">
               <Form.Label>Phòng chiếu <span className="text-danger">*</span></Form.Label>
-              <Form.Select 
-                name="room" 
-                value={form.room} 
-                onChange={handleChange} 
-                required
+              <Form.Select
+                name="room"
+                value={form.room}
+                onChange={handleChange}
+                className={fieldErrors.room ? 'field-invalid' : ''}
               >
-                <option value="">-- Chọn phòng --</option>
+                <option value="">-- Vui lòng chọn phòng --</option>
                 {AVAILABLE_ROOMS.map(room => (
                   <option key={room.value} value={room.value}>
                     {room.label}
                   </option>
                 ))}
               </Form.Select>
-              <Form.Text className="text-muted">
-                Số ghế sẽ tự động cập nhật theo phòng được chọn
-              </Form.Text>
+              {fieldErrors.room
+                ? <div className="field-error-msg">⚠ {fieldErrors.room}</div>
+                : <Form.Text className="text-muted"></Form.Text>
+              }
             </Form.Group>
+
+            {/* Tổng ghế + Đã đặt */}
             <div className="row g-3 mb-3">
               <div className="col-md-6">
                 <Form.Label>Tổng ghế</Form.Label>
-                <Form.Control name="totalSeats" type="number" value={form.totalSeats} onChange={handleChange} />
+                <Form.Control
+                  name="totalSeats"
+                  type="number"
+                  value={form.totalSeats}
+                  readOnly
+                  className="bg-secondary bg-opacity-25"
+                />
+               
               </div>
               {editingId && (
                 <div className="col-md-6">
                   <Form.Label>Đã đặt</Form.Label>
-                  <Form.Control 
-                    name="bookedSeats" 
-                    type="number" 
-                    value={form.bookedSeats || 0} 
+                  <Form.Control
+                    name="bookedSeats"
+                    type="number"
+                    value={form.bookedSeats || 0}
                     onChange={handleChange}
                     readOnly
-                    className="bg-secondary bg-opacity-25"
+                    className={`bg-secondary bg-opacity-25${fieldErrors.bookedSeats ? ' field-invalid' : ''}`}
                   />
-                  <Form.Text className="text-muted">
-                    Chỉ xem, được tính tự động từ đặt vé
-                  </Form.Text>
+                  {fieldErrors.bookedSeats
+                    ? <div className="field-error-msg">⚠ {fieldErrors.bookedSeats}</div>
+                    : <Form.Text className="text-muted">Chỉ xem, tính tự động từ đặt vé</Form.Text>
+                  }
                 </div>
               )}
             </div>
+
+            {/* Giá vé */}
             <div className="row g-3 mb-3">
               <div className="col-md-12">
-                <Form.Label>Giá vé (đ)</Form.Label>
-                <Form.Control name="price" type="number" value={form.price} onChange={handleChange} />
+                <Form.Label>Giá vé (VND) <span className="text-danger">*</span></Form.Label>
+                <Form.Control
+                  name="price"
+                  type="number"
+                  value={form.price}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: 80000"
+                  className={fieldErrors.price ? 'field-invalid' : ''}
+                />
+                {fieldErrors.price
+                  ? <div className="field-error-msg">⚠ {fieldErrors.price}</div>
+                  : <Form.Text className="text-muted"></Form.Text>
+                }
               </div>
             </div>
           </Modal.Body>
