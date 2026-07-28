@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Card, Table, Badge, Button, Modal, Form, Spinner } from 'react-bootstrap'
 import axios from 'axios'
 import './AdminCommon.css'
@@ -24,7 +24,9 @@ export default function AdminFeedbacksPage() {
         new Date(b.createdAt) - new Date(a.createdAt)
       )
       setFeedbacks(sortedFeedbacks)
-      setUsers(usersRes.data)
+      // API /api/users trả về Page<UserDto> có dạng { content: [...] }, cần lấy .content
+      const usersData = usersRes.data
+      setUsers(Array.isArray(usersData) ? usersData : (usersData?.content ?? []))
     } catch (err) {
       console.error('Error fetching data:', err)
       alert('Không thể tải dữ liệu góp ý.')

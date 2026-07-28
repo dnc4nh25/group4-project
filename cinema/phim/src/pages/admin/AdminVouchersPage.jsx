@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   Table,
@@ -18,6 +18,9 @@ import "./AdminCommon.css";
 
 const API = "http://localhost:8080/api";
 
+// Số ghế tối đa trong hệ thống (phòng lớn nhất)
+const MAX_SEATS_IN_SYSTEM = 100;
+
 const EMPTY_FORM = {
   code: "",
   title: "",
@@ -26,16 +29,158 @@ const EMPTY_FORM = {
   value: "",
   minOrderValue: 0,
   minSeats: 0,
-  maxDiscount: null,
+  maxDiscount: "",
   usageLimit: "",
   newUsersOnly: false,
   oneTimePerUser: false,
-  daysAfterRegistration: null,
+  daysAfterRegistration: "",
   weekendOnly: false,
   validFrom: "",
   validTo: "",
   isActive: true,
 };
+
+// ─── Helper: validate toàn bộ form ───────────────────────────────────────────
+function validateVoucherForm(form, vouchers, editingId) {
+  const errs = {};
+
+  // 1. Mã voucher
+  const code = (form.code || "").trim();
+  if (!code) {
+    errs.code = "Mã voucher không được để trống.";
+  } else if (code.includes(" ")) {
+    errs.code = "Mã voucher không được chứa khoảng trắng.";
+  } else if (
+    !/^[A-Z0-9]+$/.test(code.toUpperCase()) ||
+    /[^A-Z0-9]/i.test(code)
+  ) {
+    errs.code = "Mã voucher chỉ được chứa chữ cái in hoa và chữ số.";
+  } else if (code.length < 4) {
+    errs.code = "Mã voucher phải có ít nhất 4 ký tự.";
+  } else if (code.length > 20) {
+    errs.code = "Mã voucher không được vượt quá 20 ký tự.";
+  } else {
+    // Kiểm tra trùng (so sánh case-insensitive, bỏ qua chính mình)
+    const duplicate = vouchers.find(
+      (v) =>
+        v.code.toUpperCase() === code.toUpperCase() &&
+        String(v.id) !== String(editingId),
+    );
+    if (duplicate) errs.code = "Mã voucher này đã tồn tại.";
+  }
+
+  // 3. Tiêu đề
+  const title = (form.title || "").trim();
+  if (!title) {
+    errs.title = "Tiêu đề voucher không được để trống.";
+  } else if (title.length < 4) {
+    errs.title = "Tiêu đề voucher phải có ít nhất 4 ký tự.";
+  } else if (title.length > 200) {
+    errs.title = "Tiêu đề voucher không được vượt quá 200 ký tự.";
+  }
+
+  // 4. Mô tả
+  if (form.description && form.description.length > 200) {
+    errs.description = "Mô tả không được vượt quá 200 ký tự.";
+  }
+
+  // 5. Giá trị giảm
+  const value = Number(form.value);
+  if (form.value === "" || form.value === null || form.value === undefined) {
+    errs.value = "Giá trị giảm không được để trống.";
+  } else if (isNaN(value) || value <= 0) {
+    errs.value = "Giá trị giảm phải là số dương lớn hơn 0.";
+  } else if (form.type === "PERCENTAGE" && value > 100) {
+    errs.value = "Giá trị phần trăm giảm không được vượt quá 100%.";
+  }
+
+  // 6. Đơn hàng tối thiểu
+  if (form.minOrderValue !== "" && form.minOrderValue !== null) {
+    const minOrder = Number(form.minOrderValue);
+    if (isNaN(minOrder) || minOrder < 0) {
+      errs.minOrderValue = "Đơn hàng tối thiểu không được âm.";
+    }
+  }
+
+  // 7. Số ghế tối thiểu
+  if (form.minSeats !== "" && form.minSeats !== null) {
+    const minSeats = Number(form.minSeats);
+    if (!Number.isInteger(minSeats) || minSeats < 0) {
+      errs.minSeats = "Số ghế tối thiểu phải là số nguyên không âm.";
+    } else if (minSeats > MAX_SEATS_IN_SYSTEM) {
+      errs.minSeats = `Số ghế tối thiểu không được vượt quá ${MAX_SEATS_IN_SYSTEM}.`;
+    }
+  }
+
+  // 8. Giảm tối đa
+  if (
+    form.maxDiscount !== "" &&
+    form.maxDiscount !== null &&
+    form.maxDiscount !== undefined
+  ) {
+    const maxDiscount = Number(form.maxDiscount);
+    if (isNaN(maxDiscount) || maxDiscount < 0) {
+      errs.maxDiscount = "Giảm tối đa không được âm.";
+    } else if (maxDiscount === 0) {
+      errs.maxDiscount = "Giảm tối đa phải lớn hơn 0 nếu có nhập.";
+    } else if (
+      form.type === "FIXED" &&
+      !isNaN(value) &&
+      value > 0 &&
+      maxDiscount < value
+    ) {
+      errs.maxDiscount = "Giảm tối đa không được nhỏ hơn giá trị giảm cố định.";
+    }
+  }
+
+  // 9. Giới hạn sử dụng
+  const usageLimit = Number(form.usageLimit);
+  if (form.usageLimit === "" || form.usageLimit === null) {
+    errs.usageLimit = "Giới hạn sử dụng không được để trống.";
+  } else if (!Number.isInteger(usageLimit) || usageLimit <= 0) {
+    errs.usageLimit = "Giới hạn sử dụng phải là số nguyên dương lớn hơn 0.";
+  }
+
+  // 10 & 11. Ngày bắt đầu / kết thúc
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (!form.validFrom) {
+    errs.validFrom = "Ngày bắt đầu không được để trống.";
+  } else {
+    const from = new Date(form.validFrom);
+    if (from < today) {
+      errs.validFrom = "Ngày bắt đầu không được là ngày trong quá khứ.";
+    }
+  }
+
+  if (!form.validTo) {
+    errs.validTo = "Ngày kết thúc không được để trống.";
+  }
+
+  if (form.validFrom && form.validTo && !errs.validFrom) {
+    const from = new Date(form.validFrom);
+    const to   = new Date(form.validTo);
+    if (to <= from) {
+      errs.validTo = "Ngày kết thúc phải sau ngày bắt đầu.";
+    }
+  }
+
+  // 16. Số ngày sau đăng ký (chỉ validate khi bật newUsersOnly)
+  if (
+    form.newUsersOnly &&
+    form.daysAfterRegistration !== "" &&
+    form.daysAfterRegistration !== null
+  ) {
+    const days = Number(form.daysAfterRegistration);
+    if (!Number.isInteger(days) || days <= 0) {
+      errs.daysAfterRegistration =
+        "Số ngày sau khi đăng ký phải là số nguyên dương lớn hơn 0.";
+    }
+  }
+
+  return errs;
+}
 
 export default function AdminVouchersPage() {
   const [vouchers, setVouchers] = useState([]);
@@ -45,9 +190,13 @@ export default function AdminVouchersPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [search, setSearch] = useState("");
+  
+  // Ref để scroll đến vị trí thông báo lỗi
+  const errorBannerRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -63,11 +212,9 @@ export default function AdminVouchersPage() {
 
   useEffect(() => {
     load();
-
     const interval = setInterval(() => {
       load();
     }, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -75,6 +222,7 @@ export default function AdminVouchersPage() {
     setForm(EMPTY_FORM);
     setEditingId(null);
     setError("");
+    setFieldErrors({});
     setShowModal(true);
   };
 
@@ -85,13 +233,16 @@ export default function AdminVouchersPage() {
       description: voucher.description || "",
       type: voucher.type || "PERCENTAGE",
       value: voucher.value || "",
-      minOrderValue: voucher.minOrderValue || 0,
-      minSeats: voucher.minSeats || 0,
-      maxDiscount: voucher.maxDiscount || null,
+      minOrderValue: voucher.minOrderValue ?? 0,
+      minSeats: voucher.minSeats ?? 0,
+      maxDiscount: voucher.maxDiscount != null ? voucher.maxDiscount : "",
       usageLimit: voucher.usageLimit || "",
       newUsersOnly: voucher.newUsersOnly || false,
       oneTimePerUser: voucher.oneTimePerUser || false,
-      daysAfterRegistration: voucher.daysAfterRegistration || null,
+      daysAfterRegistration:
+        voucher.daysAfterRegistration != null
+          ? voucher.daysAfterRegistration
+          : "",
       weekendOnly: voucher.weekendOnly || false,
       validFrom: voucher.validFrom ? voucher.validFrom.split("T")[0] : "",
       validTo: voucher.validTo ? voucher.validTo.split("T")[0] : "",
@@ -99,11 +250,30 @@ export default function AdminVouchersPage() {
     });
     setEditingId(voucher.id);
     setError("");
+    setFieldErrors({});
     setShowModal(true);
+  };
+
+  // Xóa lỗi field khi user bắt đầu chỉnh sửa
+  const clearFieldError = (name) => {
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    clearFieldError(name);
+
+    // Khi thay đổi type, xóa luôn lỗi value và maxDiscount vì ngưỡng đổi
+    if (name === "type") {
+      setFieldErrors((prev) => ({ ...prev, value: "", maxDiscount: "" }));
+    }
+    // Khi tắt newUsersOnly, xóa lỗi daysAfterRegistration
+    if (name === "newUsersOnly" && !checked) {
+      setFieldErrors((prev) => ({ ...prev, daysAfterRegistration: "" }));
+    }
+
     setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -114,71 +284,57 @@ export default function AdminVouchersPage() {
     e.preventDefault();
     setError("");
 
-    if (!form.code?.trim()) {
-      setError("❌ Mã voucher không được để trống.");
+    // ── Validate frontend trước ──
+    const errs = validateVoucherForm(form, vouchers, editingId);
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      // Scroll đến vị trí đầu modal để hiển thị lỗi
+      setTimeout(() => {
+        if (errorBannerRef.current) {
+          errorBannerRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 100);
       return;
     }
-
-    if (!form.title?.trim()) {
-      setError("❌ Tiêu đề không được để trống.");
-      return;
-    }
-
-    if (!form.value || form.value <= 0) {
-      setError("❌ Giá trị giảm giá phải lớn hơn 0.");
-      return;
-    }
-
-    if (form.type === "percentage" && form.value > 100) {
-      setError("❌ Phần trăm giảm giá không được vượt quá 100%.");
-      return;
-    }
-
-    if (!form.usageLimit || form.usageLimit <= 0) {
-      setError("❌ Giới hạn sử dụng phải lớn hơn 0.");
-      return;
-    }
-
-    if (!form.validFrom || !form.validTo) {
-      setError("❌ Vui lòng chọn thời gian hiệu lực.");
-      return;
-    }
-
-    if (new Date(form.validFrom) >= new Date(form.validTo)) {
-      setError("❌ Ngày bắt đầu phải trước ngày kết thúc.");
-      return;
-    }
-
-    const existingVoucher = vouchers.find(
-      (v) =>
-        v.code.toLowerCase() === form.code.toLowerCase() &&
-        String(v.id) !== String(editingId),
-    );
-    if (existingVoucher) {
-      setError("❌ Mã voucher đã tồn tại.");
-      return;
-    }
+    setFieldErrors({});
 
     setSaving(true);
     try {
       const payload = {
-        code: form.code.toUpperCase().trim(),
+        code: form.code.trim().toUpperCase(),
         title: form.title.trim(),
         description: form.description?.trim() || "",
-        type: form.type.toUpperCase(),
+        type: form.type,
         value: parseFloat(form.value),
-        minOrderValue: form.minOrderValue ? parseInt(form.minOrderValue) : 0,
-        minSeats: form.minSeats ? parseInt(form.minSeats) : 0,
-        maxDiscount: form.maxDiscount ? parseInt(form.maxDiscount) : null,
+        minOrderValue:
+          form.minOrderValue !== "" && form.minOrderValue !== null
+            ? parseInt(form.minOrderValue)
+            : 0,
+        minSeats:
+          form.minSeats !== "" && form.minSeats !== null
+            ? parseInt(form.minSeats)
+            : 0,
+        maxDiscount:
+          form.maxDiscount !== "" &&
+          form.maxDiscount !== null &&
+          form.maxDiscount !== undefined
+            ? parseInt(form.maxDiscount)
+            : null,
         usageLimit: parseInt(form.usageLimit),
         usedCount: editingId
           ? vouchers.find((v) => v.id === editingId)?.usedCount || 0
           : 0,
         newUsersOnly: form.newUsersOnly || false,
         oneTimePerUser: form.oneTimePerUser || false,
-        daysAfterRegistration: form.daysAfterRegistration
-          ? parseInt(form.daysAfterRegistration)
-          : null,
+        daysAfterRegistration:
+          form.newUsersOnly &&
+          form.daysAfterRegistration !== "" &&
+          form.daysAfterRegistration !== null
+            ? parseInt(form.daysAfterRegistration)
+            : null,
         weekendOnly: form.weekendOnly || false,
         validFrom: form.validFrom,
         validTo: form.validTo,
@@ -194,8 +350,22 @@ export default function AdminVouchersPage() {
       setShowModal(false);
       load();
     } catch (err) {
-      setError("❌ Lưu thất bại. Vui lòng thử lại.");
       console.error("Save error:", err);
+      // Xử lý lỗi validation từ backend (HTTP 422)
+      if (err.response?.status === 422 && err.response?.data?.errors) {
+        setFieldErrors(err.response.data.errors);
+      } else {
+        setError("❌ Lưu thất bại. Vui lòng thử lại.");
+      }
+      // Scroll đến vị trí lỗi
+      setTimeout(() => {
+        if (errorBannerRef.current) {
+          errorBannerRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 100);
     } finally {
       setSaving(false);
     }
@@ -226,6 +396,17 @@ export default function AdminVouchersPage() {
       setError("Cập nhật trạng thái thất bại.");
     }
   };
+
+  // Helper hiển thị lỗi field inline
+  const FieldError = ({ name }) =>
+    fieldErrors[name] ? (
+      <div
+        className="field-error-msg"
+        style={{ color: "#f87171", fontSize: "0.82rem", marginTop: "4px" }}
+      >
+        ⚠ {fieldErrors[name]}
+      </div>
+    ) : null;
 
   const filtered = vouchers.filter(
     (v) =>
@@ -405,7 +586,12 @@ export default function AdminVouchersPage() {
                               <div
                                 className="usage-fill"
                                 style={{
-                                  width: `${Math.min(((voucher.usedCount || 0) / voucher.usageLimit) * 100, 100)}%`,
+                                  width: `${Math.min(
+                                    ((voucher.usedCount || 0) /
+                                      voucher.usageLimit) *
+                                      100,
+                                    100,
+                                  )}%`,
                                   backgroundColor:
                                     voucher.usedCount >= voucher.usageLimit
                                       ? "#dc3545"
@@ -465,61 +651,86 @@ export default function AdminVouchersPage() {
         )}
       </Container>
 
+      {/* ─── Modal Thêm / Sửa ──────────────────────────────────────────────── */}
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
         size="lg"
         centered
+        className="admin-modal"
       >
         <Modal.Header closeButton>
           <Modal.Title>
             {editingId ? "✏️ Sửa voucher" : "➕ Thêm voucher mới"}
           </Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleSave}>
+        <Form onSubmit={handleSave} noValidate>
           <Modal.Body>
+            {/* Banner lỗi server - thêm ref để scroll */}
+            
+
             <Row className="g-3">
+              {/* ── Mã voucher ── */}
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Mã voucher *</Form.Label>
+                  <Form.Label>
+                    Mã voucher <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="code"
                     value={form.code}
                     onChange={handleChange}
-                    placeholder="VD: WELCOME20"
+                    placeholder="Vui lòng nhập mã voucher"
                     style={{ textTransform: "uppercase" }}
-                    required
+                    className={fieldErrors.code ? "field-invalid" : ""}
+                    disabled={!!editingId} // Không cho đổi code khi edit
                   />
+                  <Form.Text className="text-muted">
+                    Chỉ chữ in hoa và số, 4–20 ký tự
+                  </Form.Text>
+                  <FieldError name="code" />
                 </Form.Group>
               </Col>
+
+              {/* ── Loại giảm giá ── */}
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Loại giảm giá *</Form.Label>
+                  <Form.Label>
+                    Loại giảm giá <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Select
                     name="type"
                     value={form.type}
                     onChange={handleChange}
-                    required
+                    className={fieldErrors.type ? "field-invalid" : ""}
                   >
                     <option value="PERCENTAGE">Phần trăm (%)</option>
                     <option value="FIXED">Số tiền cố định (đ)</option>
                   </Form.Select>
+                  <FieldError name="type" />
                 </Form.Group>
               </Col>
+
+              {/* ── Tiêu đề ── */}
               <Col xs={12}>
                 <Form.Group>
-                  <Form.Label>Tiêu đề *</Form.Label>
+                  <Form.Label>
+                    Tiêu đề <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="title"
                     value={form.title}
                     onChange={handleChange}
-                    placeholder="VD: Chào mừng thành viên mới"
-                    required
+                    placeholder="Vui lòng nhập tiêu đề."
+                    className={fieldErrors.title ? "field-invalid" : ""}
                   />
+                  <FieldError name="title" />
                 </Form.Group>
               </Col>
+
+              {/* ── Mô tả ── */}
               <Col xs={12}>
                 <Form.Group>
                   <Form.Label>Mô tả</Form.Label>
@@ -529,27 +740,49 @@ export default function AdminVouchersPage() {
                     name="description"
                     value={form.description}
                     onChange={handleChange}
-                    placeholder="Mô tả chi tiết về voucher..."
+                    placeholder="Vui lòng nhập mô tả chi tiết về voucher."
+                    className={fieldErrors.description ? "field-invalid" : ""}
+                    maxLength={500}
                   />
+                  <div className="d-flex justify-content-between align-items-start mt-1">
+                    <FieldError name="description" />
+                    <small className="text-muted ms-auto">
+                      {(form.description || "").length}/500
+                    </small>
+                  </div>
                 </Form.Group>
               </Col>
+
+              {/* ── Giá trị giảm ── */}
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>
-                    Giá trị giảm * {form.type === "PERCENTAGE" ? "(%)" : "(đ)"}
+                    Giá trị giảm <span className="text-danger">*</span>{" "}
+                    {form.type === "PERCENTAGE" ? "(%)" : "(đ)"}
                   </Form.Label>
                   <Form.Control
                     type="number"
                     name="value"
                     value={form.value}
                     onChange={handleChange}
-                    min="0"
+                    min="0.01"
                     max={form.type === "PERCENTAGE" ? "100" : undefined}
                     step={form.type === "PERCENTAGE" ? "0.1" : "1000"}
-                    required
+                    placeholder={
+                      form.type === "PERCENTAGE" ? "VD: 20" : "VD: 50000"
+                    }
+                    className={fieldErrors.value ? "field-invalid" : ""}
                   />
+                  {form.type === "PERCENTAGE" && (
+                    <Form.Text className="text-muted">
+                      Nhập từ 1 đến 100
+                    </Form.Text>
+                  )}
+                  <FieldError name="value" />
                 </Form.Group>
               </Col>
+
+              {/* ── Đơn hàng tối thiểu ── */}
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>Đơn hàng tối thiểu (đ)</Form.Label>
@@ -561,9 +794,13 @@ export default function AdminVouchersPage() {
                     min="0"
                     step="1000"
                     placeholder="0"
+                    className={fieldErrors.minOrderValue ? "field-invalid" : ""}
                   />
+                  <FieldError name="minOrderValue" />
                 </Form.Group>
               </Col>
+
+              {/* ── Số ghế tối thiểu ── */}
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>Số ghế tối thiểu</Form.Label>
@@ -573,78 +810,126 @@ export default function AdminVouchersPage() {
                     value={form.minSeats}
                     onChange={handleChange}
                     min="0"
+                    max={MAX_SEATS_IN_SYSTEM}
                     placeholder="0"
+                    className={fieldErrors.minSeats ? "field-invalid" : ""}
                   />
+                  <Form.Text className="text-muted">
+                    Tối đa {MAX_SEATS_IN_SYSTEM} ghế
+                  </Form.Text>
+                  <FieldError name="minSeats" />
                 </Form.Group>
               </Col>
+
+              {/* ── Giảm tối đa ── */}
               <Col md={4}>
                 <Form.Group>
-                  <Form.Label>Giảm tối đa (đ)</Form.Label>
+                  <Form.Label>
+                    Giảm tối đa (đ)
+                    {form.type === "PERCENTAGE" && (
+                      <span
+                        className="text-muted ms-1"
+                        style={{ fontSize: "0.78rem" }}
+                      ></span>
+                    )}
+                  </Form.Label>
                   <Form.Control
                     type="number"
                     name="maxDiscount"
                     value={form.maxDiscount}
                     onChange={handleChange}
-                    min="0"
+                    min="1"
                     step="1000"
                     placeholder="Không giới hạn"
+                    className={fieldErrors.maxDiscount ? "field-invalid" : ""}
                   />
+                  <FieldError name="maxDiscount" />
                 </Form.Group>
               </Col>
+
+              {/* ── Giới hạn sử dụng ── */}
               <Col md={4}>
                 <Form.Group>
-                  <Form.Label>Giới hạn sử dụng *</Form.Label>
+                  <Form.Label>
+                    Giới hạn sử dụng <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     type="number"
                     name="usageLimit"
                     value={form.usageLimit}
                     onChange={handleChange}
                     min="1"
-                    required
+                    step="1"
+                    placeholder="VD: 100"
+                    className={fieldErrors.usageLimit ? "field-invalid" : ""}
                   />
+                  <Form.Text className="text-muted">
+                    Số lượt tối đa có thể dùng
+                  </Form.Text>
+                  <FieldError name="usageLimit" />
                 </Form.Group>
               </Col>
+
+              {/* ── Trạng thái ── */}
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>Trạng thái</Form.Label>
                   <Form.Check
                     type="switch"
                     name="isActive"
-                    label="Kích hoạt"
+                    label={form.isActive ? "Kích hoạt" : "Tạm dừng"}
                     checked={form.isActive}
                     onChange={handleChange}
                   />
                 </Form.Group>
               </Col>
+
+              {/* ── Ngày bắt đầu / kết thúc ── */}
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Ngày bắt đầu *</Form.Label>
+                  <Form.Label>
+                    Ngày bắt đầu <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     type="date"
                     name="validFrom"
                     value={form.validFrom}
                     onChange={handleChange}
-                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    className={fieldErrors.validFrom ? "field-invalid" : ""}
                   />
+                  <FieldError name="validFrom" />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Ngày kết thúc *</Form.Label>
+                  <Form.Label>
+                    Ngày kết thúc <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     type="date"
                     name="validTo"
                     value={form.validTo}
                     onChange={handleChange}
-                    required
+                    min={(() => {
+                      if (!form.validFrom) return new Date().toISOString().split('T')[0];
+                      const d = new Date(form.validFrom);
+                      d.setDate(d.getDate() + 1);
+                      return d.toISOString().split('T')[0];
+                    })()}
+                    className={fieldErrors.validTo ? "field-invalid" : ""}
                   />
+                  <FieldError name="validTo" />
                 </Form.Group>
               </Col>
+
+              {/* ── Cài đặt nâng cao ── */}
               <Col xs={12}>
-                <hr className="my-3" />
+                <hr className="my-2" />
                 <h6 className="text-muted mb-3">⚙️ Cài đặt nâng cao</h6>
               </Col>
-              <Col md={6}>
+
+              <Col md={4}>
                 <Form.Group>
                   <Form.Check
                     type="checkbox"
@@ -653,9 +938,13 @@ export default function AdminVouchersPage() {
                     checked={form.newUsersOnly}
                     onChange={handleChange}
                   />
+                  <Form.Text className="text-muted d-block">
+                    Chỉ áp dụng cho user chưa từng đặt vé
+                  </Form.Text>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+
+              <Col md={4}>
                 <Form.Group>
                   <Form.Check
                     type="checkbox"
@@ -664,9 +953,13 @@ export default function AdminVouchersPage() {
                     checked={form.oneTimePerUser}
                     onChange={handleChange}
                   />
+                  <Form.Text className="text-muted d-block">
+                    Kiểm tra lịch sử khi thanh toán
+                  </Form.Text>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+
+              <Col md={4}>
                 <Form.Group>
                   <Form.Check
                     type="checkbox"
@@ -675,23 +968,40 @@ export default function AdminVouchersPage() {
                     checked={form.weekendOnly}
                     onChange={handleChange}
                   />
+                  <Form.Text className="text-muted d-block">
+                    Chỉ áp dụng vào thứ 7 hoặc chủ nhật
+                  </Form.Text>
                 </Form.Group>
               </Col>
+
+              {/* ── Số ngày sau đăng ký ── */}
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Số ngày sau khi đăng ký</Form.Label>
+                  <Form.Label>
+                    Số ngày sau khi đăng ký
+                    {form.newUsersOnly && (
+                      <span className="text-danger"> *</span>
+                    )}
+                  </Form.Label>
                   <Form.Control
                     type="number"
                     name="daysAfterRegistration"
-                    value={form.daysAfterRegistration || ""}
+                    value={form.daysAfterRegistration}
                     onChange={handleChange}
-                    min="0"
-                    placeholder="Không giới hạn"
+                    min="1"
+                    step="1"
+                    placeholder={form.newUsersOnly ? "VD: 7" : "Không giới hạn"}
                     disabled={!form.newUsersOnly}
+                    className={
+                      fieldErrors.daysAfterRegistration ? "field-invalid" : ""
+                    }
                   />
                   <Form.Text className="text-muted">
-                    Chỉ áp dụng khi bật "Thành viên mới"
+                    {form.newUsersOnly
+                      ? "Voucher hợp lệ trong N ngày kể từ khi đăng ký"
+                      : 'Bật "Thành viên mới" để cấu hình'}
                   </Form.Text>
+                  <FieldError name="daysAfterRegistration" />
                 </Form.Group>
               </Col>
             </Row>
@@ -717,6 +1027,7 @@ export default function AdminVouchersPage() {
         </Form>
       </Modal>
 
+      {/* ─── Modal Xác nhận xóa ──────────────────────────────────────────────── */}
       <Modal
         show={showDeleteConfirm}
         onHide={() => setShowDeleteConfirm(false)}

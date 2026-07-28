@@ -415,7 +415,11 @@ export default function AdminBookingsPage() {
         axios.get('http://localhost:8080/api/showtimes')
       ])
       setBookings(Array.isArray(bookingsRes.data) ? bookingsRes.data : [])
-      setUsers(Array.isArray(usersRes.data) ? usersRes.data : [])
+      // API /api/users trả về Page<UserDto> có dạng { content: [...] }, cần lấy .content
+      const usersData = usersRes.data
+      const usersList = Array.isArray(usersData) ? usersData
+        : (Array.isArray(usersData?.content) ? usersData.content : [])
+      setUsers(usersList)
       setMovies(Array.isArray(moviesRes.data) ? moviesRes.data : [])
       setShowtimes(Array.isArray(showtimesRes.data) ? showtimesRes.data : [])
     } catch (err) {
