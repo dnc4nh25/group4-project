@@ -190,13 +190,37 @@ export default function AdminVouchersPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [search, setSearch] = useState("");
-  
-  // Ref để scroll đến vị trí thông báo lỗi
+
+  const modalBodyRef = useRef(null);
   const errorBannerRef = useRef(null);
+
+  const scrollToFormError = () => {
+    setTimeout(() => {
+      const container = modalBodyRef.current;
+      if (!container) return;
+
+      const firstErrorField = container.querySelector(".field-invalid");
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (typeof firstErrorField.focus === "function") {
+          firstErrorField.focus({ preventScroll: true });
+        }
+        return;
+      }
+
+      if (errorBannerRef.current) {
+        errorBannerRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -222,6 +246,7 @@ export default function AdminVouchersPage() {
     setForm(EMPTY_FORM);
     setEditingId(null);
     setError("");
+    setModalError("");
     setFieldErrors({});
     setShowModal(true);
   };
@@ -250,6 +275,7 @@ export default function AdminVouchersPage() {
     });
     setEditingId(voucher.id);
     setError("");
+    setModalError("");
     setFieldErrors({});
     setShowModal(true);
   };
@@ -283,20 +309,13 @@ export default function AdminVouchersPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     setError("");
+    setModalError("");
 
     // ── Validate frontend trước ──
     const errs = validateVoucherForm(form, vouchers, editingId);
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
-      // Scroll đến vị trí đầu modal để hiển thị lỗi
-      setTimeout(() => {
-        if (errorBannerRef.current) {
-          errorBannerRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }
-      }, 100);
+      scrollToFormError();
       return;
     }
     setFieldErrors({});
@@ -355,17 +374,9 @@ export default function AdminVouchersPage() {
       if (err.response?.status === 422 && err.response?.data?.errors) {
         setFieldErrors(err.response.data.errors);
       } else {
-        setError("❌ Lưu thất bại. Vui lòng thử lại.");
+        setModalError("❌ Lưu thất bại. Vui lòng thử lại.");
       }
-      // Scroll đến vị trí lỗi
-      setTimeout(() => {
-        if (errorBannerRef.current) {
-          errorBannerRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }
-      }, 100);
+      scrollToFormError();
     } finally {
       setSaving(false);
     }
@@ -657,6 +668,7 @@ export default function AdminVouchersPage() {
         onHide={() => setShowModal(false)}
         size="lg"
         centered
+        scrollable
         className="admin-modal"
       >
         <Modal.Header closeButton>
@@ -665,9 +677,18 @@ export default function AdminVouchersPage() {
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSave} noValidate>
-          <Modal.Body>
-            {/* Banner lỗi server - thêm ref để scroll */}
-            
+          <Modal.Body ref={modalBodyRef}>
+            {modalError && (
+              <div ref={errorBannerRef} className="mb-3">
+                <Alert
+                  variant="danger"
+                  onClose={() => setModalError("")}
+                  dismissible
+                >
+                  {modalError}
+                </Alert>
+              </div>
+            )}
 
             <Row className="g-3">
               {/* ── Mã voucher ── */}

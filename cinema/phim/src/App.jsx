@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 import PrivateRoute from './components/PrivateRoute'
 import AdminRoute from './components/AdminRoute'
 import HomePage from './pages/user/HomePage'
@@ -48,6 +49,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <ScrollToTop />
       <NavBar theme={theme} onToggleTheme={handleToggleTheme} />
       <main className="main-content">
         <Routes>
