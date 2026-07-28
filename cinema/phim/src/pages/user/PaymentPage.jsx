@@ -155,11 +155,13 @@ export default function PaymentPage() {
       setSuccessData(res.data)
       
       // Cập nhật lại số điểm của user trong context để UI tự refresh
-      if (res.data.pointsEarned > 0 || res.data.pointsUsed > 0) {
-        updateUser({
-          points: Math.max(0, (currentUser?.points || 0) + (res.data.pointsEarned || 0) - (res.data.pointsUsed || 0))
-        })
-      }
+      // Luôn cập nhật điểm, ngay cả khi pointsEarned = 0
+      const newPoints = Math.max(0, 
+        (currentUser?.points || 0) 
+        + (res.data.pointsEarned || 0) 
+        - (res.data.pointsUsed || 0)
+      )
+      updateUser({ points: newPoints })
 
       setSuccess(true)
     } catch (err) {
