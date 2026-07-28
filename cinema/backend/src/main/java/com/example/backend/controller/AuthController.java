@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.AuthResponse;
 import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.RegisterRequest;
+import com.example.backend.exception.FieldValidationException;
 import com.example.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -33,6 +34,8 @@ public class AuthController {
         try {
             AuthResponse response = authService.register(registerRequest);
             return ResponseEntity.ok(response);
+        } catch (FieldValidationException e) {
+            return ResponseEntity.badRequest().body(e.getFieldErrors());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
