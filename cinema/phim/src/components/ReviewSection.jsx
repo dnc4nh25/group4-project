@@ -120,10 +120,11 @@ export default function ReviewSection({ movieId, movie }) {
           endTime: endTime.toLocaleString('vi-VN'),
           now: now.toLocaleString('vi-VN'),
           duration: duration,
-          hasEnded: endTime < now
+          hasStarted: startTime <= now
         })
 
-        if (endTime < now) {
+        // Cho phép đánh giá khi phim đã bắt đầu chiếu (thay vì đợi chiếu xong)
+        if (startTime <= now) {
           setEligible(true)
           break
         }
@@ -311,8 +312,8 @@ export default function ReviewSection({ movieId, movie }) {
         <Card.Body className="text-center py-4">
           <div style={{ fontSize: 36 }}>🎫</div>
           <p className="mt-2 mb-0 text-muted">
-            Bạn chỉ có thể đánh giá sau khi đã xem phim này.<br />
-            <small>Đặt vé và xem phim để mở khóa tính năng đánh giá.</small>
+            Bạn chỉ có thể đánh giá khi phim đã bắt đầu chiếu.<br />
+            <small>Đặt vé và đợi đến giờ chiếu để mở khóa tính năng đánh giá.</small>
           </p>
         </Card.Body>
       </Card>

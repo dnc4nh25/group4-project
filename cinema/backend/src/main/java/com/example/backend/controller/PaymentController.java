@@ -292,6 +292,8 @@ public class PaymentController {
                     .voucherCode(saved.getVoucherCode())
                     .status(saved.getStatus())
                     .createdAt(saved.getCreatedAt())
+                    .pointsEarned(saved.getPointsEarned())
+                    .pointsUsed(saved.getPointsUsed())
                     .build();
 
             return ResponseEntity.ok(response);
