@@ -112,7 +112,8 @@ export default function AdminUsersPage() {
   }
 
   const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{10,11}$/
+    // Số điện thoại phải có đúng 10 chữ số và bắt đầu bằng số 0
+    const phoneRegex = /^0[0-9]{9}$/
     return phoneRegex.test(phone)
   }
 

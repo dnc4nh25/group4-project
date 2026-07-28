@@ -42,7 +42,7 @@ function StarDisplay({ value }) {
 }
 
 export default function ReviewSection({ movieId, movie }) {
-  const { currentUser } = useAuth()
+  const { currentUser, updateUser } = useAuth()
 
   const [reviews, setReviews] = useState([])
   const [loadingReviews, setLoadingReviews] = useState(true)
@@ -146,8 +146,9 @@ export default function ReviewSection({ movieId, movie }) {
     setSubmitting(true)
     setFeedback(null)
     try {
+      let res;
       if (isEditing && myReview) {
-        await axios.put(`${API}/reviews/${myReview.id}`, {
+        res = await axios.put(`${API}/reviews/${myReview.id}`, {
           movieId: parseInt(movieId),
           userId: currentUser.id,
           rating,
@@ -155,7 +156,7 @@ export default function ReviewSection({ movieId, movie }) {
         })
         setFeedback({ type: 'success', msg: 'Đánh giá của bạn đã được cập nhật!' })
       } else {
-        await axios.post(`${API}/reviews`, {
+        res = await axios.post(`${API}/reviews`, {
           movieId: parseInt(movieId),
           userId: currentUser.id,
           rating,
@@ -163,6 +164,20 @@ export default function ReviewSection({ movieId, movie }) {
         })
         setFeedback({ type: 'success', msg: 'Cảm ơn bạn đã đánh giá!' })
       }
+      
+      // Cập nhật điểm trong context nếu có
+      if (res.data.userPoints !== undefined) {
+        updateUser({ points: res.data.userPoints })
+      }
+      
+      // Hiển thị thông báo nếu được cộng điểm
+      if (res.data.pointsEarned > 0) {
+        setFeedback({ 
+          type: 'success', 
+          msg: `Cảm ơn bạn đã đánh giá! Bạn được cộng ${res.data.pointsEarned} điểm thưởng! 🎉` 
+        })
+      }
+      
       setComment('')
       setRating(5)
       setIsEditing(false)
