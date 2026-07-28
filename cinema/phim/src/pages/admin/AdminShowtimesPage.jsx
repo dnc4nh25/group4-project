@@ -216,13 +216,13 @@ export default function AdminShowtimesPage() {
       errs.room = 'Phòng chiếu không hợp lệ.'
     }
 
-    // Giá vé
+    // Giá vé cơ bản
     if (!form.price && form.price !== 0) {
-      errs.price = 'Giá vé không được để trống.'
+      errs.price = 'Giá vé cơ bản không được để trống.'
     } else {
       const price = Number(form.price)
       if (isNaN(price) || price < 0) {
-        errs.price = 'Giá vé phải là số không âm.'
+        errs.price = 'Giá vé cơ bản phải là số không âm.'
       } 
     }
 
@@ -451,7 +451,7 @@ export default function AdminShowtimesPage() {
                       <th>Giờ</th>
                       <th>Phòng</th>
                       <th>Trạng thái ghế</th>
-                      <th>Giá vé</th>
+                      <th>Giá vé cơ bản</th>
                       <th>Thao tác</th>
                     </tr>
                   </thead>
@@ -712,10 +712,10 @@ export default function AdminShowtimesPage() {
               )}
             </div>
 
-            {/* Giá vé */}
+            {/* Giá vé cơ bản */}
             <div className="row g-3 mb-3">
               <div className="col-md-12">
-                <Form.Label>Giá vé (VND) <span className="text-danger">*</span></Form.Label>
+                <Form.Label>Giá vé cơ bản (đ) <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   name="price"
                   type="number"
@@ -723,13 +723,12 @@ export default function AdminShowtimesPage() {
                   onChange={handleChange}
                   placeholder="Ví dụ: 80000"
                   className={fieldErrors.price ? 'field-invalid' : ''}
+                  min="0"
+                  step="1000"
                 />
-                {fieldErrors.price
-                  ? <div className="field-error-msg">⚠ {fieldErrors.price}</div>
-                  : <Form.Text className="text-muted"></Form.Text>
-                }
-                <Form.Label>Giá vé cơ bản (đ) <span className="text-danger">*</span></Form.Label>
-                <Form.Control name="price" type="number" value={form.price} onChange={handleChange} required />
+                {fieldErrors.price && (
+                  <div className="field-error-msg">⚠ {fieldErrors.price}</div>
+                )}
                 <Form.Text className="text-muted fst-italic">
                   Hệ thống sẽ tự động phụ thu khi khách đặt: VIP (+20.000đ), Ghế đôi (x2 + 20.000đ).
                 </Form.Text>
