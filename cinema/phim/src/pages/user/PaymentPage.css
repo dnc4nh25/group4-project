@@ -1,4 +1,4 @@
-﻿/* ================================================
+/* ================================================
    PaymentPage.css — Full redesign
    Dark/Light mode supported via [data-theme]
    ================================================ */
@@ -936,4 +936,57 @@
   .pay-summary-card {
     position: static;
   }
+}
+
+/* ─── Points Input ───────────────────────────────── */
+.pay-points-input-box {
+  background: var(--bg-surface, #f5f7fa);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e9ecef);
+}
+
+[data-theme="dark"] .pay-points-input-box {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: #2d3448;
+}
+
+.pay-points-input-box label {
+  font-size: 0.88rem;
+  color: var(--text-primary, #1a1a2e);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .pay-points-input-box label {
+  color: #e0e0e0;
+}
+
+.pay-points-input-box .pay-input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #dcdfe6);
+  font-size: 1rem;
+  background: transparent;
+  color: var(--text-primary, #1a1a2e);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .pay-points-input-box .pay-input {
+  border-color: #2d3448;
+  color: #fff;
+}
+
+.pay-points-input-box .pay-input:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+}
+
+.pay-points-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted, #606266);
+  margin-top: 0.5rem;
 }

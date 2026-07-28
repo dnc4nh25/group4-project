@@ -728,6 +728,11 @@ export default function AdminShowtimesPage() {
                   ? <div className="field-error-msg">⚠ {fieldErrors.price}</div>
                   : <Form.Text className="text-muted"></Form.Text>
                 }
+                <Form.Label>Giá vé cơ bản (đ) <span className="text-danger">*</span></Form.Label>
+                <Form.Control name="price" type="number" value={form.price} onChange={handleChange} required />
+                <Form.Text className="text-muted fst-italic">
+                  Hệ thống sẽ tự động phụ thu khi khách đặt: VIP (+20.000đ), Ghế đôi (x2 + 20.000đ).
+                </Form.Text>
               </div>
             </div>
           </Modal.Body>

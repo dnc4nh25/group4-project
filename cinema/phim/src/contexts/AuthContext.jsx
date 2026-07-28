@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
 
@@ -18,8 +18,14 @@ export function AuthProvider({ children }) {
     sessionStorage.removeItem('cinema_user')
   }
 
+  const updateUser = (data) => {
+    const updated = { ...currentUser, ...data }
+    setCurrentUser(updated)
+    sessionStorage.setItem('cinema_user', JSON.stringify(updated))
+  }
+
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

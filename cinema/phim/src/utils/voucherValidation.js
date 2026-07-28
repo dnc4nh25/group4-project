@@ -82,11 +82,18 @@ export class VoucherValidator {
       const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
 
       return vouchers.map(voucher => {
-        // Fix bug date: validTo là LocalDate (YYYY-MM-DD string), không phải datetime
-        const validToOk = !voucher.validTo || voucher.validTo >= todayStr
-        const validFromOk = !voucher.validFrom || voucher.validFrom <= todayStr
-        const hasUsages = voucher.usedCount < voucher.usageLimit
+        // Helper function to format date from string or array [YYYY, MM, DD]
+        const formatDate = (dateObj) => {
+          if (!dateObj) return null;
+          if (Array.isArray(dateObj)) {
+            return `${dateObj[0]}-${String(dateObj[1]).padStart(2, '0')}-${String(dateObj[2]).padStart(2, '0')}`;
+          }
+          return dateObj.toString();
+        }
 
+        const validToOk = !voucher.validTo || formatDate(voucher.validTo) >= todayStr
+        const validFromOk = !voucher.validFrom || formatDate(voucher.validFrom) <= todayStr
+        const hasUsages = !voucher.usageLimit || (voucher.usedCount || 0) < voucher.usageLimit
         // Weekend check (client-side preview only)
         const isWeekend = today.getDay() === 0 || today.getDay() === 6
         const weekendOk = !voucher.weekendOnly || isWeekend

@@ -236,6 +236,7 @@ public class UserController {
                         ? user.getStatus().name().toLowerCase() // "ACTIVE" → "active"
                         : "active")
                 .createdAt(user.getCreatedAt())
+                .points(user.getPoints())
                 .build();
     }
 

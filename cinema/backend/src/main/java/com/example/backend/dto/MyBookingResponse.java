@@ -29,4 +29,6 @@ public class MyBookingResponse {
     private String voucherCode;
     private BookingStatus status;
     private LocalDateTime createdAt;
+    private Long pointsEarned;
+    private Long pointsUsed;
 }

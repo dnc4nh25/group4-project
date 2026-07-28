@@ -13,4 +13,5 @@ public class CheckoutRequest {
     private Long subtotal;          // Giá gốc
     private String voucherCode;     // null nếu không dùng voucher
     private String paymentMethod;   // "QR", "CARD", "CASH"
+    private Long usePoints;
 }

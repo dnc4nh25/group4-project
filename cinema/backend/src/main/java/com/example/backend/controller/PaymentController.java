@@ -216,7 +216,7 @@ public class PaymentController {
             // Xử lý voucher (nếu có)
             Voucher voucher = null;
             long discount = 0L;
-            long subtotal = request.getSubtotal() != null ? request.getSubtotal() : 0L;
+            long subtotal = calculateSubtotal(selectedSeats, showtime.getPrice());
 
             if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
                 voucher = voucherRepository.findByCode(request.getVoucherCode().trim())
@@ -232,6 +232,26 @@ public class PaymentController {
 
             long finalTotal = subtotal - discount;
 
+            // Xử lý dùng điểm
+            long usePoints = request.getUsePoints() != null ? request.getUsePoints() : 0L;
+            long currentPoints = user.getPoints() != null ? user.getPoints() : 0L;
+            
+            if (usePoints > 0) {
+                if (usePoints > currentPoints) {
+                    return ResponseEntity.badRequest().body("Số điểm sử dụng vượt quá số điểm hiện có");
+                }
+                if (usePoints > finalTotal) {
+                    return ResponseEntity.badRequest().body("Số điểm sử dụng không được vượt quá số tiền thanh toán");
+                }
+                finalTotal -= usePoints;
+                currentPoints -= usePoints;
+            }
+
+            // Tính điểm thưởng (5% của finalTotal)
+            long pointsEarned = finalTotal > 0 ? (long)(finalTotal * 0.05) : 0L;
+            user.setPoints(currentPoints + pointsEarned);
+            userRepository.save(user);
+
             // 1. Tạo Booking
             Booking booking = Booking.builder()
                     .user(user)
@@ -243,6 +263,8 @@ public class PaymentController {
                     .voucherCode(voucher != null ? voucher.getCode() : null)
                     .status(BookingStatus.CONFIRMED)
                     .createdAt(LocalDateTime.now())
+                    .pointsEarned(pointsEarned)
+                    .pointsUsed(usePoints)
                     .build();
             Booking saved = bookingRepository.save(booking);
 
@@ -296,6 +318,30 @@ public class PaymentController {
             discount = voucher.getValue();
         }
         return Math.min((long) discount, subtotal);
+    }
+
+    private long calculateSubtotal(List<String> seats, long basePrice) {
+        long total = 0;
+        for (String seat : seats) {
+            if (seat == null || seat.length() < 2) {
+                total += basePrice;
+                continue;
+            }
+            char row = Character.toUpperCase(seat.charAt(0));
+            int num = 0;
+            try {
+                num = Integer.parseInt(seat.substring(1));
+            } catch (NumberFormatException e) {}
+
+            if ((row == 'E' || row == 'F' || row == 'G' || row == 'H') && num >= 3 && num <= 8) {
+                total += (basePrice + 20000);
+            } else if (row == 'J') {
+                total += (basePrice * 2 + 20000);
+            } else {
+                total += basePrice;
+            }
+        }
+        return total;
     }
 
     private List<String> parseSeats(String seatsJson) {

@@ -1,9 +1,11 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Container, Card, Button, Alert, Spinner, Row, Col, Badge } from 'react-bootstrap'
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
 import SeatMap from '../../components/SeatMap'
+import { getSeatInfo, calculateTotalSeatsPrice } from '../../utils/seatPricing'
+
 export default function BookingPage() {
   const { showtimeId } = useParams()
   const { currentUser } = useAuth()
@@ -60,7 +62,7 @@ export default function BookingPage() {
 
   const bookedCount = showtime ? parsedBookedSeats.length : 0
   const available = showtime ? showtime.totalSeats - bookedCount : 0
-  const totalPrice = selectedSeats.length * (showtime?.price || 0)
+  const totalPrice = calculateTotalSeatsPrice(selectedSeats, showtime?.price || 0)
 
   const handleConfirm = async () => {
     if (selectedSeats.length === 0) {
@@ -211,7 +213,7 @@ export default function BookingPage() {
                 <div className="booking-detail-row"><span>📅 Ngày:</span><strong>{showtime?.date}</strong></div>
                 <div className="booking-detail-row"><span>⏰ Giờ:</span><strong>{showtime?.time}</strong></div>
                 <div className="booking-detail-row"><span>🏟️ Phòng:</span><strong>{showtime?.room}</strong></div>
-                <div className="booking-detail-row"><span>💰 Giá/ghế:</span><strong className="text-warning">{showtime?.price?.toLocaleString()}đ</strong></div>
+                <div className="booking-detail-row"><span>💰 Giá cơ bản:</span><strong className="text-warning">{showtime?.price?.toLocaleString()}đ</strong></div>
                 <hr />
 
 
@@ -221,26 +223,47 @@ export default function BookingPage() {
                     <span className="text-muted fst-italic small">Chưa chọn ghế nào — click vào ghế trên sơ đồ</span>
                   ) : (
                     <div className="d-flex flex-wrap gap-1">
-                      {selectedSeats.sort().map(s => (
-                        <Badge
-                          key={s}
-                          bg="danger"
-                          style={{ cursor: 'pointer', fontSize: '0.8rem' }}
-                          onClick={() => handleToggleSeat(s)}
-                          title="Click để bỏ chọn"
-                        >
-                          {s} ✕
-                        </Badge>
-                      ))}
+                      {selectedSeats.sort().map(s => {
+                        const seatInfo = getSeatInfo(s, showtime?.price || 0);
+                        let bg = 'secondary';
+                        if (seatInfo.type === 'vip') bg = 'warning text-dark';
+                        else if (seatInfo.type === 'couple') bg = 'info';
+                        
+                        return (
+                          <Badge
+                            key={s}
+                            bg={bg}
+                            style={{ cursor: 'pointer', fontSize: '0.8rem' }}
+                            onClick={() => handleToggleSeat(s)}
+                            title={`Bỏ chọn ${s}`}
+                          >
+                            {s} ({seatInfo.label}) ✕
+                          </Badge>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
 
-
                 <div className="total-price-box p-3 rounded mb-3">
-                  <div className="d-flex justify-content-between small">
+                  <div className="d-flex justify-content-between small mb-2">
                     <span>Số ghế đã chọn:</span><span>{selectedSeats.length}</span>
                   </div>
+                  {selectedSeats.length > 0 && (
+                    <div className="mb-2">
+                      {['standard', 'vip', 'couple'].map(type => {
+                        const seatsOfType = selectedSeats.filter(s => getSeatInfo(s).type === type);
+                        if (seatsOfType.length === 0) return null;
+                        const info = getSeatInfo(seatsOfType[0], showtime?.price || 0);
+                        return (
+                          <div key={type} className="d-flex justify-content-between small text-muted">
+                            <span>{info.label} x {seatsOfType.length}</span>
+                            <span>{(info.price * seatsOfType.length).toLocaleString()}đ</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                   <hr className="my-2" />
                   <div className="d-flex justify-content-between fw-bold fs-5">
                     <span>Tổng cộng:</span>
