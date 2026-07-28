@@ -17,9 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,27 +152,21 @@ public class ReviewController {
             return ResponseEntity.ok(response);
         }
         
-        // Check if any showtime has ended
-        boolean hasEndedShowtime = userBookings.stream()
+        // Cho phép đánh giá khi suất chiếu đã bắt đầu (không cần đợi hết phim)
+        boolean hasStartedShowtime = userBookings.stream()
                 .filter(booking -> booking.getShowtime().getMovie().getId().equals(movieId))
                 .anyMatch(booking -> {
                     Showtime showtime = booking.getShowtime();
-                    Movie movie = showtime.getMovie();
-                    
-                    // Use actual movie duration, default to 120 minutes if not set
-                    int movieDurationMinutes = movie.getDuration() != null ? movie.getDuration() : 120;
-                    
-                    LocalDateTime showtimeEnd = LocalDateTime.of(
+                    LocalDateTime showtimeStart = LocalDateTime.of(
                         showtime.getDate(),
                         showtime.getTime()
-                    ).plusMinutes(movieDurationMinutes);
-                    
-                    return LocalDateTime.now().isAfter(showtimeEnd);
+                    );
+                    return !LocalDateTime.now().isBefore(showtimeStart);
                 });
         
-        if (!hasEndedShowtime) {
+        if (!hasStartedShowtime) {
             response.put("canReview", false);
-            response.put("reason", "Suất chiếu chưa kết thúc");
+            response.put("reason", "Suất chiếu chưa bắt đầu");
             response.put("hasReview", hasReview);
             return ResponseEntity.ok(response);
         }

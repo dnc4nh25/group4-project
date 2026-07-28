@@ -46,7 +46,7 @@ export default function ReviewSection({ movieId, movie }) {
 
   const [reviews, setReviews] = useState([])
   const [loadingReviews, setLoadingReviews] = useState(true)
-  const [eligible, setEligible] = useState(false)   // đã xem phim trong quá khứ
+  const [eligible, setEligible] = useState(false)   // đã đến giờ chiếu (suất đã bắt đầu)
   const [checking, setChecking] = useState(true)
   const [myReview, setMyReview] = useState(null)    // đánh giá của tôi (nếu có)
 
@@ -102,7 +102,6 @@ export default function ReviewSection({ movieId, movie }) {
       )
 
       const now = new Date()
-      const duration = movie?.duration || 120 // phút
 
       for (const booking of myBookings) {
         const showtime = movieShowtimes.find(
@@ -110,20 +109,8 @@ export default function ReviewSection({ movieId, movie }) {
         )
         if (!showtime) continue
 
-        // LocalTime từ backend có format "HH:mm:ss", không cần thêm ":00"
         const startTime = new Date(`${showtime.date}T${showtime.time}`)
-        const endTime = new Date(startTime.getTime() + duration * 60 * 1000)
 
-        console.log('🎬 Checking showtime:', {
-          showtimeId: showtime.id,
-          startTime: startTime.toLocaleString('vi-VN'),
-          endTime: endTime.toLocaleString('vi-VN'),
-          now: now.toLocaleString('vi-VN'),
-          duration: duration,
-          hasStarted: startTime <= now
-        })
-
-        // Cho phép đánh giá khi phim đã bắt đầu chiếu (thay vì đợi chiếu xong)
         if (startTime <= now) {
           setEligible(true)
           break
