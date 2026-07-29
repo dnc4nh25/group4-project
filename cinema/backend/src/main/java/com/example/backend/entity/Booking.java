@@ -70,4 +70,9 @@ public class Booking {
     @Column(name = "points_used")
     @Builder.Default
     private Long pointsUsed = 0L;
+
+    // Trạng thái đã gửi email nhắc nhở hay chưa
+    @Column(name = "reminder_sent")
+    @Builder.Default
+    private Boolean reminderSent = false;
 }
