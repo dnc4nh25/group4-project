@@ -3,6 +3,8 @@ package com.example.backend.controller;
 import com.example.backend.dto.MovieDto;
 import com.example.backend.entity.Movie;
 import com.example.backend.repository.MovieRepository;
+import com.example.backend.repository.ReviewRepository;
+import com.example.backend.repository.ShowtimeRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,8 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,12 +27,24 @@ public class MovieController {
     @Autowired
     private MovieRepository movieRepository;
 
+    @Autowired
+    private ShowtimeRepository showtimeRepository;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping
     public ResponseEntity<List<MovieDto>> getAllMovies() {
         List<MovieDto> movies = movieRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(movie -> {
+                    MovieDto dto = convertToDto(movie);
+                    boolean hasShowtimes = showtimeRepository.existsByMovieId(movie.getId());
+                    boolean hasReviews = reviewRepository.existsByMovieId(movie.getId());
+                    dto.setCanBeDeleted(!(hasShowtimes || hasReviews));
+                    return dto;
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(movies);
     }
@@ -58,13 +74,72 @@ public class MovieController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
-        if (movieRepository.existsById(id)) {
-            movieRepository.deleteById(id);
-            return ResponseEntity.ok().build();
+    @GetMapping("/{id}/check-delete")
+    public ResponseEntity<Map<String, Object>> checkDeleteStatus(@PathVariable Long id) {
+        if (!movieRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+
+        boolean hasFutureShowtimes = showtimeRepository.existsByMovieIdAndDateGreaterThanEqual(id, LocalDate.now());
+        if (hasFutureShowtimes) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "BLOCKED",
+                    "message", "Phim này vẫn đang có lịch chiếu trong tương lai. Vui lòng xử lý hoặc khóa các suất chiếu liên quan trước khi ẩn phim."
+            ));
+        }
+
+        boolean hasShowtimes = showtimeRepository.existsByMovieId(id);
+        boolean hasReviews = reviewRepository.existsByMovieId(id);
+
+        if (hasShowtimes || hasReviews) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "HIDE",
+                    "message", "Bạn chỉ có thể ẩn bộ phim này vì phim đã có dữ liệu liên quan trong hệ thống."
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "status", "DELETE",
+                "message", "Có thể xóa thật."
+            ));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteMovie(@PathVariable Long id) {
+        return movieRepository.findById(id)
+                .map(movie -> {
+                    boolean hasFutureShowtimes = showtimeRepository.existsByMovieIdAndDateGreaterThanEqual(id, LocalDate.now());
+                    if (hasFutureShowtimes) {
+                        return ResponseEntity.badRequest()
+                                .body(Map.of(
+                                        "success", (Object) false,
+                                        "message", "Phim vẫn còn suất chiếu trong tương lai. Vui lòng xử lý các suất chiếu trước khi ẩn phim."
+                                ));
+                    }
+
+                    boolean hasShowtimes = showtimeRepository.existsByMovieId(id);
+                    boolean hasReviews = reviewRepository.existsByMovieId(id);
+
+                    if (hasShowtimes || hasReviews) {
+                        movie.setStatus("INACTIVE");
+                        movieRepository.save(movie);
+                        return ResponseEntity.ok(Map.of(
+                                "success", (Object) true,
+                                "action", "HIDE",
+                                "message", "Phim không thể xóa vì đã có dữ liệu lịch sử. Hệ thống đã chuyển phim sang trạng thái ẩn."
+                        ));
+                    }
+
+                    movieRepository.deleteById(id);
+                    return ResponseEntity.ok(Map.of(
+                            "success", (Object) true,
+                            "message", "Xóa phim thành công"
+                    ));
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of(
+                        "success", false,
+                        "message", "Không tìm thấy phim"
+                )));
     }
 
     private MovieDto convertToDto(Movie movie) {
@@ -84,6 +159,7 @@ public class MovieController {
                 .releaseDate(movie.getReleaseDate())
                 .ageRating(movie.getAgeRating())
                 .trailerUrl(movie.getTrailerUrl())
+                .status(movie.getStatus())
                 .build();
     }
 
@@ -103,6 +179,7 @@ public class MovieController {
                 .releaseDate(dto.getReleaseDate())
                 .ageRating(dto.getAgeRating())
                 .trailerUrl(dto.getTrailerUrl())
+                .status(dto.getStatus() != null ? dto.getStatus() : "ACTIVE")
                 .build();
     }
 
@@ -119,6 +196,7 @@ public class MovieController {
         if (dto.getReleaseDate() != null) movie.setReleaseDate(dto.getReleaseDate());
         if (dto.getAgeRating() != null) movie.setAgeRating(dto.getAgeRating());
         if (dto.getTrailerUrl() != null) movie.setTrailerUrl(dto.getTrailerUrl());
+        if (dto.getStatus() != null) movie.setStatus(dto.getStatus());
     }
 
     private List<String> parseGenresFromJson(String genresJson) {

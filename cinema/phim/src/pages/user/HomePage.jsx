@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Container, Button, Row, Col, Badge } from 'react-bootstrap'
 import { useState, useEffect } from 'react'
 import MovieCard from '../../components/MovieCard'
@@ -24,7 +24,7 @@ export default function HomePage() {
     const loadMovies = async () => {
       try {
         const res = await movieApi.getAll()
-        setMovies(res.data)
+        setMovies(res.data.filter(m => m.status === 'ACTIVE' || !m.status))
       } catch (err) {
         console.error('Lỗi tải phim:', err)
       } finally {
