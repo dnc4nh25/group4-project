@@ -34,9 +34,15 @@ export default function AdminMoviesPage() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showHideModal, setShowHideModal] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
+  const [deleteMessage, setDeleteMessage] = useState('')
   const [deletingId, setDeletingId] = useState(null)
+  const [restoringId, setRestoringId] = useState(null)
   const [search, setSearch] = useState('')
   const [genreFilter, setGenreFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [viewMode, setViewMode] = useState('table') // 'table' or 'grid'
 
   const [selectedMovie, setSelectedMovie] = useState(null)
@@ -302,17 +308,52 @@ export default function AdminMoviesPage() {
     }
   }
 
-  const handleDeleteClick = (id, e) => {
+  const handleDeleteClick = async (id, e) => {
     e.stopPropagation()
-    setDeletingId(id); setShowDeleteConfirm(true)
+    setDeletingId(id)
+    setError('')
+    try {
+      const res = await axios.get(`${API}/movies/${id}/check-delete`)
+      const { status, message } = res.data
+      setDeleteMessage(message)
+      if (status === 'BLOCKED') {
+        setShowBlockModal(true)
+      } else if (status === 'HIDE') {
+        setShowHideModal(true)
+      } else {
+        setShowDeleteConfirm(true)
+      }
+    } catch (err) {
+      setError('Lỗi khi kiểm tra dữ liệu xóa phim.')
+    }
   }
+
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`${API}/movies/${deletingId}`)
+      const res = await axios.delete(`${API}/movies/${deletingId}`)
       setShowDeleteConfirm(false)
+      setShowHideModal(false)
       if (selectedMovie && String(selectedMovie.id) === String(deletingId)) setSelectedMovie(null)
       load()
-    } catch { setError('Xóa thất bại.') }
+    } catch { setError('Xóa/Ẩn thất bại.') }
+  }
+
+  const handleRestoreClick = (m, e) => {
+    e.stopPropagation()
+    setRestoringId(m.id)
+    setShowRestoreConfirm(true)
+  }
+
+  const handleConfirmRestore = async () => {
+    setError('')
+    try {
+      await axios.put(`${API}/movies/${restoringId}`, { status: 'ACTIVE' })
+      load()
+      setShowRestoreConfirm(false)
+    } catch {
+      setShowRestoreConfirm(false)
+      setError('Khôi phục thất bại.')
+    }
   }
 
   const filtered = movies.filter(m => {
@@ -322,7 +363,9 @@ export default function AdminMoviesPage() {
       (m.genres && m.genres.includes(genreFilter)) ||
       m.genre === genreFilter
 
-    return matchSearch && matchGenre
+    const matchStatus = !statusFilter || (m.status || 'ACTIVE') === statusFilter
+
+    return matchSearch && matchGenre && matchStatus
   })
 
   const totalMovies = movies.length
@@ -387,7 +430,7 @@ export default function AdminMoviesPage() {
               <h6 className="mb-0 text-light">🔍 Bộ lọc</h6>
             </div>
             <Row className="g-3">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Group>
                   <Form.Label className="small text-muted">Tìm kiếm</Form.Label>
                   <InputGroup>
@@ -413,6 +456,20 @@ export default function AdminMoviesPage() {
                   >
                     <option value="">Tất cả thể loại</option>
                     {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group>
+                  <Form.Label className="small text-muted">Trạng thái</Form.Label>
+                  <Form.Select
+                    className="filter-input"
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="ACTIVE">Đang hoạt động</option>
+                    <option value="INACTIVE">Đã ẩn</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -488,6 +545,7 @@ export default function AdminMoviesPage() {
                           <th>Rating</th>
                           <th>Thời lượng</th>
                           <th>Độ tuổi</th>
+                          <th>Trạng thái</th>
                           <th>Thao tác</th>
                         </tr>
                       </thead>
@@ -535,6 +593,11 @@ export default function AdminMoviesPage() {
                               <Badge bg="info" className="time-badge">{m.ageRating}</Badge>
                             </td>
                             <td>
+                              <Badge bg={m.status === 'INACTIVE' ? 'secondary' : 'success'}>
+                                {m.status === 'INACTIVE' ? 'Đã ẩn' : 'Đang hoạt động'}
+                              </Badge>
+                            </td>
+                            <td>
                               <div className="action-buttons">
                                 <Button
                                   size="sm"
@@ -545,25 +608,37 @@ export default function AdminMoviesPage() {
                                 >
                                   👁️
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline-primary"
-                                  className="action-btn me-1"
-                                  onClick={(e) => handleOpenEdit(m, e)}
-                                  title="Sửa"
-                                >
-                                  ✏️
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline-danger"
-                                  className="action-btn"
-                                  onClick={(e) => handleDeleteClick(m.id, e)}
-                                  title="Xóa"
-                                >
-                                  🗑️
-                                </Button>
-                              </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline-primary"
+                                    className="action-btn me-1"
+                                    onClick={(e) => handleOpenEdit(m, e)}
+                                    title="Sửa"
+                                  >
+                                    ✏️
+                                  </Button>
+                                  {m.status === 'INACTIVE' ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline-success"
+                                      className="action-btn"
+                                      onClick={(e) => handleRestoreClick(m, e)}
+                                      title="Khôi phục"
+                                    >
+                                      🔄
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant={m.canBeDeleted ? "outline-danger" : "outline-warning"}
+                                      className="action-btn"
+                                      onClick={(e) => handleDeleteClick(m.id, e)}
+                                      title={m.canBeDeleted ? "Xóa" : "Ẩn phim"}
+                                    >
+                                      {m.canBeDeleted ? "🗑️" : "🙈"}
+                                    </Button>
+                                  )}
+                                </div>
                             </td>
                           </tr>
                         ))}
@@ -598,12 +673,23 @@ export default function AdminMoviesPage() {
                           >
                             ✏️ Sửa
                           </button>
-                          <button
-                            className="movie-grid-action-btn delete"
-                            onClick={(e) => handleDeleteClick(m.id, e)}
-                          >
-                            🗑️ Xóa
-                          </button>
+                          {m.status === 'INACTIVE' ? (
+                            <button
+                              className="movie-grid-action-btn view"
+                              style={{ backgroundColor: 'rgba(25, 135, 84, 0.9)' }}
+                              onClick={(e) => handleRestoreClick(m, e)}
+                            >
+                              🔄 Khôi phục
+                            </button>
+                          ) : (
+                            <button
+                              className="movie-grid-action-btn delete"
+                              style={m.canBeDeleted ? {} : { backgroundColor: 'rgba(255, 193, 7, 0.9)' }}
+                              onClick={(e) => handleDeleteClick(m.id, e)}
+                            >
+                              {m.canBeDeleted ? "🗑️ Xóa" : "🙈 Ẩn"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -622,6 +708,7 @@ export default function AdminMoviesPage() {
                           <span className="movie-detail-badge genre">{m.genre}</span>
                         )}
                         <span className="movie-detail-badge age">{m.ageRating}</span>
+                        <span className={`movie-detail-badge ${m.status === 'INACTIVE' ? 'genre' : 'rating'}`}>{m.status === 'INACTIVE' ? 'Đã ẩn' : 'Đang hoạt động'}</span>
                       </div>
                     </div>
                   </div>
@@ -1036,32 +1123,80 @@ export default function AdminMoviesPage() {
       </Modal>
 
       
-      <Modal
-        show={showDeleteConfirm}
-        onHide={() => setShowDeleteConfirm(false)}
-        centered
-        className="delete-modal"
-      >
+      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered className="delete-modal">
         <Modal.Header closeButton>
-          <Modal.Title>⚠️Xác nhận xóa</Modal.Title>
+          <Modal.Title>Xác nhận xóa phim</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Bạn có chắc chắn muốn xóa phim này không?</p>
+          <p>Bạn có chắc chắn muốn xóa bộ phim: <strong>{movies.find(m => m.id === deletingId)?.title}</strong></p>
+          
           <p className="text-muted" style={{ fontSize: '0.9rem' }}>
-            Thao tác này không thể hoàn tác và sẽ xóa tất cả dữ liệu liên quan đến phim.
+            Hành động này sẽ xóa vĩnh viễn dữ liệu phim khỏi hệ thống và không thể khôi phục.
           </p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} style={{ borderRadius: '8px' }}>
             Hủy
           </Button>
-          <Button
-            id="confirm-delete-movie-btn"
-            variant="danger"
-            onClick={handleConfirmDelete}
-            style={{ borderRadius: '8px' }}
-          >
-            🗑️ Xóa phim
+          <Button id="confirm-delete-movie-btn" variant="danger" onClick={handleConfirmDelete} style={{ borderRadius: '8px' }}>
+            Xóa phim
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showHideModal} onHide={() => setShowHideModal(false)} centered className="delete-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Không thể xóa phim</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{deleteMessage}</p>
+          <p className="text-muted" style={{ fontSize: '0.9rem' }}>
+            Lý do:<br/>
+            - Phim đã từng có suất chiếu.<br/>
+            - Phim đã có lượt đánh giá từ người dùng.<br/>
+            - Phim có liên quan đến lịch sử đặt vé và giao dịch.<br/>
+            <br/>
+            Để đảm bảo dữ liệu lịch sử và thống kê không bị mất, hệ thống sẽ chuyển phim sang trạng thái: <strong>NGỪNG HOẠT ĐỘNG</strong>.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowHideModal(false)} style={{ borderRadius: '8px' }}>
+            Hủy
+          </Button>
+          <Button variant="primary" onClick={handleConfirmDelete} style={{ borderRadius: '8px' }}>
+            Ẩn
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showBlockModal} onHide={() => setShowBlockModal(false)} centered className="delete-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Không thể ẩn phim</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{deleteMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowBlockModal(false)} style={{ borderRadius: '8px' }}>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showRestoreConfirm} onHide={() => setShowRestoreConfirm(false)} centered className="delete-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận khôi phục</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Bạn có chắc chắn muốn khôi phục hoạt động cho bộ phim:</p>
+          <p><strong>{movies.find(m => m.id === restoringId)?.title}</strong></p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRestoreConfirm(false)} style={{ borderRadius: '8px' }}>
+            Hủy
+          </Button>
+          <Button variant="success" onClick={handleConfirmRestore} style={{ borderRadius: '8px' }}>
+            Khôi phục
           </Button>
         </Modal.Footer>
       </Modal>

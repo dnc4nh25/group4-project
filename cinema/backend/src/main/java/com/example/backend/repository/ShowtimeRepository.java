@@ -13,4 +13,7 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
 
     // Tìm tất cả xuất chiếu trong cùng phòng và cùng ngày (dùng cho validate trùng lịch)
     List<Showtime> findByRoomAndDate(String room, LocalDate date);
+
+    boolean existsByMovieId(Long movieId);
+    boolean existsByMovieIdAndDateGreaterThanEqual(Long movieId, LocalDate date);
 }

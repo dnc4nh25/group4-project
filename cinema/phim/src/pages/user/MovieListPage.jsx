@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Container, Row, Col, Form, InputGroup, Button, Spinner, Alert, Badge, Pagination } from 'react-bootstrap'
 import { useFetch } from '../../hooks/useFetch'
 import MovieCard from '../../components/MovieCard'
@@ -37,7 +37,7 @@ export default function MovieListPage() {
 
   const filteredMovies = useMemo(() => {
     if (!movies) return []
-    let result = [...movies]
+    let result = movies.filter(m => m.status === 'ACTIVE' || !m.status)
 
     if (genre !== 'all') {
       result = result.filter(m => {

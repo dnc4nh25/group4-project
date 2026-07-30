@@ -56,4 +56,8 @@ public class Movie {
 
     @Column(name = "trailer_url", length = 500, columnDefinition = "NVARCHAR(500)")
     private String trailerUrl;
+
+    @Column(length = 20)
+    @Builder.Default
+    private String status = "ACTIVE";
 }

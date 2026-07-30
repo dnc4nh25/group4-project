@@ -23,4 +23,6 @@ public class MovieDto {
     private LocalDate releaseDate;
     private String ageRating;
     private String trailerUrl;
+    private String status;
+    private Boolean canBeDeleted;
 }
