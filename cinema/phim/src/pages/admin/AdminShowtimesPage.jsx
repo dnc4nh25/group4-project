@@ -26,6 +26,7 @@ export default function AdminShowtimesPage() {
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const [deletingId, setDeletingId] = useState(null)
 
   const [filterDate, setFilterDate] = useState('')
@@ -292,6 +293,7 @@ export default function AdminShowtimesPage() {
 
   const handleDeleteClick = (id) => { 
     setDeletingId(id)
+    setDeleteError('')
     setShowDeleteConfirm(true)
   }
   const handleConfirmDelete = async () => {
@@ -300,15 +302,12 @@ export default function AdminShowtimesPage() {
       setShowDeleteConfirm(false)
       load()
     } catch (err) {
-      setShowDeleteConfirm(false)
-      
-      // Check if error response has specific message
       if (err.response?.data?.error) {
-        setError(`❌ ${err.response.data.error}`)
+        setDeleteError(`❌ ${err.response.data.error}`)
       } else if (err.response?.status === 400) {
-        setError('❌ Không thể xóa suất chiếu này vì đã có người đặt vé.')
+        setDeleteError('❌ Không thể xóa suất chiếu này vì đã có dữ liệu đặt vé.')
       } else {
-        setError('❌ Xóa thất bại. Vui lòng thử lại.')
+        setDeleteError('❌ Xóa thất bại. Vui lòng thử lại.')
       }
     }
   }
@@ -744,11 +743,12 @@ export default function AdminShowtimesPage() {
         </Form>
       </Modal>
 
-      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
+      <Modal show={showDeleteConfirm} onHide={() => { setShowDeleteConfirm(false); setDeleteError(''); }} centered>
         <Modal.Header closeButton>
           <Modal.Title>🗑️ Xác nhận xóa suất chiếu</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {deleteError && <Alert variant="danger">{deleteError}</Alert>}
           {deletingId && (() => {
             const showtime = showtimes.find(st => st.id === deletingId)
             const bookingCount = bookingCounts[deletingId] || 0
@@ -783,7 +783,7 @@ export default function AdminShowtimesPage() {
           })()}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+          <Button variant="secondary" onClick={() => { setShowDeleteConfirm(false); setDeleteError(''); }}>
             Hủy
           </Button>
           <Button 
