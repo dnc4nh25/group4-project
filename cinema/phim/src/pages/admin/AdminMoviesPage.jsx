@@ -353,14 +353,14 @@ export default function AdminMoviesPage() {
       <Container className="py-4">
         
         <Row className="admin-stats-row g-3">
-          <Col xs={6} lg={3}>
+          <Col xs={12} md={4}>
             <div className="admin-stat-card-custom">
               <div className="stat-card-icon primary">🎬</div>
               <div className="stat-card-value">{totalMovies}</div>
               <div className="stat-card-label">Tổng số phim</div>
             </div>
           </Col>
-          <Col xs={6} lg={3}>
+          <Col xs={12} md={4}>
             <div className="admin-stat-card-custom">
               <div className="stat-card-icon secondary">⭐</div>
               <div className="stat-card-value">{avgMovieRating}</div>
@@ -368,7 +368,7 @@ export default function AdminMoviesPage() {
             </div>
           </Col>
           {/* Bỏ stat card Tổng thời lượng */}
-          <Col xs={6} lg={3}>
+          <Col xs={12} md={4}>
             <div className="admin-stat-card-custom">
               <div className="stat-card-icon primary">📊</div>
               <div className="stat-card-value">{GENRES.length}</div>

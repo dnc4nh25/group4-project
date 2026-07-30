@@ -117,7 +117,7 @@ public class ShowtimeController {
             return ResponseEntity.notFound().build();
         }
 
-        // Chỉ kiểm tra bookings có status CONFIRMED (bỏ qua các booking đã CANCELLED)
+        // Kiểm tra bookings có status CONFIRMED
         boolean hasConfirmedBookings = bookingRepository.existsByShowtimeIdAndStatus(
                 id,
                 BookingStatus.CONFIRMED
@@ -127,19 +127,19 @@ public class ShowtimeController {
         System.out.println("🔍 DELETE Showtime ID: " + id);
         System.out.println("🔍 Has CONFIRMED bookings: " + hasConfirmedBookings);
 
-        // Thêm debug chi tiết
-        java.util.List<com.example.backend.entity.Booking> allBookings = bookingRepository.findByShowtimeId(id);
-        System.out.println("🔍 Total bookings: " + allBookings.size());
-        allBookings.forEach(b -> {
-            System.out.println("  - Booking ID: " + b.getId() + ", Status: " + b.getStatus());
-        });
-
         if (hasConfirmedBookings) {
             return ResponseEntity.badRequest()
                     .body(Map.of(
-                            "error", "Không thể xóa suất chiếu này vì vẫn còn vé đang được giữ (chưa hủy)",
-                            "message", "Suất chiếu đã có booking đang CONFIRMED không thể xóa"
+                            "error", "Không thể xóa suất chiếu này vì vẫn còn vé đang được giữ (chưa hủy).",
+                            "message", "Suất chiếu đã có booking đang CONFIRMED không thể xóa."
                     ));
+        }
+
+        // Xóa tất cả các booking (đã hủy) liên quan trước khi xóa suất chiếu để tránh lỗi foreign key constraint
+        java.util.List<com.example.backend.entity.Booking> cancelledBookings = bookingRepository.findByShowtimeId(id);
+        if (!cancelledBookings.isEmpty()) {
+            System.out.println("🗑️ Xóa " + cancelledBookings.size() + " vé đã hủy liên quan đến suất chiếu " + id);
+            bookingRepository.deleteAll(cancelledBookings);
         }
 
         System.out.println("✅ Deleting showtime " + id + " - All bookings are cancelled or no bookings exist");

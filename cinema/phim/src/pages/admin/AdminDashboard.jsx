@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Container, Card, Row, Col, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import {
@@ -48,16 +48,31 @@ export default function AdminDashboard() {
 
   const dailyData = useMemo(() => {
     if (!bookings) return []
+    
     const map = {}
     bookings.forEach(b => {
       const day = (b.createdAt || '').split('T')[0]
       if (!day) return
       map[day] = (map[day] || 0) + (b.totalPrice || 0)
     })
-    return Object.entries(map)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-dateFilter)
-      .map(([date, revenue]) => ({ date, 'Doanh thu': revenue }))
+
+    const result = []
+    const today = new Date()
+    for (let i = dateFilter - 1; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const dayStr = String(d.getDate()).padStart(2, '0')
+      const formattedDate = `${year}-${month}-${dayStr}`
+      
+      result.push({
+        date: formattedDate,
+        'Doanh thu': map[formattedDate] || 0
+      })
+    }
+    
+    return result
   }, [bookings, dateFilter])
 
   const { data: movies } = useFetch('http://localhost:8080/api/movies')
