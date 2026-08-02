@@ -399,6 +399,13 @@ export default function AdminBookingsPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [showUserDetailModal, setShowUserDetailModal] = useState(false)
 
+  const [activeTab, setActiveTab] = useState('list')
+  const [checkinCode, setCheckinCode] = useState('')
+  const [checkinResult, setCheckinResult] = useState(null)
+  const [checkinError, setCheckinError] = useState('')
+  const [checkinLoading, setCheckinLoading] = useState(false)
+  const [checkinUpdating, setCheckinUpdating] = useState(false)
+
   const [filterDate, setFilterDate] = useState('')
   const [filterMovie, setFilterMovie] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -629,6 +636,36 @@ export default function AdminBookingsPage() {
   const clearFilters = () => { setFilterDate(''); setFilterMovie(''); setFilterStatus(''); setSearchText('') }
   const hasActiveFilters = filterDate || filterMovie || filterStatus || searchText
 
+  const handleCheckinSearch = async () => {
+    if (!checkinCode.trim()) return
+    setCheckinLoading(true)
+    setCheckinError('')
+    setCheckinResult(null)
+    try {
+      const res = await axios.get(`http://localhost:8080/api/bookings/code/${checkinCode.trim().toUpperCase()}`)
+      setCheckinResult(res.data)
+    } catch (err) {
+      setCheckinError('Không tìm thấy vé với mã này.')
+    } finally {
+      setCheckinLoading(false)
+    }
+  }
+
+  const handleCheckinConfirm = async () => {
+    if (!checkinResult) return
+    setCheckinUpdating(true)
+    try {
+      await axios.patch(`http://localhost:8080/api/bookings/${checkinResult.id}/checkin`)
+      setCheckinResult(r => ({ ...r, status: 'CHECKED_IN' }))
+      load() // Tải lại danh sách ngầm
+      alert('Soát vé thành công! Khách có thể vào rạp.')
+    } catch (err) {
+      alert(typeof err.response?.data === 'string' ? err.response.data : 'Lỗi khi soát vé.')
+    } finally {
+      setCheckinUpdating(false)
+    }
+  }
+
   return (
     <div className="page-wrapper">
       <div className="page-header-banner py-4">
@@ -636,13 +673,25 @@ export default function AdminBookingsPage() {
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
               <h1 className="fw-bold mb-1">🎟️ Quản lý Đặt Vé</h1>
-              <p className="text-muted mb-0">Xem, lọc và quản lý tất cả đơn đặt vé trong hệ thống</p>
+              <p className="text-muted mb-0">Xem, lọc, và soát vé xem phim</p>
             </div>
           </div>
         </Container>
       </div>
 
       <Container className="py-4">
+        {/* Tab Navigation */}
+        <div className="admin-food-tabs mb-4">
+          <button
+            className={`admin-tab-btn ${activeTab === 'list' ? 'active' : ''}`}
+            onClick={() => setActiveTab('list')}
+          >
+            📋 Danh sách vé
+          </button>
+        </div>
+
+        {activeTab === 'list' && (
+          <>
         <Row className="g-4 mb-4">
           <Col md={4}>
             <div className="admin-stat-professional">
@@ -812,6 +861,8 @@ export default function AdminBookingsPage() {
               </div>
             </Card.Body>
           </Card>
+        )}
+          </>
         )}
       </Container>
 

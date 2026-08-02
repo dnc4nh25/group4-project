@@ -24,6 +24,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -268,6 +269,12 @@ public class PaymentController {
                     .build();
             Booking saved = bookingRepository.save(booking);
 
+            // Sinh bookingCode: BK-YYYYMMDD-XXXXX
+            String bookingCode = "BK-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
+                    + "-" + String.format("%05d", saved.getId());
+            saved.setBookingCode(bookingCode);
+            bookingRepository.save(saved);
+
             // 2. Cập nhật bookedSeatNums trong Showtime
             List<String> newBookedSeats = new ArrayList<>(currentBooked);
             newBookedSeats.addAll(selectedSeats);
@@ -291,6 +298,7 @@ public class PaymentController {
                     .discount(saved.getDiscount())
                     .voucherCode(saved.getVoucherCode())
                     .status(saved.getStatus())
+                    .bookingCode(saved.getBookingCode())
                     .createdAt(saved.getCreatedAt())
                     .pointsEarned(saved.getPointsEarned())
                     .pointsUsed(saved.getPointsUsed())

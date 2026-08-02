@@ -101,4 +101,25 @@ export const paymentApi = {
   checkout: (data) => apiClient.post('/payment/checkout', data),
 };
 
+export const foodItemApi = {
+  getAll: () => apiClient.get('/food-items'),
+  getAvailable: () => apiClient.get('/food-items/available'),
+  getById: (id) => apiClient.get(`/food-items/${id}`),
+  create: (data) => apiClient.post('/food-items', data),
+  update: (id, data) => apiClient.put(`/food-items/${id}`, data),
+  toggle: (id) => apiClient.patch(`/food-items/${id}/toggle`),
+  restock: (id, qty) => apiClient.patch(`/food-items/${id}/restock`, { quantity: qty }),
+  delete: (id) => apiClient.delete(`/food-items/${id}`),
+};
+
+export const foodOrderApi = {
+  getAll: () => apiClient.get('/food-orders'),
+  getByUser: (userId) => apiClient.get(`/food-orders/user/${userId}`),
+  getById: (id) => apiClient.get(`/food-orders/${id}`),
+  getByCode: (code) => apiClient.get(`/food-orders/code/${code}`),
+  create: (data) => apiClient.post('/food-orders', data),
+  updateStatus: (id, status) => apiClient.patch(`/food-orders/${id}/status`, { status }),
+  cancel: (id) => apiClient.patch(`/food-orders/${id}/cancel`),
+};
+
 export default apiClient;

@@ -56,6 +56,9 @@ public class Booking {
     @Builder.Default
     private BookingStatus status = BookingStatus.CONFIRMED;
 
+    @Column(name = "booking_code", unique = true, length = 30, columnDefinition = "NVARCHAR(30)")
+    private String bookingCode; // BK-20260802-00123
+
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
