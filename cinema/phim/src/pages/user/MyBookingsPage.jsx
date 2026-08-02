@@ -190,10 +190,27 @@ export default function MyBookingsPage() {
       </Modal>
 
       <Container>
-        <div className="page-header mb-5">
+        <div className="page-header mb-4">
           <h1 className="fw-bold text-white mb-2">Vé của tôi</h1>
           <p className="text-white-50">Quản lý lịch sử đặt vé xem phim của bạn</p>
         </div>
+
+        {/* Thông báo chính sách hủy vé */}
+        <Alert className="border-0 mb-4" style={{ 
+          backgroundColor: 'rgba(23, 162, 184, 0.15)', 
+          borderLeft: '4px solid #17a2b8' 
+        }}>
+          <div className="d-flex align-items-start">
+            <span className="me-3" style={{ fontSize: '1.5rem' }}>ℹ️</span>
+            <div>
+              <h6 className="fw-bold mb-2" style={{ color: '#17a2b8' }}>Chính sách hủy vé</h6>
+              <p className="mb-0" style={{ fontSize: '0.95rem', color: '#e0e0e0' }}>
+                Bạn chỉ có thể hủy vé trước <strong style={{ color: '#ffc107' }}> 6 giờ</strong> so với giờ chiếu phim. 
+                Ví dụ: Phim chiếu lúc <strong style={{ color: '#ffc107' }}>15:00</strong>, bạn phải hủy vé trước <strong style={{ color: '#ffc107' }}>09:00</strong> cùng ngày.
+              </p>
+            </div>
+          </div>
+        </Alert>
 
         {error && (
           <Alert variant="danger" className="border-0 bg-danger bg-opacity-25 text-white">
@@ -297,6 +314,21 @@ export default function MyBookingsPage() {
                                 '🗑 Hủy vé'
                               )}
                             </Button>
+                          </div>
+                        )}
+                        
+                        {/* Thông báo khi không thể hủy vé */}
+                        {booking.status === 'CONFIRMED' && !canCancelBooking(booking) && (
+                          <div className="mt-3">
+                            <div className="py-2 px-3" style={{ 
+                              fontSize: '0.85rem',
+                              backgroundColor: 'rgba(255, 193, 7, 0.15)',
+                              borderRadius: '6px',
+                              borderLeft: '3px solid #ffc107'
+                            }}>
+                              <span className="me-2">⏰</span>
+                              <small style={{ color: '#ffd966' }}>Không thể hủy vé (đã quá thời hạn 6 giờ trước suất chiếu)</small>
+                            </div>
                           </div>
                         )}
                       </div>

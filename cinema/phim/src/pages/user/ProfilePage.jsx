@@ -41,7 +41,8 @@ export default function ProfilePage() {
   }
 
   const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{10,11}$/
+    // Số điện thoại phải có đúng 10 chữ số và bắt đầu bằng số 0
+    const phoneRegex = /^0[0-9]{9}$/
     return phoneRegex.test(phone)
   }
 
@@ -67,7 +68,7 @@ export default function ProfilePage() {
     }
 
     if (!validatePhone(form.phone)) {
-      setError('Số điện thoại phải có 10-11 chữ số.')
+      setError('Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0.')
       return
     }
 

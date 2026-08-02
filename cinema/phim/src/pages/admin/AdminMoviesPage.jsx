@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Container, Table, Button, Modal, Form, Alert, Spinner, Badge, Row, Col, Card, InputGroup, ToggleButtonGroup, ToggleButton } from 'react-bootstrap'
 import axios from 'axios'
 import './AdminMoviesPage.css'
@@ -32,10 +32,17 @@ export default function AdminMoviesPage() {
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showHideModal, setShowHideModal] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
+  const [deleteMessage, setDeleteMessage] = useState('')
   const [deletingId, setDeletingId] = useState(null)
+  const [restoringId, setRestoringId] = useState(null)
   const [search, setSearch] = useState('')
   const [genreFilter, setGenreFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [viewMode, setViewMode] = useState('table') // 'table' or 'grid'
 
   const [selectedMovie, setSelectedMovie] = useState(null)
@@ -65,7 +72,9 @@ export default function AdminMoviesPage() {
       ])
       setReviews(revRes.data.filter(r => String(r.movieId) === String(movie.id))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
-      setUsers(usrRes.data)
+      // API /api/users trả về Page<UserDto> có dạng { content: [...] }, cần lấy .content
+      const usersData = usrRes.data
+      setUsers(Array.isArray(usersData) ? usersData : (usersData?.content ?? []))
     } catch { setReviews([]) }
     finally { setLoadingReviews(false) }
   }, [])
@@ -78,7 +87,7 @@ export default function AdminMoviesPage() {
   const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : null;
 
   const handleOpenAdd = () => {
-    setForm(EMPTY_FORM); setEditingId(null); setError(''); setShowModal(true)
+    setForm(EMPTY_FORM); setEditingId(null); setError(''); setFieldErrors({}); setShowModal(true)
   }
   const handleOpenEdit = (movie, e) => {
     e.stopPropagation()
@@ -87,18 +96,25 @@ export default function AdminMoviesPage() {
       genres: movie.genres || (movie.genre ? [movie.genre] : ['Hành động']),
       posterFile: null
     }
-    setForm(movieData); setEditingId(movie.id); setError(''); setShowModal(true)
+    setForm(movieData); setEditingId(movie.id); setError(''); setFieldErrors({}); setShowModal(true)
   }
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
+    // Xoá lỗi của field khi user bắt đầu sửa
+    if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: '' }))
+  }
 
   const handleGenreChange = (genre) => {
     const currentGenres = form.genres || []
     if (currentGenres.includes(genre)) {
-      setForm({ ...form, genres: currentGenres.filter(g => g !== genre) })
+      setForm(prev => ({ ...prev, genres: currentGenres.filter(g => g !== genre) }))
     } else {
-      setForm({ ...form, genres: [...currentGenres, genre] })
+      setForm(prev => ({ ...prev, genres: [...currentGenres, genre] }))
     }
+    // Xoá lỗi genres khi user chọn
+    if (fieldErrors.genres) setFieldErrors(prev => ({ ...prev, genres: '' }))
   }
 
   const handleFileChange = (e) => {
@@ -153,78 +169,112 @@ export default function AdminMoviesPage() {
     e.preventDefault()
     setError('')
 
-    if (!form.title?.trim()) {
-      setError('❌ Tên phim không được để trống.'); return
-    }
+    // ── Validate tất cả fields cùng lúc và hiển thị inline ──
+    const errs = {}
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
-    if (!form.duration) {
-      setError('❌ Thời lượng không được để trống.'); return
-    }
-
-    const duration = parseInt(form.duration)
-    if (isNaN(duration) || duration <= 0) {
-      setError('❌ Thời lượng phải là số dương.'); return
-    }
-
-    if (duration > 500) {
-      setError('❌ Thời lượng không hợp lệ (tối đa 500 phút).'); return
-    }
-
-    if (form.title.trim().length < 2) {
-      setError('❌ Tên phim phải có ít nhất 2 ký tự.'); return
-    }
-
-    if (form.title.trim().length > 200) {
-      setError('❌ Tên phim không được quá 200 ký tự.'); return
-    }
-
-    if (form.poster && form.poster.trim() && !form.poster.startsWith('data:')) {
-      try {
-        new URL(form.poster)
-      } catch {
-        setError('❌ URL poster không hợp lệ.'); return
+    // Tên phim
+    const title = form.title?.trim() || ''
+    if (!title) {
+      errs.title = 'Tên phim không được để trống.'
+    } else if (title.length < 2) {
+      errs.title = 'Tên phim phải có ít nhất 2 ký tự.'
+    } else if (title.length > 200) {
+      errs.title = 'Tên phim không được quá 200 ký tự.'
+    } else {
+      // Kiểm tra tên phim trùng (bỏ qua chính nó khi edit)
+      const duplicate = movies.find(m => 
+        m.title.trim().toLowerCase() === title.toLowerCase() && 
+        String(m.id) !== String(editingId)
+      )
+      if (duplicate) {
+        errs.title = `Tên phim đã tồn tại. Vui lòng chọn tên khác.`
       }
     }
 
-    if (form.description && form.description.length > 1000) {
-      setError('❌ Mô tả không được quá 1000 ký tự.'); return
-    }
-
-    if (form.director && form.director.length > 200) {
-      setError('❌ Tên đạo diễn không được quá 200 ký tự.'); return
-    }
-
-    if (form.cast && form.cast.length > 500) {
-      setError('❌ Danh sách diễn viên không được quá 500 ký tự.'); return
-    }
-
-    if (form.releaseDate) {
-      const releaseDate = new Date(form.releaseDate)
-      const minDate = new Date('1900-01-01')
-      const maxDate = new Date()
-      maxDate.setFullYear(maxDate.getFullYear() + 5) // Allow up to 5 years in future
-
-      if (releaseDate < minDate || releaseDate > maxDate) {
-        setError('❌ Ngày khởi chiếu không hợp lệ.'); return
-      }
-    }
-
+    // Thể loại
     if (!form.genres || form.genres.length === 0) {
-      setError('❌ Vui lòng chọn ít nhất một thể loại.'); return
+      errs.genres = 'Vui lòng chọn ít nhất một thể loại.'
     }
+
+    // Thời lượng
+    if (!form.duration && form.duration !== 0) {
+      errs.duration = 'Thời lượng không được để trống.'
+    } else {
+      const duration = parseInt(form.duration)
+      if (isNaN(duration) || duration <= 0) {
+        errs.duration = 'Thời lượng phải là số dương.'
+      } else if (duration > 500) {
+        errs.duration = 'Thời lượng không hợp lệ (tối đa 500 phút).'
+      }
+    }
+
+    // URL Poster — bắt buộc (trừ khi đã upload file)
+    if (!form.poster || !form.poster.trim()) {
+      errs.poster = 'URL poster không được để trống.'
+    } else if (!form.poster.startsWith('data:')) {
+      try { new URL(form.poster) } catch { errs.poster = 'URL poster không hợp lệ (phải bắt đầu bằng https://).'; }
+    }
+
+    // Bỏ validation ngày khởi chiếu - không bắt buộc nữa
+
+    // Đạo diễn — bắt buộc
+    if (!form.director?.trim()) {
+      errs.director = 'Tên đạo diễn không được để trống.'
+    } else if (form.director.trim().length > 200) {
+      errs.director = 'Tên đạo diễn không được quá 200 ký tự.'
+    }
+
+    // Diễn viên — bắt buộc
+    if (!form.cast?.trim()) {
+      errs.cast = 'Danh sách diễn viên không được để trống.'
+    } else if (form.cast.trim().length > 500) {
+      errs.cast = 'Danh sách diễn viên không được quá 500 ký tự.'
+    }
+
+    // URL Trailer — bắt buộc + hợp lệ
+    if (!form.trailerUrl?.trim()) {
+      errs.trailerUrl = 'URL trailer không được để trống.'
+    } else {
+      try { new URL(form.trailerUrl) } catch { errs.trailerUrl = 'URL trailer không hợp lệ (phải bắt đầu bằng https://).'; }
+    }
+
+    // Mô tả — bắt buộc
+    if (!form.description?.trim()) {
+      errs.description = 'Mô tả không được để trống.'
+    } else if (form.description.trim().length > 1000) {
+      errs.description = `Mô tả không được quá 1000 ký tự (hiện tại: ${form.description.trim().length}).`
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs)
+      
+      // Scroll đến field lỗi đầu tiên
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('.field-invalid')
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          firstErrorField.focus()
+        }
+      }, 100)
+      
+      return
+    }
+    setFieldErrors({})
 
     setSaving(true)
     try {
       const payload = {
         ...form,
         title: form.title.trim(),
-        rating: editingId ? parseFloat(form.rating || 0) : 0.0, // Khi tạo mới luôn là 0.0, khi sửa giữ nguyên
+        rating: editingId ? parseFloat(form.rating || 0) : 0.0,
         duration: parseInt(form.duration),
         director: form.director?.trim() || '',
         cast: form.cast?.trim() || '',
         description: form.description?.trim() || '',
         poster: form.poster?.trim() || '',
-        genres: form.genres  // Send as array, backend will handle JSON conversion
+        genres: form.genres
       }
 
       if (editingId) {
@@ -237,7 +287,7 @@ export default function AdminMoviesPage() {
         setSelectedMovie({ ...selectedMovie, ...payload })
       }
     } catch (err) {
-      setError('❌ Lưu thất bại. Vui lòng thử lại.')
+      setError('Lưu thất bại. Vui lòng thử lại.')
       console.error('Save error:', err)
     }
     finally { setSaving(false) }
@@ -258,17 +308,52 @@ export default function AdminMoviesPage() {
     }
   }
 
-  const handleDeleteClick = (id, e) => {
+  const handleDeleteClick = async (id, e) => {
     e.stopPropagation()
-    setDeletingId(id); setShowDeleteConfirm(true)
+    setDeletingId(id)
+    setError('')
+    try {
+      const res = await axios.get(`${API}/movies/${id}/check-delete`)
+      const { status, message } = res.data
+      setDeleteMessage(message)
+      if (status === 'BLOCKED') {
+        setShowBlockModal(true)
+      } else if (status === 'HIDE') {
+        setShowHideModal(true)
+      } else {
+        setShowDeleteConfirm(true)
+      }
+    } catch (err) {
+      setError('Lỗi khi kiểm tra dữ liệu xóa phim.')
+    }
   }
+
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`${API}/movies/${deletingId}`)
+      const res = await axios.delete(`${API}/movies/${deletingId}`)
       setShowDeleteConfirm(false)
+      setShowHideModal(false)
       if (selectedMovie && String(selectedMovie.id) === String(deletingId)) setSelectedMovie(null)
       load()
-    } catch { setError('Xóa thất bại.') }
+    } catch { setError('Xóa/Ẩn thất bại.') }
+  }
+
+  const handleRestoreClick = (m, e) => {
+    e.stopPropagation()
+    setRestoringId(m.id)
+    setShowRestoreConfirm(true)
+  }
+
+  const handleConfirmRestore = async () => {
+    setError('')
+    try {
+      await axios.put(`${API}/movies/${restoringId}`, { status: 'ACTIVE' })
+      load()
+      setShowRestoreConfirm(false)
+    } catch {
+      setShowRestoreConfirm(false)
+      setError('Khôi phục thất bại.')
+    }
   }
 
   const filtered = movies.filter(m => {
@@ -278,7 +363,9 @@ export default function AdminMoviesPage() {
       (m.genres && m.genres.includes(genreFilter)) ||
       m.genre === genreFilter
 
-    return matchSearch && matchGenre
+    const matchStatus = !statusFilter || (m.status || 'ACTIVE') === statusFilter
+
+    return matchSearch && matchGenre && matchStatus
   })
 
   const totalMovies = movies.length
@@ -309,28 +396,22 @@ export default function AdminMoviesPage() {
       <Container className="py-4">
         
         <Row className="admin-stats-row g-3">
-          <Col xs={6} lg={3}>
+          <Col xs={12} md={4}>
             <div className="admin-stat-card-custom">
               <div className="stat-card-icon primary">🎬</div>
               <div className="stat-card-value">{totalMovies}</div>
               <div className="stat-card-label">Tổng số phim</div>
             </div>
           </Col>
-          <Col xs={6} lg={3}>
+          <Col xs={12} md={4}>
             <div className="admin-stat-card-custom">
               <div className="stat-card-icon secondary">⭐</div>
               <div className="stat-card-value">{avgMovieRating}</div>
               <div className="stat-card-label">Rating trung bình</div>
             </div>
           </Col>
-          <Col xs={6} lg={3}>
-            <div className="admin-stat-card-custom">
-              <div className="stat-card-icon success">⏱️</div>
-              <div className="stat-card-value">{hours}h {minutes}m</div>
-              <div className="stat-card-label">Tổng thời lượng</div>
-            </div>
-          </Col>
-          <Col xs={6} lg={3}>
+          {/* Bỏ stat card Tổng thời lượng */}
+          <Col xs={12} md={4}>
             <div className="admin-stat-card-custom">
               <div className="stat-card-icon primary">📊</div>
               <div className="stat-card-value">{GENRES.length}</div>
@@ -349,7 +430,7 @@ export default function AdminMoviesPage() {
               <h6 className="mb-0 text-light">🔍 Bộ lọc</h6>
             </div>
             <Row className="g-3">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Group>
                   <Form.Label className="small text-muted">Tìm kiếm</Form.Label>
                   <InputGroup>
@@ -375,6 +456,20 @@ export default function AdminMoviesPage() {
                   >
                     <option value="">Tất cả thể loại</option>
                     {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group>
+                  <Form.Label className="small text-muted">Trạng thái</Form.Label>
+                  <Form.Select
+                    className="filter-input"
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="ACTIVE">Đang hoạt động</option>
+                    <option value="INACTIVE">Đã ẩn</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -450,6 +545,7 @@ export default function AdminMoviesPage() {
                           <th>Rating</th>
                           <th>Thời lượng</th>
                           <th>Độ tuổi</th>
+                          <th>Trạng thái</th>
                           <th>Thao tác</th>
                         </tr>
                       </thead>
@@ -497,6 +593,11 @@ export default function AdminMoviesPage() {
                               <Badge bg="info" className="time-badge">{m.ageRating}</Badge>
                             </td>
                             <td>
+                              <Badge bg={m.status === 'INACTIVE' ? 'secondary' : 'success'}>
+                                {m.status === 'INACTIVE' ? 'Đã ẩn' : 'Đang hoạt động'}
+                              </Badge>
+                            </td>
+                            <td>
                               <div className="action-buttons">
                                 <Button
                                   size="sm"
@@ -507,25 +608,37 @@ export default function AdminMoviesPage() {
                                 >
                                   👁️
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline-primary"
-                                  className="action-btn me-1"
-                                  onClick={(e) => handleOpenEdit(m, e)}
-                                  title="Sửa"
-                                >
-                                  ✏️
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline-danger"
-                                  className="action-btn"
-                                  onClick={(e) => handleDeleteClick(m.id, e)}
-                                  title="Xóa"
-                                >
-                                  🗑️
-                                </Button>
-                              </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline-primary"
+                                    className="action-btn me-1"
+                                    onClick={(e) => handleOpenEdit(m, e)}
+                                    title="Sửa"
+                                  >
+                                    ✏️
+                                  </Button>
+                                  {m.status === 'INACTIVE' ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline-success"
+                                      className="action-btn"
+                                      onClick={(e) => handleRestoreClick(m, e)}
+                                      title="Khôi phục"
+                                    >
+                                      🔄
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant={m.canBeDeleted ? "outline-danger" : "outline-warning"}
+                                      className="action-btn"
+                                      onClick={(e) => handleDeleteClick(m.id, e)}
+                                      title={m.canBeDeleted ? "Xóa" : "Ẩn phim"}
+                                    >
+                                      {m.canBeDeleted ? "🗑️" : "🙈"}
+                                    </Button>
+                                  )}
+                                </div>
                             </td>
                           </tr>
                         ))}
@@ -560,12 +673,23 @@ export default function AdminMoviesPage() {
                           >
                             ✏️ Sửa
                           </button>
-                          <button
-                            className="movie-grid-action-btn delete"
-                            onClick={(e) => handleDeleteClick(m.id, e)}
-                          >
-                            🗑️ Xóa
-                          </button>
+                          {m.status === 'INACTIVE' ? (
+                            <button
+                              className="movie-grid-action-btn view"
+                              style={{ backgroundColor: 'rgba(25, 135, 84, 0.9)' }}
+                              onClick={(e) => handleRestoreClick(m, e)}
+                            >
+                              🔄 Khôi phục
+                            </button>
+                          ) : (
+                            <button
+                              className="movie-grid-action-btn delete"
+                              style={m.canBeDeleted ? {} : { backgroundColor: 'rgba(255, 193, 7, 0.9)' }}
+                              onClick={(e) => handleDeleteClick(m.id, e)}
+                            >
+                              {m.canBeDeleted ? "🗑️ Xóa" : "🙈 Ẩn"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -584,6 +708,7 @@ export default function AdminMoviesPage() {
                           <span className="movie-detail-badge genre">{m.genre}</span>
                         )}
                         <span className="movie-detail-badge age">{m.ageRating}</span>
+                        <span className={`movie-detail-badge ${m.status === 'INACTIVE' ? 'genre' : 'rating'}`}>{m.status === 'INACTIVE' ? 'Đã ẩn' : 'Đang hoạt động'}</span>
                       </div>
                     </div>
                   </div>
@@ -764,33 +889,42 @@ export default function AdminMoviesPage() {
             {editingId ? 'Chỉnh sửa phim' : ' Thêm phim mới'}
           </Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleSave}>
+        <Form onSubmit={handleSave} noValidate>
           <Modal.Body>
-            {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
+            {/* Lỗi API server (không phải validation field) */}
+            {error && (
+              <div className="field-error-banner">
+                ⚠️ {error}
+              </div>
+            )}
 
-            
+            {/* ── Thông tin cơ bản ── */}
             <div className="form-section-title">
               <span>📋</span> Thông tin cơ bản
             </div>
+
+            {/* Tên phim */}
             <div className="form-group-custom">
               <label className="form-label-custom">
                 Tên phim <span className="required">*</span>
               </label>
               <input
                 type="text"
-                className="form-input-custom"
+                className={`form-input-custom${fieldErrors.title ? ' field-invalid' : ''}`}
                 name="title"
                 value={form.title}
                 onChange={handleChange}
                 placeholder="Nhập tên phim..."
-                required
               />
+              {fieldErrors.title && (
+                <div className="field-error-msg">⚠ {fieldErrors.title}</div>
+              )}
             </div>
 
-            
+            {/* Thể loại phim */}
             <div className="form-group-custom">
-              <label className="form-label-custom">Thể loại phim</label>
-              <div className="genres-selection">
+              <label className="form-label-custom">Thể loại phim <span className="required">*</span></label>
+              <div className={`genres-selection${fieldErrors.genres ? ' field-invalid-box' : ''}`}>
                 {GENRES.map(genre => (
                   <div key={genre} className="form-check form-check-inline">
                     <input
@@ -806,47 +940,54 @@ export default function AdminMoviesPage() {
                   </div>
                 ))}
               </div>
-              <small className="form-text text-muted">
-                Chọn một hoặc nhiều thể loại phù hợp với phim
-              </small>
+              {fieldErrors.genres
+                ? <div className="field-error-msg">⚠ {fieldErrors.genres}</div>
+                : <small className="form-text text-muted">Chọn một hoặc nhiều thể loại phù hợp với phim</small>
+              }
             </div>
 
+            {/* Thời lượng */}
             <div className="row g-3 mb-2">
               <div className="col-md-6">
                 <label className="form-label-custom">
-                  Thời lượng <span className="required">*</span>
+                  Thời lượng (phút) <span className="required">*</span>
                 </label>
                 <input
                   type="number"
-                  className="form-input-custom"
+                  className={`form-input-custom${fieldErrors.duration ? ' field-invalid' : ''}`}
                   name="duration"
                   value={form.duration}
                   onChange={handleChange}
                   placeholder="120"
-                  required
+                  min={1}
+                  max={500}
                 />
+                {fieldErrors.duration && (
+                  <div className="field-error-msg">⚠ {fieldErrors.duration}</div>
+                )}
               </div>
             </div>
 
-            
+            {/* ── Poster phim ── */}
             <div className="form-section-title" style={{ marginTop: '1rem' }}>
-              <span></span> Poster phim
+              <span>🖼️</span> Poster phim
             </div>
 
             <div className="row g-3 mb-2">
               <div className="col-md-6">
-                <label className="form-label-custom">URL Poster</label>
+                <label className="form-label-custom">URL Poster <span className="required">*</span></label>
                 <input
                   type="text"
-                  className="form-input-custom"
+                  className={`form-input-custom${fieldErrors.poster ? ' field-invalid' : ''}`}
                   name="poster"
                   value={form.poster}
                   onChange={handleChange}
                   placeholder="https://example.com/poster.jpg"
                 />
-                <small className="form-text text-muted">
-                  Nhập URL ảnh poster từ internet
-                </small>
+                {fieldErrors.poster
+                  ? <div className="field-error-msg">⚠ {fieldErrors.poster}</div>
+                  : <small className="form-text text-muted">Nhập URL ảnh poster từ internet (bắt buộc nếu không upload file)</small>
+                }
               </div>
               <div className="col-md-6">
                 <label className="form-label-custom">Hoặc tải ảnh từ máy tính</label>
@@ -856,13 +997,10 @@ export default function AdminMoviesPage() {
                   accept="image/*"
                   onChange={handleFileChange}
                 />
-                <small className="form-text text-muted">
-                  Chọn file ảnh (tối đa 5MB)
-                </small>
+                <small className="form-text text-muted">Chọn file ảnh (tối đa 5MB)</small>
               </div>
             </div>
 
-            
             {form.poster && (
               <div className="poster-preview mb-3">
                 <label className="form-label-custom">Xem trước poster:</label>
@@ -871,23 +1009,18 @@ export default function AdminMoviesPage() {
                     src={form.poster}
                     alt="Poster preview"
                     className="poster-preview-image"
-                    style={{
-                      maxWidth: '200px',
-                      maxHeight: '300px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '2px solid #ddd'
-                    }}
+                    style={{ maxWidth: '200px', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #ddd' }}
                     onError={e => e.target.src = 'https://via.placeholder.com/200x300?text=Lỗi+ảnh'}
                   />
                 </div>
               </div>
             )}
 
-            
+            {/* ── Thông tin chi tiết ── */}
             <div className="form-section-title" style={{ marginTop: '1rem' }}>
               <span>🎬</span> Thông tin chi tiết
             </div>
+
             <div className="row g-3 mb-2">
               <div className="col-md-6">
                 <label className="form-label-custom">Ngôn ngữ</label>
@@ -906,68 +1039,70 @@ export default function AdminMoviesPage() {
                   {AGE_RATINGS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
               </div>
-              <div className="col-md-3">
-                <label className="form-label-custom">Khởi chiếu</label>
-                <input
-                  type="date"
-                  className="form-input-custom"
-                  name="releaseDate"
-                  value={form.releaseDate}
-                  onChange={handleChange}
-                />
-              </div>
+              {/* Bỏ field Ngày khởi chiếu */}
             </div>
 
             <div className="row g-3 mb-2">
               <div className="col-md-6">
-                <label className="form-label-custom">Đạo diễn</label>
+                <label className="form-label-custom">Đạo diễn <span className="required">*</span></label>
                 <input
                   type="text"
-                  className="form-input-custom"
+                  className={`form-input-custom${fieldErrors.director ? ' field-invalid' : ''}`}
                   name="director"
                   value={form.director}
                   onChange={handleChange}
                   placeholder="Tên đạo diễn..."
                 />
+                {fieldErrors.director && (
+                  <div className="field-error-msg">⚠ {fieldErrors.director}</div>
+                )}
               </div>
               <div className="col-md-6">
-                <label className="form-label-custom">Diễn viên</label>
+                <label className="form-label-custom">Diễn viên <span className="required">*</span></label>
                 <input
                   type="text"
-                  className="form-input-custom"
+                  className={`form-input-custom${fieldErrors.cast ? ' field-invalid' : ''}`}
                   name="cast"
                   value={form.cast}
                   onChange={handleChange}
                   placeholder="Diễn viên 1, Diễn viên 2, ..."
                 />
+                {fieldErrors.cast && (
+                  <div className="field-error-msg">⚠ {fieldErrors.cast}</div>
+                )}
               </div>
             </div>
 
             <div className="form-group-custom">
-              <label className="form-label-custom">URL Trailer</label>
+              <label className="form-label-custom">URL Trailer <span className="required">*</span></label>
               <input
                 type="url"
-                className="form-input-custom"
+                className={`form-input-custom${fieldErrors.trailerUrl ? ' field-invalid' : ''}`}
                 name="trailerUrl"
                 value={form.trailerUrl}
                 onChange={handleChange}
                 placeholder="https://www.youtube.com/watch?v=VIDEO_ID"
               />
-              <small className="form-text text-muted">
-                Nhập link YouTube trailer để người dùng có thể xem trailer trực tiếp
-              </small>
+              {fieldErrors.trailerUrl
+                ? <div className="field-error-msg">⚠ {fieldErrors.trailerUrl}</div>
+                : <small className="form-text text-muted">Nhập link YouTube trailer để người dùng có thể xem trailer trực tiếp</small>
+              }
             </div>
 
             <div className="form-group-custom">
-              <label className="form-label-custom">Mô tả</label>
+              <label className="form-label-custom">Mô tả <span className="required">*</span></label>
               <textarea
-                className="form-input-custom"
+                className={`form-input-custom${fieldErrors.description ? ' field-invalid' : ''}`}
                 name="description"
                 value={form.description}
                 onChange={handleChange}
                 placeholder="Nội dung phim..."
                 rows={3}
               />
+              {fieldErrors.description
+                ? <div className="field-error-msg">⚠ {fieldErrors.description}</div>
+                : <small className="form-text text-muted">{(form.description || '').length}/1000 ký tự</small>
+              }
             </div>
           </Modal.Body>
           <Modal.Footer>
@@ -988,32 +1123,80 @@ export default function AdminMoviesPage() {
       </Modal>
 
       
-      <Modal
-        show={showDeleteConfirm}
-        onHide={() => setShowDeleteConfirm(false)}
-        centered
-        className="delete-modal"
-      >
+      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered className="delete-modal">
         <Modal.Header closeButton>
-          <Modal.Title>⚠️Xác nhận xóa</Modal.Title>
+          <Modal.Title>Xác nhận xóa phim</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Bạn có chắc chắn muốn xóa phim này không?</p>
+          <p>Bạn có chắc chắn muốn xóa bộ phim: <strong>{movies.find(m => m.id === deletingId)?.title}</strong></p>
+          
           <p className="text-muted" style={{ fontSize: '0.9rem' }}>
-            Thao tác này không thể hoàn tác và sẽ xóa tất cả dữ liệu liên quan đến phim.
+            Hành động này sẽ xóa vĩnh viễn dữ liệu phim khỏi hệ thống và không thể khôi phục.
           </p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} style={{ borderRadius: '8px' }}>
             Hủy
           </Button>
-          <Button
-            id="confirm-delete-movie-btn"
-            variant="danger"
-            onClick={handleConfirmDelete}
-            style={{ borderRadius: '8px' }}
-          >
-            🗑️ Xóa phim
+          <Button id="confirm-delete-movie-btn" variant="danger" onClick={handleConfirmDelete} style={{ borderRadius: '8px' }}>
+            Xóa phim
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showHideModal} onHide={() => setShowHideModal(false)} centered className="delete-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Không thể xóa phim</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{deleteMessage}</p>
+          <p className="text-muted" style={{ fontSize: '0.9rem' }}>
+            Lý do:<br/>
+            - Phim đã từng có suất chiếu.<br/>
+            - Phim đã có lượt đánh giá từ người dùng.<br/>
+            - Phim có liên quan đến lịch sử đặt vé và giao dịch.<br/>
+            <br/>
+            Để đảm bảo dữ liệu lịch sử và thống kê không bị mất, hệ thống sẽ chuyển phim sang trạng thái: <strong>NGỪNG HOẠT ĐỘNG</strong>.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowHideModal(false)} style={{ borderRadius: '8px' }}>
+            Hủy
+          </Button>
+          <Button variant="primary" onClick={handleConfirmDelete} style={{ borderRadius: '8px' }}>
+            Ẩn
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showBlockModal} onHide={() => setShowBlockModal(false)} centered className="delete-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Không thể ẩn phim</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{deleteMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowBlockModal(false)} style={{ borderRadius: '8px' }}>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showRestoreConfirm} onHide={() => setShowRestoreConfirm(false)} centered className="delete-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận khôi phục</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Bạn có chắc chắn muốn khôi phục hoạt động cho bộ phim:</p>
+          <p><strong>{movies.find(m => m.id === restoringId)?.title}</strong></p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRestoreConfirm(false)} style={{ borderRadius: '8px' }}>
+            Hủy
+          </Button>
+          <Button variant="success" onClick={handleConfirmRestore} style={{ borderRadius: '8px' }}>
+            Khôi phục
           </Button>
         </Modal.Footer>
       </Modal>

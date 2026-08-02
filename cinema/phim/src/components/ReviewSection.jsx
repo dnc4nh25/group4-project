@@ -42,11 +42,11 @@ function StarDisplay({ value }) {
 }
 
 export default function ReviewSection({ movieId, movie }) {
-  const { currentUser } = useAuth()
+  const { currentUser, updateUser } = useAuth()
 
   const [reviews, setReviews] = useState([])
   const [loadingReviews, setLoadingReviews] = useState(true)
-  const [eligible, setEligible] = useState(false)   // đã xem phim trong quá khứ
+  const [eligible, setEligible] = useState(false)   // đã đến giờ chiếu (suất đã bắt đầu)
   const [checking, setChecking] = useState(true)
   const [myReview, setMyReview] = useState(null)    // đánh giá của tôi (nếu có)
 
@@ -102,7 +102,6 @@ export default function ReviewSection({ movieId, movie }) {
       )
 
       const now = new Date()
-      const duration = movie?.duration || 120 // phút
 
       for (const booking of myBookings) {
         const showtime = movieShowtimes.find(
@@ -110,20 +109,9 @@ export default function ReviewSection({ movieId, movie }) {
         )
         if (!showtime) continue
 
-        // LocalTime từ backend có format "HH:mm:ss", không cần thêm ":00"
         const startTime = new Date(`${showtime.date}T${showtime.time}`)
-        const endTime = new Date(startTime.getTime() + duration * 60 * 1000)
 
-        console.log('🎬 Checking showtime:', {
-          showtimeId: showtime.id,
-          startTime: startTime.toLocaleString('vi-VN'),
-          endTime: endTime.toLocaleString('vi-VN'),
-          now: now.toLocaleString('vi-VN'),
-          duration: duration,
-          hasEnded: endTime < now
-        })
-
-        if (endTime < now) {
+        if (startTime <= now) {
           setEligible(true)
           break
         }
@@ -145,8 +133,9 @@ export default function ReviewSection({ movieId, movie }) {
     setSubmitting(true)
     setFeedback(null)
     try {
+      let res;
       if (isEditing && myReview) {
-        await axios.put(`${API}/reviews/${myReview.id}`, {
+        res = await axios.put(`${API}/reviews/${myReview.id}`, {
           movieId: parseInt(movieId),
           userId: currentUser.id,
           rating,
@@ -154,7 +143,7 @@ export default function ReviewSection({ movieId, movie }) {
         })
         setFeedback({ type: 'success', msg: 'Đánh giá của bạn đã được cập nhật!' })
       } else {
-        await axios.post(`${API}/reviews`, {
+        res = await axios.post(`${API}/reviews`, {
           movieId: parseInt(movieId),
           userId: currentUser.id,
           rating,
@@ -162,6 +151,20 @@ export default function ReviewSection({ movieId, movie }) {
         })
         setFeedback({ type: 'success', msg: 'Cảm ơn bạn đã đánh giá!' })
       }
+      
+      // Cập nhật điểm trong context nếu có
+      if (res.data.userPoints !== undefined) {
+        updateUser({ points: res.data.userPoints })
+      }
+      
+      // Hiển thị thông báo nếu được cộng điểm
+      if (res.data.pointsEarned > 0) {
+        setFeedback({ 
+          type: 'success', 
+          msg: `Cảm ơn bạn đã đánh giá! Bạn được cộng ${res.data.pointsEarned} điểm thưởng! 🎉` 
+        })
+      }
+      
       setComment('')
       setRating(5)
       setIsEditing(false)
@@ -311,8 +314,8 @@ export default function ReviewSection({ movieId, movie }) {
         <Card.Body className="text-center py-4">
           <div style={{ fontSize: 36 }}>🎫</div>
           <p className="mt-2 mb-0 text-muted">
-            Bạn chỉ có thể đánh giá sau khi đã xem phim này.<br />
-            <small>Đặt vé và xem phim để mở khóa tính năng đánh giá.</small>
+            Bạn chỉ có thể đánh giá khi phim đã bắt đầu chiếu.<br />
+            <small>Đặt vé và đợi đến giờ chiếu để mở khóa tính năng đánh giá.</small>
           </p>
         </Card.Body>
       </Card>

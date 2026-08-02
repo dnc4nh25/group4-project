@@ -17,9 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,27 +152,21 @@ public class ReviewController {
             return ResponseEntity.ok(response);
         }
         
-        // Check if any showtime has ended
-        boolean hasEndedShowtime = userBookings.stream()
+        // Cho phép đánh giá khi suất chiếu đã bắt đầu (không cần đợi hết phim)
+        boolean hasStartedShowtime = userBookings.stream()
                 .filter(booking -> booking.getShowtime().getMovie().getId().equals(movieId))
                 .anyMatch(booking -> {
                     Showtime showtime = booking.getShowtime();
-                    Movie movie = showtime.getMovie();
-                    
-                    // Use actual movie duration, default to 120 minutes if not set
-                    int movieDurationMinutes = movie.getDuration() != null ? movie.getDuration() : 120;
-                    
-                    LocalDateTime showtimeEnd = LocalDateTime.of(
+                    LocalDateTime showtimeStart = LocalDateTime.of(
                         showtime.getDate(),
                         showtime.getTime()
-                    ).plusMinutes(movieDurationMinutes);
-                    
-                    return LocalDateTime.now().isAfter(showtimeEnd);
+                    );
+                    return !LocalDateTime.now().isBefore(showtimeStart);
                 });
         
-        if (!hasEndedShowtime) {
+        if (!hasStartedShowtime) {
             response.put("canReview", false);
-            response.put("reason", "Suất chiếu chưa kết thúc");
+            response.put("reason", "Suất chiếu chưa bắt đầu");
             response.put("hasReview", hasReview);
             return ResponseEntity.ok(response);
         }
@@ -216,18 +208,22 @@ public class ReviewController {
             }
             
             // Check if review already exists
-            Review review = reviewRepository.findByMovieIdAndUserId(
+            Review existingReview = reviewRepository.findByMovieIdAndUserId(
                 reviewDto.getMovieId(), 
                 reviewDto.getUserId()
             ).orElse(null);
             
-            if (review != null) {
-                // Update existing review
+            boolean isNewReview = (existingReview == null);
+            Review review;
+            
+            if (existingReview != null) {
+                // Update existing review (không cộng điểm nữa)
+                review = existingReview;
                 review.setRating(reviewDto.getRating());
                 review.setComment(reviewDto.getComment());
                 review.setUpdatedAt(LocalDateTime.now());
             } else {
-                // Create new review
+                // Create new review - cộng điểm thưởng
                 review = Review.builder()
                         .movie(movie)
                         .user(user)
@@ -236,6 +232,11 @@ public class ReviewController {
                         .hidden(false)
                         .createdAt(LocalDateTime.now())
                         .build();
+                
+                // Cộng điểm thưởng cho user khi viết review lần đầu (10 điểm)
+                Long currentPoints = user.getPoints() != null ? user.getPoints() : 0L;
+                user.setPoints(currentPoints + 10L);
+                userRepository.save(user);
             }
             
             Review saved = reviewRepository.save(review);
@@ -243,7 +244,13 @@ public class ReviewController {
             // Cập nhật rating của phim
             updateMovieRating(reviewDto.getMovieId());
             
-            return ResponseEntity.ok(convertToDto(saved));
+            // Trả về response bao gồm cả điểm mới của user
+            Map<String, Object> response = new HashMap<>();
+            response.put("review", convertToDto(saved));
+            response.put("userPoints", user.getPoints());
+            response.put("pointsEarned", isNewReview ? 10 : 0);
+            
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -276,7 +283,13 @@ public class ReviewController {
             // Cập nhật rating của phim
             updateMovieRating(review.getMovie().getId());
             
-            return ResponseEntity.ok(convertToDto(updated));
+            // Trả về response nhất quán với POST (không cộng điểm khi update)
+            Map<String, Object> response = new HashMap<>();
+            response.put("review", convertToDto(updated));
+            response.put("userPoints", review.getUser().getPoints());
+            response.put("pointsEarned", 0);
+            
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             return ResponseEntity.badRequest()

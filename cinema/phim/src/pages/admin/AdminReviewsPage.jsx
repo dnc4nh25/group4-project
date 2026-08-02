@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Container, Table, Button, Alert, Spinner, Badge, Row, Col, Card, InputGroup, Form } from 'react-bootstrap'
 import axios from 'axios'
 import './AdminCommon.css'
@@ -36,7 +36,9 @@ export default function AdminReviewsPage() {
       ])
       setReviews(reviewsRes.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
       setMovies(moviesRes.data)
-      setUsers(usersRes.data)
+      // API /api/users trả về Page<UserDto> có dạng { content: [...] }, cần lấy .content
+      const usersData = usersRes.data
+      setUsers(Array.isArray(usersData) ? usersData : (usersData?.content ?? []))
     } catch { 
       setError('Lỗi tải dữ liệu') 
     }
