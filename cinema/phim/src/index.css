@@ -1502,6 +1502,35 @@ table th {
   box-shadow: 0 4px 10px rgba(224, 86, 253, 0.3);
 }
 
+/* === Hàng ghế đôi === */
+.seat-row-couple {
+  /* Giữ nguyên bố cục như hàng thường */
+}
+
+.seats-in-row-couple {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* Nút ghế đôi: rộng = 2 ghế (40px) + 1 gap (6px) = 86px */
+.seat-btn-couple {
+  width: 86px !important;
+  min-width: 86px !important;
+  height: 42px;
+  border-radius: 10px 10px 4px 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .seat-booked {
   background: rgba(231, 76, 60, 0.3);
   color: rgba(255, 130, 120, 0.8);
@@ -2548,6 +2577,12 @@ table th {
     width: 34px;
     height: 28px;
     font-size: 0.55rem;
+  }
+
+  .seat-btn-couple {
+    width: 74px !important;
+    min-width: 74px !important;
+    height: 32px;
   }
 
   .seat-grid {

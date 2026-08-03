@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { paymentApi } from '../../services/api'
-import { getSeatInfo } from '../../utils/seatPricing'
+import { getSeatInfo, buildSeatLayout } from '../../utils/seatPricing'
 import VoucherValidator from '../../utils/voucherValidation'
 import './PaymentPage.css'
 
@@ -267,6 +267,7 @@ export default function PaymentPage() {
 
   // ─── MAIN PAYMENT PAGE ────────────────────────────────────
   const { selectedSeats, subtotal, seatCount, showtime, movie } = bookingData
+  const layoutRows = showtime ? buildSeatLayout(showtime.totalSeats).rows : []
 
   return (
     <div className="pay-wrapper">
@@ -319,7 +320,7 @@ export default function PaymentPage() {
                 <span>💺 Ghế đã chọn:</span>
                 <div className="pay-seat-badges">
                   {selectedSeats.map(seat => {
-                    const info = getSeatInfo(seat, showtime?.price || 0)
+                    const info = getSeatInfo(seat, showtime?.price || 0, layoutRows)
                     return (
                       <span key={seat} className="pay-seat-badge" style={{ backgroundColor: info.type === 'vip' ? '#f39c12' : info.type === 'couple' ? '#be2edd' : undefined }}>
                         {seat} ({info.label})

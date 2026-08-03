@@ -4,7 +4,7 @@ import { Container, Card, Button, Alert, Spinner, Row, Col, Badge } from 'react-
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
 import SeatMap from '../../components/SeatMap'
-import { getSeatInfo, calculateTotalSeatsPrice } from '../../utils/seatPricing'
+import { getSeatInfo, calculateTotalSeatsPrice, buildSeatLayout } from '../../utils/seatPricing'
 
 export default function BookingPage() {
   const { showtimeId } = useParams()
@@ -49,9 +49,18 @@ export default function BookingPage() {
   }, [showtimeId])
 
   const handleToggleSeat = (seatId) => {
-    setSelectedSeats(prev =>
-      prev.includes(seatId) ? prev.filter(s => s !== seatId) : [...prev, seatId]
-    )
+    if (Array.isArray(seatId)) {
+      // Ghế đôi: toggle cả cặp cùng lúc
+      setSelectedSeats(prev => {
+        const allSelected = seatId.every(id => prev.includes(id))
+        if (allSelected) return prev.filter(s => !seatId.includes(s))
+        return [...prev.filter(s => !seatId.includes(s)), ...seatId]
+      })
+    } else {
+      setSelectedSeats(prev =>
+        prev.includes(seatId) ? prev.filter(s => s !== seatId) : [...prev, seatId]
+      )
+    }
   }
 
   const parsedBookedSeats = showtime?.bookedSeatNums
@@ -62,7 +71,8 @@ export default function BookingPage() {
 
   const bookedCount = showtime ? parsedBookedSeats.length : 0
   const available = showtime ? showtime.totalSeats - bookedCount : 0
-  const totalPrice = calculateTotalSeatsPrice(selectedSeats, showtime?.price || 0)
+  const layoutRows = showtime ? buildSeatLayout(showtime.totalSeats).rows : []
+  const totalPrice = calculateTotalSeatsPrice(selectedSeats, showtime?.price || 0, layoutRows)
 
   const handleConfirm = async () => {
     if (selectedSeats.length === 0) {
@@ -224,7 +234,7 @@ export default function BookingPage() {
                   ) : (
                     <div className="d-flex flex-wrap gap-1">
                       {selectedSeats.sort().map(s => {
-                        const seatInfo = getSeatInfo(s, showtime?.price || 0);
+                        const seatInfo = getSeatInfo(s, showtime?.price || 0, layoutRows);
                         let bg = 'secondary';
                         if (seatInfo.type === 'vip') bg = 'warning text-dark';
                         else if (seatInfo.type === 'couple') bg = 'info';
@@ -252,9 +262,9 @@ export default function BookingPage() {
                   {selectedSeats.length > 0 && (
                     <div className="mb-2">
                       {['standard', 'vip', 'couple'].map(type => {
-                        const seatsOfType = selectedSeats.filter(s => getSeatInfo(s).type === type);
+                        const seatsOfType = selectedSeats.filter(s => getSeatInfo(s, 0, layoutRows).type === type);
                         if (seatsOfType.length === 0) return null;
-                        const info = getSeatInfo(seatsOfType[0], showtime?.price || 0);
+                        const info = getSeatInfo(seatsOfType[0], showtime?.price || 0, layoutRows);
                         return (
                           <div key={type} className="d-flex justify-content-between small text-muted">
                             <span>{info.label} x {seatsOfType.length}</span>

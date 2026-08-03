@@ -1,32 +1,30 @@
-import { getSeatInfo } from '../utils/seatPricing'
+import { buildSeatLayout } from '../utils/seatPricing'
 
 export default function SeatMap({ totalSeats, bookedSeatNums = [], selectedSeats = [], onToggleSeat, maxSelect }) {
-  const SEATS_PER_ROW = 10
-  const ROW_LABELS = 'ABCDEFGHIJKLMNOP'.split('')
-  const numRows = Math.ceil(totalSeats / SEATS_PER_ROW)
+  const { rows } = buildSeatLayout(totalSeats || 0)
 
-  const rows = []
-  for (let r = 0; r < numRows; r++) {
-    const seats = []
-    for (let s = 1; s <= SEATS_PER_ROW; s++) {
-      const seatNum = r * SEATS_PER_ROW + s
-      if (seatNum <= totalSeats) seats.push(ROW_LABELS[r] + s)
-    }
-    rows.push({ label: ROW_LABELS[r], seats })
-  }
-
-  const isBooked = (id) => bookedSeatNums.includes(id)
+  const isBooked   = (id) => bookedSeatNums.includes(id)
   const isSelected = (id) => selectedSeats.includes(id)
 
-  const handleClick = (id) => {
-    if (isBooked(id)) return
-    if (!isSelected(id) && maxSelect && selectedSeats.length >= maxSelect) return
-    onToggleSeat(id)
+  const handleClickSingle = (seatId) => {
+    if (isBooked(seatId)) return
+    if (!isSelected(seatId) && maxSelect && selectedSeats.length >= maxSelect) return
+    onToggleSeat(seatId)
+  }
+
+  const handleClickCouple = (ids) => {
+    const anyBooked   = ids.some(id => isBooked(id))
+    if (anyBooked) return
+    const allSelected = ids.every(id => isSelected(id))
+    // Nếu chưa chọn thì cần 2 slot trống
+    if (!allSelected && maxSelect && selectedSeats.length + 2 > maxSelect) return
+    onToggleSeat(ids) // truyền mảng lên BookingPage
   }
 
   return (
     <div className="seat-map-wrapper">
 
+      {/* Màn hình */}
       <div className="screen-container" style={{ textAlign: 'center', marginBottom: '3rem', position: 'relative', width: '100%' }}>
         <svg viewBox="0 0 800 120" style={{ width: '100%', maxWidth: '600px', height: 'auto', filter: 'drop-shadow(0px 10px 15px rgba(255,107,53,0.3))' }}>
           <defs>
@@ -43,45 +41,80 @@ export default function SeatMap({ totalSeats, bookedSeatNums = [], selectedSeats
         </svg>
       </div>
 
-
       <div className="seat-grid">
-        {rows.map(({ label, seats }) => (
-          <div key={label} className="seat-row">
-            <span className="row-label">{label}</span>
-            <div className="seats-in-row">
-              {seats.map((seatId, idx) => {
-                const booked = isBooked(seatId)
-                const selected = isSelected(seatId)
-                const seatType = getSeatInfo(seatId, 0).type
-                
-                let btnClass = `seat-${seatType}`
-                if (booked) btnClass = 'seat-booked'
-                else if (selected) btnClass = 'seat-selected'
+        {rows.map(({ label, seats, type: rowType }) => {
+          const isCouple = rowType === 'couple'
 
-                return (
-                  <button
-                    key={seatId}
-                    className={`seat-btn ${btnClass}`}
-                    onClick={() => handleClick(seatId)}
-                    disabled={booked}
-                    title={booked ? `${seatId} – Đã đặt` : selected ? `${seatId} – Click để bỏ chọn` : `${seatId} – Click để chọn`}
-                    style={{ marginLeft: idx === 5 ? '1.5rem' : undefined }}
-                  >
-                    {seatId}
-                  </button>
-                )
-              })}
+          return (
+            <div key={label} className="seat-row">
+              <span className="row-label">{label}</span>
+
+              <div className="seats-in-row">
+                {isCouple
+                  ? seats.map((seat) => {
+                      const { ids } = seat
+                      const anyBooked   = ids.some(id => isBooked(id))
+                      const allSelected = ids.every(id => isSelected(id))
+
+                      let btnClass = 'seat-couple'
+                      if (anyBooked)    btnClass = 'seat-booked'
+                      else if (allSelected) btnClass = 'seat-selected'
+
+                      return (
+                        <button
+                          key={ids[0]}
+                          className={`seat-btn seat-btn-couple ${btnClass}`}
+                          onClick={() => handleClickCouple(ids)}
+                          disabled={anyBooked}
+                          title={
+                            anyBooked   ? `${ids.join(' + ')} – Đã đặt` :
+                            allSelected ? `${ids.join(' + ')} – Click để bỏ chọn` :
+                                          `${ids.join(' + ')} – Ghế Đôi`
+                          }
+                        >
+                          {ids[0]}·{ids[1]}
+                        </button>
+                      )
+                    })
+                  : seats.map((seat) => {
+                      const seatId  = seat.id
+                      const booked  = isBooked(seatId)
+                      const selected = isSelected(seatId)
+
+                      let btnClass = `seat-${seat.type}`
+                      if (booked)   btnClass = 'seat-booked'
+                      else if (selected) btnClass = 'seat-selected'
+
+                      return (
+                        <button
+                          key={seatId}
+                          className={`seat-btn ${btnClass}`}
+                          onClick={() => handleClickSingle(seatId)}
+                          disabled={booked}
+                          title={
+                            booked   ? `${seatId} – Đã đặt` :
+                            selected ? `${seatId} – Click để bỏ chọn` :
+                                       `${seatId} – Click để chọn`
+                          }
+                        >
+                          {seatId}
+                        </button>
+                      )
+                    })
+                }
+              </div>
+
+              <span className="row-label">{label}</span>
             </div>
-            <span className="row-label">{label}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-
+      {/* Chú thích */}
       <div className="seat-legend">
         <div className="legend-item"><span className="legend-dot seat-standard-dot"></span> Thường</div>
         <div className="legend-item"><span className="legend-dot seat-vip-dot"></span> VIP</div>
-        <div className="legend-item"><span className="legend-dot seat-couple-dot"></span> Đôi</div>
+        <div className="legend-item"><span className="legend-dot seat-couple-dot"></span> Ghế Đôi</div>
         <div className="legend-item"><span className="legend-dot seat-selected-dot"></span> Đang chọn</div>
         <div className="legend-item"><span className="legend-dot seat-booked-dot"></span> Đã đặt</div>
       </div>
