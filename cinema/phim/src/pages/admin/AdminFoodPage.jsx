@@ -8,17 +8,17 @@ const CATEGORIES = ['POPCORN', 'DRINK', 'COMBO', 'SNACK']
 const CATEGORY_LABELS = { POPCORN: '🍿 Bỏng ngô', DRINK: '🥤 Nước', COMBO: '🎁 Combo', SNACK: '🌭 Snack' }
 
 const STATUS_FLOW = {
-  PENDING:   { label: 'Chờ xử lý',    next: 'PREPARING', nextLabel: '▶ Bắt đầu chuẩn bị' },
-  PREPARING: { label: 'Chuẩn bị',     next: 'READY',     nextLabel: '✅ Sẵn sàng lấy' },
-  READY:     { label: 'Sẵn lấy',      next: 'COMPLETED', nextLabel: '🎉 Hoàn tất' },
-  COMPLETED: { label: 'Đã hoàn tất',  next: null,        nextLabel: null },
-  CANCELLED: { label: 'Đã hủy',       next: null,        nextLabel: null },
+  PENDING: { label: 'Chờ xử lý', next: 'PREPARING', nextLabel: '▶ Bắt đầu chuẩn bị' },
+  PREPARING: { label: 'Chuẩn bị', next: 'READY', nextLabel: '✅ Sẵn sàng lấy' },
+  READY: { label: 'Sẵn lấy', next: 'COMPLETED', nextLabel: '🎉 Hoàn tất' },
+  COMPLETED: { label: 'Đã hoàn tất', next: null, nextLabel: null },
+  CANCELLED: { label: 'Đã hủy', next: null, nextLabel: null },
 }
 
 const STATUS_BADGE = {
-  PENDING:   'warning',
+  PENDING: 'warning',
   PREPARING: 'info',
-  READY:     'success',
+  READY: 'success',
   COMPLETED: 'secondary',
   CANCELLED: 'danger',
 }
@@ -191,7 +191,7 @@ export default function AdminFoodPage() {
         new URL(imageUrlStr)
         const hasExt = /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(imageUrlStr);
         if (!hasExt && !/cdn|firebasestorage|cloudinary/i.test(imageUrlStr)) {
-           errors.imageUrl = 'URL ảnh không đúng định dạng (jpg, jpeg, png, webp, gif hoặc URL CDN hợp lệ)'
+          errors.imageUrl = 'URL ảnh không đúng định dạng (jpg, jpeg, png, webp, gif hoặc URL CDN hợp lệ)'
         }
       } catch (_) {
         errors.imageUrl = 'URL ảnh không đúng định dạng'
@@ -220,7 +220,7 @@ export default function AdminFoodPage() {
       formData.sizes.forEach((s, idx) => {
         const sLabel = (s.label || '').trim().toUpperCase()
         const sPriceStr = String(s.price || '').trim()
-        
+
         if (!sLabel) {
           errors[`sizeLabel_${idx}`] = 'Tên size bắt buộc nhập'
         } else if (!allowedSizes.includes(sLabel)) {
@@ -449,63 +449,63 @@ export default function AdminFoodPage() {
                   <div className="table-responsive">
                     <Table className="admin-table modern-table" hover responsive>
                       <thead>
-                    <tr>
-                      <th>Ảnh</th>
-                      <th>Tên sản phẩm</th>
-                      <th>Danh mục</th>
-                      <th>Giá</th>
-                      <th>Tồn kho</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredItems.map(item => (
-                      <tr key={item.id}>
-                        <td>
-                          <img
-                            src={item.imageUrl || 'https://via.placeholder.com/48'}
-                            alt={item.name}
-                            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }}
-                          />
-                        </td>
-                        <td>
-                          <div className="fw-bold">{item.name}</div>
-                          {item.sizes?.length > 0 && (
-                            <div style={{ fontSize: '0.75rem', color: '#a8a8b8' }}>
-                              {item.sizes.map(s => `${s.label}: ${s.price?.toLocaleString()}đ`).join(' | ')}
-                            </div>
-                          )}
-                        </td>
-                        <td><span className="admin-cat-badge">{CATEGORY_LABELS[item.category]}</span></td>
-                        <td className="fw-bold" style={{ color: '#f5a623' }}>
-                          {item.basePrice?.toLocaleString('vi-VN')}đ
-                        </td>
-                        <td>
-                          <span className={`admin-stock-badge ${item.stock === 0 ? 'out' : item.stock < 5 ? 'low' : 'ok'}`}>
-                            {item.stock}
-                          </span>
-                        </td>
-                        <td>
-                          <select
-                            value={item.isAvailable ? 'true' : 'false'}
-                            onChange={() => handleToggle(item)}
-                            className="admin-food-select"
-                            style={{ padding: '4px 8px', fontSize: '0.85rem', width: 'auto' }}
-                          >
-                            <option value="true">Đang bán</option>
-                            <option value="false">Tạm ngưng</option>
-                          </select>
-                        </td>
-                        <td>
-                          <div className="action-buttons d-flex gap-1 flex-wrap">
-                            <Button size="sm" variant="outline-primary" className="action-btn" onClick={() => openEditModal(item)} title="Chỉnh sửa">✏️</Button>
-                            <Button size="sm" variant="outline-danger" className="action-btn" onClick={() => handleDeleteItem(item.id)} title="Xóa">🗑</Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        <tr>
+                          <th>Ảnh</th>
+                          <th>Tên sản phẩm</th>
+                          <th>Danh mục</th>
+                          <th>Giá</th>
+                          <th>Tồn kho</th>
+                          <th>Trạng thái</th>
+                          <th>Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredItems.map(item => (
+                          <tr key={item.id}>
+                            <td>
+                              <img
+                                src={item.imageUrl || 'https://via.placeholder.com/48'}
+                                alt={item.name}
+                                style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }}
+                              />
+                            </td>
+                            <td>
+                              <div className="fw-bold">{item.name}</div>
+                              {item.sizes?.length > 0 && (
+                                <div style={{ fontSize: '0.75rem', color: '#a8a8b8' }}>
+                                  {item.sizes.map(s => `${s.label}: ${s.price?.toLocaleString()}đ`).join(' | ')}
+                                </div>
+                              )}
+                            </td>
+                            <td><span className="admin-cat-badge">{CATEGORY_LABELS[item.category]}</span></td>
+                            <td className="fw-bold" style={{ color: '#f5a623' }}>
+                              {item.basePrice?.toLocaleString('vi-VN')}đ
+                            </td>
+                            <td>
+                              <span className={`admin-stock-badge ${item.stock === 0 ? 'out' : item.stock < 5 ? 'low' : 'ok'}`}>
+                                {item.stock}
+                              </span>
+                            </td>
+                            <td>
+                              <select
+                                value={item.isAvailable ? 'true' : 'false'}
+                                onChange={() => handleToggle(item)}
+                                className="admin-food-select"
+                                style={{ padding: '4px 8px', fontSize: '0.85rem', width: 'auto' }}
+                              >
+                                <option value="true">Đang bán</option>
+                                <option value="false">Tạm ngưng</option>
+                              </select>
+                            </td>
+                            <td>
+                              <div className="action-buttons d-flex gap-1 flex-wrap">
+                                <Button size="sm" variant="outline-primary" className="action-btn" onClick={() => openEditModal(item)} title="Chỉnh sửa">✏️</Button>
+                                <Button size="sm" variant="outline-danger" className="action-btn" onClick={() => handleDeleteItem(item.id)} title="Xóa">🗑</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
                     </Table>
                     {filteredItems.length === 0 && (
                       <div className="text-center py-5" style={{ color: '#a8a8b8' }}>Không có sản phẩm nào</div>
@@ -540,67 +540,67 @@ export default function AdminFoodPage() {
                   <div className="table-responsive">
                     <Table className="admin-table modern-table" hover responsive>
                       <thead>
-                    <tr>
-                      <th>Mã đơn</th>
-                      <th>Khách hàng</th>
-                      <th>Items</th>
-                      <th>Tổng tiền</th>
-                      <th>Pickup</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrders.map(order => {
-                      const sf = STATUS_FLOW[order.status]
-                      return (
-                        <tr key={order.id}>
-                          <td>
-                            <div className="fw-bold font-monospace" style={{ color: '#f5a623', fontSize: '0.85rem' }}>
-                              {order.orderCode}
-                            </div>
-                            <small style={{ color: '#666' }}>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</small>
-                          </td>
-                          <td>{order.userName}</td>
-                          <td>
-                            <div style={{ fontSize: '0.82rem', color: '#d4d4d4' }}>
-                              {order.items?.slice(0, 2).map((item, i) => (
-                                <div key={i}>{item.foodItemName} ×{item.quantity}</div>
-                              ))}
-                              {order.items?.length > 2 && <div style={{ color: '#a8a8b8' }}>+{order.items.length - 2} more</div>}
-                            </div>
-                          </td>
-                          <td className="fw-bold" style={{ color: '#f5a623' }}>
-                            {order.totalAmount?.toLocaleString('vi-VN')}đ
-                          </td>
-                          <td style={{ fontSize: '0.85rem' }}>
-                            {order.pickupDate && <div>{new Date(order.pickupDate).toLocaleDateString('vi-VN')}</div>}
-                            {order.pickupTime && <div style={{ color: '#a8a8b8' }}>{order.pickupTime}</div>}
-                          </td>
-                          <td>
-                            <Badge bg={STATUS_BADGE[order.status] || 'secondary'}>
-                              {STATUS_FLOW[order.status]?.label || order.status}
-                            </Badge>
-                          </td>
-                          <td>
-                            <div className="action-buttons d-flex gap-1 flex-wrap">
-                              <Button size="sm" variant="outline-primary" className="action-btn"
-                                onClick={() => setOrderDetailModal({ show: true, order })}
-                                title="Xem chi tiết"
-                              >👁️</Button>
-                              {sf?.next && (
-                                <Button size="sm" variant="outline-success" className="action-btn"
-                                  onClick={() => handleUpdateStatus(order.id, sf.next)}
-                                  disabled={statusUpdating === order.id}
-                                  title={sf.nextLabel}
-                                >▶</Button>
-                              )}
-                            </div>
-                          </td>
+                        <tr>
+                          <th>Mã đơn</th>
+                          <th>Khách hàng</th>
+                          <th>Items</th>
+                          <th>Tổng tiền</th>
+                          <th>Pickup</th>
+                          <th>Trạng thái</th>
+                          <th>Thao tác</th>
                         </tr>
-                      )
-                    })}
-                  </tbody>
+                      </thead>
+                      <tbody>
+                        {filteredOrders.map(order => {
+                          const sf = STATUS_FLOW[order.status]
+                          return (
+                            <tr key={order.id}>
+                              <td>
+                                <div className="fw-bold font-monospace" style={{ color: '#f5a623', fontSize: '0.85rem' }}>
+                                  {order.orderCode}
+                                </div>
+                                <small style={{ color: '#666' }}>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</small>
+                              </td>
+                              <td>{order.userName}</td>
+                              <td>
+                                <div style={{ fontSize: '0.82rem', color: '#d4d4d4' }}>
+                                  {order.items?.slice(0, 2).map((item, i) => (
+                                    <div key={i}>{item.foodItemName} ×{item.quantity}</div>
+                                  ))}
+                                  {order.items?.length > 2 && <div style={{ color: '#a8a8b8' }}>+{order.items.length - 2} more</div>}
+                                </div>
+                              </td>
+                              <td className="fw-bold" style={{ color: '#f5a623' }}>
+                                {order.totalAmount?.toLocaleString('vi-VN')}đ
+                              </td>
+                              <td style={{ fontSize: '0.85rem' }}>
+                                {order.pickupDate && <div>{new Date(order.pickupDate).toLocaleDateString('vi-VN')}</div>}
+                                {order.pickupTime && <div style={{ color: '#a8a8b8' }}>{order.pickupTime}</div>}
+                              </td>
+                              <td>
+                                <Badge bg={STATUS_BADGE[order.status] || 'secondary'}>
+                                  {STATUS_FLOW[order.status]?.label || order.status}
+                                </Badge>
+                              </td>
+                              <td>
+                                <div className="action-buttons d-flex gap-1 flex-wrap">
+                                  <Button size="sm" variant="outline-primary" className="action-btn"
+                                    onClick={() => setOrderDetailModal({ show: true, order })}
+                                    title="Xem chi tiết"
+                                  >👁️</Button>
+                                  {sf?.next && (
+                                    <Button size="sm" variant="outline-success" className="action-btn"
+                                      onClick={() => handleUpdateStatus(order.id, sf.next)}
+                                      disabled={statusUpdating === order.id}
+                                      title={sf.nextLabel}
+                                    >▶</Button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
                     </Table>
                     {filteredOrders.length === 0 && (
                       <div className="text-center py-5" style={{ color: '#a8a8b8' }}>Không có đơn hàng</div>
@@ -623,21 +623,21 @@ export default function AdminFoodPage() {
           <div className="admin-form-grid">
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Tên sản phẩm *</Form.Label>
-              <input 
+              <input
                 ref={el => formRefs.current.name = el}
-                className={`admin-food-input ${formErrors.name ? 'border border-danger' : ''}`} 
-                value={form.name} 
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
-                placeholder="Bỏng ngô bơ thơm..." 
+                className={`admin-food-input ${formErrors.name ? 'border border-danger' : ''}`}
+                value={form.name}
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Bỏng ngô bơ thơm..."
               />
               {formErrors.name && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.name}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Danh mục *</Form.Label>
-              <select 
+              <select
                 ref={el => formRefs.current.category = el}
-                className={`admin-food-select w-100 ${formErrors.category ? 'border border-danger' : ''}`} 
-                value={form.category} 
+                className={`admin-food-select w-100 ${formErrors.category ? 'border border-danger' : ''}`}
+                value={form.category}
                 onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
               >
                 <option value="">-- Chọn danh mục --</option>
@@ -647,57 +647,57 @@ export default function AdminFoodPage() {
             </Form.Group>
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Giá cơ bản (đ) *</Form.Label>
-              <input 
+              <input
                 ref={el => formRefs.current.basePrice = el}
-                className={`admin-food-input ${formErrors.basePrice ? 'border border-danger' : ''}`} 
-                type="text" 
-                value={form.basePrice} 
-                onChange={e => setForm(f => ({ ...f, basePrice: e.target.value }))} 
-                placeholder="45000" 
+                className={`admin-food-input ${formErrors.basePrice ? 'border border-danger' : ''}`}
+                type="text"
+                value={form.basePrice}
+                onChange={e => setForm(f => ({ ...f, basePrice: e.target.value }))}
+                placeholder="45000"
               />
               {formErrors.basePrice && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.basePrice}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Tồn kho *</Form.Label>
-              <input 
+              <input
                 ref={el => formRefs.current.stock = el}
-                className={`admin-food-input ${formErrors.stock ? 'border border-danger' : ''}`} 
-                type="text" 
-                value={form.stock} 
-                onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} 
-                placeholder="100" 
+                className={`admin-food-input ${formErrors.stock ? 'border border-danger' : ''}`}
+                type="text"
+                value={form.stock}
+                onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
+                placeholder="100"
               />
               {formErrors.stock && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.stock}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group style={{ gridColumn: '1 / -1' }}>
               <Form.Label style={{ color: '#a8a8b8' }}>URL ảnh *</Form.Label>
-              <input 
+              <input
                 ref={el => formRefs.current.imageUrl = el}
-                className={`admin-food-input ${formErrors.imageUrl ? 'border border-danger' : ''}`} 
-                value={form.imageUrl} 
-                onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} 
-                placeholder="https://..." 
+                className={`admin-food-input ${formErrors.imageUrl ? 'border border-danger' : ''}`}
+                value={form.imageUrl}
+                onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+                placeholder="https://..."
               />
               {formErrors.imageUrl && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.imageUrl}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group style={{ gridColumn: '1 / -1' }}>
               <Form.Label style={{ color: '#a8a8b8' }}>Mô tả *</Form.Label>
-              <textarea 
+              <textarea
                 ref={el => formRefs.current.description = el}
-                className={`admin-food-input ${formErrors.description ? 'border border-danger' : ''}`} 
-                rows={2} 
-                value={form.description} 
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))} 
-                placeholder="Mô tả sản phẩm..." 
+                className={`admin-food-input ${formErrors.description ? 'border border-danger' : ''}`}
+                rows={2}
+                value={form.description}
+                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                placeholder="Mô tả sản phẩm..."
               />
               {formErrors.description && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.description}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Trạng thái hiển thị *</Form.Label>
-              <select 
+              <select
                 ref={el => formRefs.current.isAvailable = el}
-                className={`admin-food-select w-100 ${formErrors.isAvailable ? 'border border-danger' : ''}`} 
-                value={form.isAvailable ? 'true' : 'false'} 
+                className={`admin-food-select w-100 ${formErrors.isAvailable ? 'border border-danger' : ''}`}
+                value={form.isAvailable ? 'true' : 'false'}
                 onChange={e => setForm(f => ({ ...f, isAvailable: e.target.value === 'true' }))}
               >
                 <option value="true">Đang bán</option>
@@ -717,21 +717,21 @@ export default function AdminFoodPage() {
             {form.sizes.map((s, idx) => (
               <div key={idx} className="mb-2">
                 <div className="d-flex gap-2 align-items-center">
-                  <input 
+                  <input
                     ref={el => formRefs.current[`sizeLabel_${idx}`] = el}
-                    className={`admin-food-input ${formErrors[`sizeLabel_${idx}`] ? 'border border-danger' : ''}`} 
-                    style={{ width: 80 }} 
-                    placeholder="L" 
-                    value={s.label} 
-                    onChange={e => updateSize(idx, 'label', e.target.value)} 
+                    className={`admin-food-input ${formErrors[`sizeLabel_${idx}`] ? 'border border-danger' : ''}`}
+                    style={{ width: 80 }}
+                    placeholder="L"
+                    value={s.label}
+                    onChange={e => updateSize(idx, 'label', e.target.value)}
                   />
-                  <input 
+                  <input
                     ref={el => formRefs.current[`sizePrice_${idx}`] = el}
-                    className={`admin-food-input ${formErrors[`sizePrice_${idx}`] ? 'border border-danger' : ''}`} 
-                    type="text" 
-                    placeholder="65000" 
-                    value={s.price} 
-                    onChange={e => updateSize(idx, 'price', e.target.value)} 
+                    className={`admin-food-input ${formErrors[`sizePrice_${idx}`] ? 'border border-danger' : ''}`}
+                    type="text"
+                    placeholder="65000"
+                    value={s.price}
+                    onChange={e => updateSize(idx, 'price', e.target.value)}
                   />
                   <button className="admin-action-btn delete" onClick={() => removeSize(idx)}>✕</button>
                 </div>

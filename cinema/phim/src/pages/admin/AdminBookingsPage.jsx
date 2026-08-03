@@ -603,11 +603,12 @@ export default function AdminBookingsPage() {
 
   const getStatusInfo = (status) => {
     switch (normalizeStatus(status)) {
-      case 'confirmed': return { label: 'Đã xác nhận', variant: 'success', icon: '✅' }
-      case 'pending':   return { label: 'Đang chờ',    variant: 'warning', icon: '⏳' }
-      case 'cancelled': return { label: 'Đã hủy',      variant: 'danger',  icon: '❌' }
-      case 'refunded':  return { label: 'Đã hoàn tiền',variant: 'info',    icon: '💸' }
-      default:          return { label: 'Không xác định', variant: 'secondary', icon: '❓' }
+      case 'confirmed':   return { label: 'Đã xác nhận', variant: 'success',   icon: '✅' }
+      case 'checked_in': return { label: 'Đã vào rạp',  variant: 'success',   icon: '🎬' }
+      case 'pending':    return { label: 'Đang chờ',    variant: 'warning',   icon: '⏳' }
+      case 'cancelled':  return { label: 'Đã hủy',      variant: 'danger',    icon: '❌' }
+      case 'refunded':   return { label: 'Đã hoàn tiền',variant: 'info',      icon: '💸' }
+      default:           return { label: 'Không xác định', variant: 'secondary', icon: '❓' }
     }
   }
 
@@ -751,11 +752,12 @@ export default function AdminBookingsPage() {
               <Col md={2}>
                 <Form.Group>
                   <Form.Label className="small text-muted">Trạng thái</Form.Label>
-                  <Form.Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="filter-input">
-                    <option value="">Tất cả</option>
-                    <option value="confirmed">✅ Đã xác nhận</option>
-                    <option value="cancelled">❌ Đã hủy</option>
-                  </Form.Select>
+                    <Form.Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="filter-input">
+                      <option value="">Tất cả</option>
+                      <option value="confirmed">✅ Đã xác nhận</option>
+                      <option value="checked_in">🎬 Đã vào rạp</option>
+                      <option value="cancelled">❌ Đã hủy</option>
+                    </Form.Select>
                 </Form.Group>
               </Col>
               <Col md={4}>

@@ -10,18 +10,34 @@ const PAYMENT_METHODS = [
   { id: 'CARD', label: 'Thẻ ngân hàng', icon: '💳', desc: 'Visa, Mastercard, ATM nội địa' },
 ]
 
-const generateTimeSlots = () => {
-  const slots = []
-  for (let h = 9; h <= 21; h++) {
-    slots.push(`${String(h).padStart(2,'0')}:00`)
-    if (h < 21) slots.push(`${String(h).padStart(2,'0')}:30`)
-  }
-  return slots
+const formatDateInput = (d) => d.toISOString().split('T')[0]
+
+// Tính giờ tối thiểu được phép chọn
+const getMinTime = (selectedDateStr) => {
+  const todayStr = formatDateInput(new Date())
+  if (selectedDateStr !== todayStr) return '09:00'
+  const now = new Date()
+  now.setMinutes(now.getMinutes() + 15)
+  const h = String(now.getHours()).padStart(2, '0')
+  const m = String(now.getMinutes()).padStart(2, '0')
+  // Nếu đã qua 23:30, trả về null (hết suất)
+  if (now.getHours() > 23 || (now.getHours() === 23 && now.getMinutes() > 30)) return null
+  return `${h}:${m}`
 }
 
-const TIME_SLOTS = generateTimeSlots()
-
-const formatDateInput = (d) => d.toISOString().split('T')[0]
+// Tính giờ mặc định hợp lệ (làm tròn lên 15 phút gần nhất)
+const getDefaultTime = (selectedDateStr) => {
+  const min = getMinTime(selectedDateStr)
+  if (!min) return '09:00'
+  const [h, m] = min.split(':').map(Number)
+  const roundedM = Math.ceil(m / 15) * 15
+  if (roundedM >= 60) {
+    const newH = h + 1
+    if (newH > 23) return '09:00'
+    return `${String(newH).padStart(2, '0')}:00`
+  }
+  return `${String(h).padStart(2, '0')}:${String(roundedM).padStart(2, '0')}`
+}
 
 export default function FoodCheckoutPage() {
   const location = useLocation()
@@ -32,17 +48,47 @@ export default function FoodCheckoutPage() {
 
   const today = new Date()
   const maxDate = new Date(today); maxDate.setDate(today.getDate() + 7)
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
 
   const [pickupDate, setPickupDate] = useState(formatDateInput(today))
-  const [pickupTime, setPickupTime] = useState('10:00')
+  const [pickupTime, setPickupTime] = useState(getDefaultTime(formatDateInput(today)))
   const [paymentMethod, setPaymentMethod] = useState('QR')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [orderResult, setOrderResult] = useState(null)
+  const [timeError, setTimeError] = useState('')
 
   const [usePoints, setUsePoints] = useState(false)
   const [pointsToUse, setPointsToUse] = useState(0)
+
+  // Nếu hết suất hôm nay → tự chuyển sang ngày mai
+  useEffect(() => {
+    if (getMinTime(pickupDate) === null) {
+      setPickupDate(formatDateInput(tomorrow))
+      setPickupTime('09:00')
+    }
+  }, [pickupDate])
+
+  // Khi đổi ngày → reset giờ về giá trị hợp lệ
+  const handleDateChange = (newDate) => {
+    setPickupDate(newDate)
+    setPickupTime(getDefaultTime(newDate))
+    setTimeError('')
+  }
+
+  // Validate giờ khi người dùng thay đổi
+  const handleTimeChange = (val) => {
+    setPickupTime(val)
+    const minTime = getMinTime(pickupDate)
+    if (minTime && val < minTime) {
+      setTimeError(`Vui lòng chọn sau ${minTime} (tối thiểu 15 phút)`)
+    } else if (val < '09:00' || val > '23:30') {
+      setTimeError('Vui lòng chọn khung giờ từ 09:00 đến 23:30')
+    } else {
+      setTimeError('')
+    }
+  }
 
   useEffect(() => {
     if (usePoints) {
@@ -74,6 +120,12 @@ export default function FoodCheckoutPage() {
   }
 
   const handleSubmit = async () => {
+    // Validate time trước submit
+    const minTime = getMinTime(pickupDate)
+    if (minTime === null || pickupTime < minTime || pickupTime < '09:00' || pickupTime > '23:30') {
+      setError('Giờ lấy hàng không hợp lệ. Vui lòng kiểm tra lại.')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
@@ -229,25 +281,30 @@ export default function FoodCheckoutPage() {
                       value={pickupDate}
                       min={formatDateInput(today)}
                       max={formatDateInput(maxDate)}
-                      onChange={e => setPickupDate(e.target.value)}
+                      onChange={e => handleDateChange(e.target.value)}
                       className="food-pickup-input"
                     />
                   </div>
                   <div className="food-pickup-field">
                     <label>Giờ lấy</label>
-                    <select
+                    <input
+                      type="time"
                       value={pickupTime}
-                      onChange={e => setPickupTime(e.target.value)}
-                      className="food-pickup-input"
-                    >
-                      {TIME_SLOTS.map(slot => (
-                        <option key={slot} value={slot}>{slot}</option>
-                      ))}
-                    </select>
+                      min={getMinTime(pickupDate) || '09:00'}
+                      max="23:30"
+                      step="60"
+                      onChange={e => handleTimeChange(e.target.value)}
+                      className={`food-pickup-input ${timeError ? 'food-pickup-input-error' : ''}`}
+                    />
+                    {timeError && (
+                      <small style={{ color: '#ff6b6b', marginTop: 4, display: 'block', fontSize: '0.78rem' }}>
+                        ⚠️ {timeError}
+                      </small>
+                    )}
                   </div>
                 </div>
                 <p className="food-pickup-note">
-                  ℹ️ Vui lòng đến quầy F&B đúng giờ. Đơn hàng sẽ được giữ trong 15 phút.
+                  ℹ️ Đơn hàng cần đặt trước ít nhất 15 phút để chuẩn bị.
                 </p>
               </div>
             </div>
@@ -255,30 +312,40 @@ export default function FoodCheckoutPage() {
 
           {/* RIGHT — Payment */}
           <div className="pay-right">
-            <div className="pay-card pay-summary-card">
+            {/* Payment Method Card — same as PaymentPage */}
+            <div className="pay-card">
               <div className="pay-card-header">
                 <span className="pay-card-icon">💳</span>
-                <h3>Thanh toán</h3>
+                <h3>Phương thức thanh toán</h3>
+              </div>
+              <div className="pay-methods">
+                {PAYMENT_METHODS.map(m => (
+                  <div
+                    key={m.id}
+                    className={`pay-method-card ${paymentMethod === m.id ? 'active' : ''}`}
+                    onClick={() => setPaymentMethod(m.id)}
+                    role="radio"
+                    aria-checked={paymentMethod === m.id}
+                  >
+                    <div className="pay-method-radio">
+                      <div className={`pay-radio-dot ${paymentMethod === m.id ? 'active' : ''}`} />
+                    </div>
+                    <div className="pay-method-icon">{m.icon}</div>
+                    <div className="pay-method-body">
+                      <div className="pay-method-label">{m.label}</div>
+                      <div className="pay-method-desc">{m.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pay-card pay-summary-card">
+              <div className="pay-card-header">
+                <span className="pay-card-icon">💰</span>
+                <h3>Tổng kết đơn hàng</h3>
               </div>
               <div className="pay-card-body">
-                <div className="pay-methods">
-                  {PAYMENT_METHODS.map(m => (
-                    <div
-                      key={m.id}
-                      className={`pay-method-item ${paymentMethod === m.id ? 'selected' : ''}`}
-                      onClick={() => setPaymentMethod(m.id)}
-                    >
-                      <span className="pay-method-icon">{m.icon}</span>
-                      <div>
-                        <div className="pay-method-label">{m.label}</div>
-                        <div className="pay-method-desc">{m.desc}</div>
-                      </div>
-                      <div className="pay-method-radio">
-                        {paymentMethod === m.id && <span className="pay-radio-dot" />}
-                      </div>
-                    </div>
-                  ))}
-                </div>
 
                 <div className="pay-summary-rows">
                   <div className="pay-summary-row">
@@ -375,6 +442,8 @@ export default function FoodCheckoutPage() {
           font-family: 'Inter', sans-serif; transition: border-color 0.2s;
         }
         .food-pickup-input:focus { outline: none; border-color: var(--primary, #f5a623); }
+        .food-pickup-input-error { border-color: #ff6b6b !important; }
+        .food-pickup-input-error:focus { border-color: #ff6b6b !important; box-shadow: 0 0 0 2px rgba(255,107,107,0.2); }
         .food-pickup-note { font-size: 0.82rem; color: var(--text-muted, #a8a8b8); margin: 0; padding-top: 8px; }
         .food-qr-box { text-align: center; margin: 24px 0 16px; }
         .food-qr-img { width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--primary, #f5a623); }

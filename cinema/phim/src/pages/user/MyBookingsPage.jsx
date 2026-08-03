@@ -6,11 +6,11 @@ import { bookingApi, foodOrderApi } from '../../services/api'
 import './MyBookingsPage.css'
 
 const FOOD_STATUS_MAP = {
-  PENDING:    { label: 'Chờ xử lý',    cls: 'status-pending',   icon: '⏳' },
-  PREPARING:  { label: 'Đang chuẩn bị', cls: 'status-pending',   icon: '👨‍🍳' },
-  READY:      { label: 'Sẵn sàng lấy', cls: 'status-confirmed', icon: '✅' },
-  COMPLETED:  { label: 'Đã lấy',       cls: 'status-confirmed', icon: '🎉' },
-  CANCELLED:  { label: 'Đã hủy',       cls: 'status-cancelled', icon: '✕' },
+  PENDING: { label: 'Đã đặt hàng', cls: 'status-confirmed', icon: '✅' },
+  PREPARING: { label: 'Đang chuẩn bị', cls: 'status-pending', icon: '👨‍🍳' },
+  READY: { label: 'Sẵn sàng lấy', cls: 'status-confirmed', icon: '✅' },
+  COMPLETED: { label: 'Đã lấy', cls: 'status-confirmed', icon: '🎉' },
+  CANCELLED: { label: 'Đã hủy', cls: 'status-cancelled', icon: '✕' },
 }
 
 export default function MyBookingsPage() {
@@ -108,9 +108,9 @@ export default function MyBookingsPage() {
   // ─── Helpers ─────────────────────────────────────────
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'CONFIRMED':   return <Badge className="status-badge status-confirmed">✓ Đã xác nhận</Badge>
-      case 'CANCELLED':   return <Badge className="status-badge status-cancelled">✕ Đã hủy</Badge>
-      case 'CHECKED_IN':  return <Badge className="status-badge" style={{ background: '#10b981', color:'#fff' }}>🎬 Đã vào rạp</Badge>
+      case 'CONFIRMED': return <Badge className="status-badge status-confirmed">✓ Đã xác nhận</Badge>
+      case 'CANCELLED': return <Badge className="status-badge status-cancelled">✕ Đã hủy</Badge>
+      case 'CHECKED_IN': return <Badge className="status-badge" style={{ background: '#10b981', color: '#fff' }}>🎬 Đã vào rạp</Badge>
       default: return <Badge className="status-badge status-pending">{status}</Badge>
     }
   }
@@ -148,20 +148,8 @@ export default function MyBookingsPage() {
   }
 
   const getCancelFoodStatus = (order) => {
-    if (order.status !== 'PENDING' && order.status !== 'PREPARING') return { canCancel: false }
-    if (!order.pickupDate || !order.pickupTime) return { canCancel: true }
-    try {
-      const [year, month, day] = order.pickupDate.split('-').map(Number)
-      const [hour, minute] = order.pickupTime.split(':').map(Number)
-      const pickupDateTime = new Date(year, month - 1, day, hour, minute)
-      const cancelDeadline = new Date(pickupDateTime.getTime() - 60 * 60 * 1000)
-      if (new Date() > cancelDeadline) {
-         return { canCancel: false, isTimeRestricted: true }
-      }
-      return { canCancel: true }
-    } catch (e) {
-      return { canCancel: true }
-    }
+    if (order.status !== 'PENDING') return { canCancel: false }
+    return { canCancel: true }
   }
 
   if (loading) {
@@ -487,7 +475,7 @@ export default function MyBookingsPage() {
                             {(() => {
                               const cancelStatus = getCancelFoodStatus(order)
                               if (!cancelStatus.canCancel && !cancelStatus.isTimeRestricted) return null
-                              
+
                               if (cancelStatus.isTimeRestricted) {
                                 return (
                                   <div className="py-1 px-2" style={{ fontSize: '0.8rem', backgroundColor: 'rgba(255,193,7,0.15)', borderRadius: '6px', borderLeft: '3px solid #ffc107', marginTop: 'auto', marginBottom: 'auto' }}>
