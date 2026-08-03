@@ -3,16 +3,22 @@ package com.example.backend.service;
 import com.example.backend.dto.AuthResponse;
 import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.RegisterRequest;
+import com.example.backend.dto.ForgotPasswordRequest;
+import com.example.backend.dto.ResetPasswordRequest;
 import com.example.backend.entity.User;
+import com.example.backend.entity.PasswordResetOtp;
 import com.example.backend.enums.UserRole;
 import com.example.backend.enums.UserStatus;
 import com.example.backend.exception.FieldValidationException;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.PasswordResetOtpRepository;
 import com.example.backend.security.JwtUtils;
+import com.example.backend.utils.EmailUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,6 +29,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final PasswordResetOtpRepository passwordResetOtpRepository;
+    private final EmailUtil emailUtil;
 
     public AuthResponse login(LoginRequest request) {
         // 1. Tìm user theo username
@@ -116,5 +124,52 @@ public class AuthService {
         // Số điện thoại phải có đúng 10 chữ số và bắt đầu bằng số 0
         String phoneRegex = "^0[0-9]{9}$";
         return phone.matches(phoneRegex);
+    }
+
+    public void processForgotPassword(ForgotPasswordRequest request) {
+        // 1. Kiểm tra xem email có tồn tại trong hệ thống hay không
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trên hệ thống."));
+
+        // 2. Tạo mã OTP ngẫu nhiên 6 chữ số
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+
+        // 3. Lưu OTP vào DB với thời hạn 5 phút
+        PasswordResetOtp resetOtp = PasswordResetOtp.builder()
+                .email(request.getEmail())
+                .otpCode(otp)
+                .expiryTime(LocalDateTime.now().plusMinutes(5))
+                .used(false)
+                .build();
+        passwordResetOtpRepository.save(resetOtp);
+
+        // 4. Gửi email OTP
+        emailUtil.sendOtpEmail(request.getEmail(), otp);
+    }
+
+    public void processResetPassword(ResetPasswordRequest request) {
+        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+            throw new RuntimeException("Mật khẩu mới không được để trống.");
+        }
+        if (request.getNewPassword().length() < 6) {
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự.");
+        }
+
+        // 1. Tìm OTP hợp lệ (đúng mã, chưa dùng, chưa hết hạn)
+        PasswordResetOtp resetOtp = passwordResetOtpRepository.findByEmailAndOtpCodeAndUsedFalseAndExpiryTimeAfter(
+                request.getEmail(), request.getOtp(), LocalDateTime.now())
+                .orElseThrow(() -> new RuntimeException("Mã OTP không đúng hoặc đã hết hạn."));
+
+        // 2. Tìm user theo email
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trên hệ thống."));
+
+        // 3. Cập nhật mật khẩu mới mã hóa
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // 4. Đánh dấu OTP đã sử dụng
+        resetOtp.setUsed(true);
+        passwordResetOtpRepository.save(resetOtp);
     }
 }

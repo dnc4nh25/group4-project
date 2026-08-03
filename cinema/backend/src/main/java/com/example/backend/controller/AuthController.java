@@ -3,6 +3,8 @@ package com.example.backend.controller;
 import com.example.backend.dto.AuthResponse;
 import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.RegisterRequest;
+import com.example.backend.dto.ForgotPasswordRequest;
+import com.example.backend.dto.ResetPasswordRequest;
 import com.example.backend.exception.FieldValidationException;
 import com.example.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,26 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (FieldValidationException e) {
             return ResponseEntity.badRequest().body(e.getFieldErrors());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.processForgotPassword(request);
+            return ResponseEntity.ok("Mã OTP đã được gửi đến email của bạn.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            authService.processResetPassword(request);
+            return ResponseEntity.ok("Đặt lại mật khẩu thành công.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

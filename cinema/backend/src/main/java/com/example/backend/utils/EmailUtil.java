@@ -42,4 +42,30 @@ public class EmailUtil {
             throw e; // Ném ra lỗi để service có thể catch và không cập nhật trạng thái reminderSent
         }
     }
+
+    public void sendOtpEmail(String to, String otpCode) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Mã OTP khôi phục mật khẩu - CinemaXP");
+
+            String text = String.format(
+                    "Xin chào,\n\n" +
+                    "Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại CinemaXP.\n" +
+                    "Mã OTP của bạn là: %s\n" +
+                    "Mã xác thực này có hiệu lực trong vòng 5 phút.\n" +
+                    "Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.\n\n" +
+                    "Trân trọng,\n" +
+                    "Ban quản trị CinemaXP",
+                    otpCode
+            );
+
+            message.setText(text);
+            mailSender.send(message);
+            log.info("Đã gửi email OTP khôi phục mật khẩu thành công đến: {}", to);
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi email OTP đến: {}", to, e);
+            throw e;
+        }
+    }
 }
