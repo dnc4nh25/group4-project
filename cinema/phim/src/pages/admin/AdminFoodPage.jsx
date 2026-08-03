@@ -56,7 +56,9 @@ export default function AdminFoodPage() {
   const [itemModal, setItemModal] = useState({ show: false, mode: 'create', item: null })
   const [form, setForm] = useState(emptyForm)
   const [formLoading, setFormLoading] = useState(false)
-  const [formError, setFormError] = useState('')
+  const [formErrors, setFormErrors] = useState({})
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const formRefs = useRef({})
 
   // ─── Restock Modal ────────────────────────────────────────
   const [restockModal, setRestockModal] = useState({ show: false, item: null })
@@ -98,7 +100,8 @@ export default function AdminFoodPage() {
   // ─── Item CRUD ────────────────────────────────────────────
   const openCreateModal = () => {
     setForm(emptyForm)
-    setFormError('')
+    setFormErrors({})
+    setHasSubmitted(false)
     setItemModal({ show: true, mode: 'create', item: null })
   }
 
@@ -115,21 +118,171 @@ export default function AdminFoodPage() {
       tag: item.tag || '',
       sizes: item.sizes || [],
     })
-    setFormError('')
+    setFormErrors({})
+    setHasSubmitted(false)
     setItemModal({ show: true, mode: 'edit', item })
   }
 
+  const validateForm = (formData) => {
+    const errors = {}
+
+    // Name
+    const nameStr = (formData.name || '').trim()
+    if (!nameStr) {
+      errors.name = 'Tên sản phẩm bắt buộc nhập'
+    } else if (nameStr.length < 4 || nameStr.length > 50) {
+      errors.name = 'Tên sản phẩm phải từ 4 đến 50 ký tự'
+    } else if (/\s{2,}/.test(nameStr)) {
+      errors.name = 'Không được chứa nhiều khoảng trắng liên tiếp'
+    } else {
+      const duplicate = items.find(i => i.name.trim().toLowerCase() === nameStr.toLowerCase() && i.id !== itemModal.item?.id)
+      if (duplicate) {
+        errors.name = 'Tên sản phẩm đã tồn tại'
+      }
+    }
+
+    // Category
+    if (!formData.category) {
+      errors.category = 'Danh mục bắt buộc chọn'
+    } else if (!['POPCORN', 'DRINK', 'COMBO', 'SNACK'].includes(formData.category)) {
+      errors.category = 'Danh mục không hợp lệ'
+    }
+
+    // Base Price
+    const basePriceStr = String(formData.basePrice || '').trim()
+    if (!basePriceStr) {
+      errors.basePrice = 'Giá cơ bản bắt buộc nhập'
+    } else if (/\s/.test(basePriceStr)) {
+      errors.basePrice = 'Giá cơ bản không được chứa khoảng trắng'
+    } else if (!/^\d+$/.test(basePriceStr)) {
+      errors.basePrice = 'Giá cơ bản phải là số nguyên dương, không chứa chữ, ký tự đặc biệt hay e, E'
+    } else {
+      const priceVal = parseInt(basePriceStr, 10)
+      if (priceVal <= 0) {
+        errors.basePrice = 'Giá cơ bản phải lớn hơn 0'
+      } else if (priceVal > 100000000) {
+        errors.basePrice = 'Giá cơ bản vượt quá giới hạn'
+      }
+    }
+
+    // Stock
+    const stockStr = String(formData.stock || '').trim()
+    if (!stockStr) {
+      errors.stock = 'Tồn kho bắt buộc nhập'
+    } else if (/\s/.test(stockStr)) {
+      errors.stock = 'Tồn kho không được chứa khoảng trắng'
+    } else if (!/^\d+$/.test(stockStr)) {
+      errors.stock = 'Tồn kho phải là số nguyên không âm, không chứa chữ, ký tự đặc biệt hay e, E'
+    } else {
+      const stockVal = parseInt(stockStr, 10)
+      if (stockVal > 1000000) {
+        errors.stock = 'Tồn kho vượt quá giới hạn'
+      }
+    }
+
+    // Image URL
+    const imageUrlStr = (formData.imageUrl || '').trim()
+    if (!imageUrlStr) {
+      errors.imageUrl = 'URL ảnh bắt buộc nhập'
+    } else if (!/^https?:\/\//.test(imageUrlStr)) {
+      errors.imageUrl = 'URL ảnh phải bắt đầu bằng http:// hoặc https://'
+    } else {
+      try {
+        new URL(imageUrlStr)
+        const hasExt = /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(imageUrlStr);
+        if (!hasExt && !/cdn|firebasestorage|cloudinary/i.test(imageUrlStr)) {
+           errors.imageUrl = 'URL ảnh không đúng định dạng (jpg, jpeg, png, webp, gif hoặc URL CDN hợp lệ)'
+        }
+      } catch (_) {
+        errors.imageUrl = 'URL ảnh không đúng định dạng'
+      }
+    }
+
+    // Description
+    const descStr = (formData.description || '').trim()
+    if (!descStr) {
+      errors.description = 'Mô tả bắt buộc nhập'
+    } else if (descStr.length > 500) {
+      errors.description = 'Mô tả không được vượt quá 500 ký tự'
+    }
+
+    // Status
+    if (formData.isAvailable === undefined || formData.isAvailable === null) {
+      errors.isAvailable = 'Trạng thái bắt buộc chọn'
+    }
+
+    // Sizes
+    if (!formData.sizes || formData.sizes.length === 0) {
+      errors.sizes = 'Phải có ít nhất 1 size'
+    } else {
+      const sizeSet = new Set()
+      const allowedSizes = ['M', 'L', 'XL']
+      formData.sizes.forEach((s, idx) => {
+        const sLabel = (s.label || '').trim().toUpperCase()
+        const sPriceStr = String(s.price || '').trim()
+        
+        if (!sLabel) {
+          errors[`sizeLabel_${idx}`] = 'Tên size bắt buộc nhập'
+        } else if (!allowedSizes.includes(sLabel)) {
+          errors[`sizeLabel_${idx}`] = 'Size chỉ được phép là M, L, XL'
+        } else if (sizeSet.has(sLabel)) {
+          errors[`sizeLabel_${idx}`] = `Size ${sLabel} đã tồn tại`
+        } else {
+          sizeSet.add(sLabel)
+        }
+
+        if (!sPriceStr) {
+          errors[`sizePrice_${idx}`] = 'Giá size bắt buộc nhập'
+        } else if (/\s/.test(sPriceStr)) {
+          errors[`sizePrice_${idx}`] = 'Giá size không chứa khoảng trắng'
+        } else if (!/^\d+$/.test(sPriceStr)) {
+          errors[`sizePrice_${idx}`] = 'Giá size phải là số nguyên dương, không chứa chữ'
+        } else {
+          const sPriceVal = parseInt(sPriceStr, 10)
+          if (sPriceVal <= 0) {
+            errors[`sizePrice_${idx}`] = 'Giá size phải lớn hơn 0'
+          } else {
+            const basePriceVal = parseInt(basePriceStr, 10)
+            if (!errors.basePrice && sPriceVal < basePriceVal) {
+              errors[`sizePrice_${idx}`] = 'Giá size không được nhỏ hơn giá cơ bản'
+            }
+          }
+        }
+      })
+    }
+
+    return errors
+  }
+
+  useEffect(() => {
+    if (hasSubmitted) {
+      setFormErrors(validateForm(form))
+    }
+  }, [form, hasSubmitted, items, itemModal.item?.id])
+
   const handleFormSave = async () => {
-    if (!form.name.trim()) { setFormError('Tên sản phẩm không được để trống'); return }
-    if (!form.basePrice || isNaN(form.basePrice)) { setFormError('Giá không hợp lệ'); return }
+    setHasSubmitted(true)
+    const errors = validateForm(form)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      const firstErrorKey = Object.keys(errors)[0]
+      if (formRefs.current[firstErrorKey]) {
+        formRefs.current[firstErrorKey].scrollIntoView({ behavior: 'smooth', block: 'center' })
+        formRefs.current[firstErrorKey].focus()
+      }
+      return
+    }
 
     setFormLoading(true)
-    setFormError('')
     try {
       const payload = {
         ...form,
-        basePrice: parseInt(form.basePrice),
-        stock: parseInt(form.stock) || 0,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        imageUrl: form.imageUrl.trim(),
+        basePrice: parseInt(form.basePrice, 10),
+        stock: parseInt(form.stock, 10) || 0,
+        sizes: form.sizes.map(s => ({ ...s, label: s.label.trim().toUpperCase(), price: parseInt(s.price, 10) }))
       }
       if (itemModal.mode === 'create') {
         await foodItemApi.create(payload)
@@ -141,7 +294,7 @@ export default function AdminFoodPage() {
       setItemModal({ show: false, mode: 'create', item: null })
       loadItems()
     } catch (e) {
-      setFormError(e.response?.data || 'Có lỗi xảy ra')
+      showToast(e.response?.data || 'Có lỗi xảy ra', 'error')
     } finally {
       setFormLoading(false)
     }
@@ -467,54 +620,126 @@ export default function AdminFoodPage() {
           <Modal.Title className="text-white">{itemModal.mode === 'create' ? '+ Thêm sản phẩm mới' : '✏️ Sửa sản phẩm'}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="cancel-modal-body">
-          {formError && <Alert variant="danger" className="py-2">{formError}</Alert>}
           <div className="admin-form-grid">
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Tên sản phẩm *</Form.Label>
-              <input className="admin-food-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Bỏng ngô bơ thơm..." />
+              <input 
+                ref={el => formRefs.current.name = el}
+                className={`admin-food-input ${formErrors.name ? 'border border-danger' : ''}`} 
+                value={form.name} 
+                onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
+                placeholder="Bỏng ngô bơ thơm..." 
+              />
+              {formErrors.name && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.name}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
-              <Form.Label style={{ color: '#a8a8b8' }}>Danh mục</Form.Label>
-              <select className="admin-food-select w-100" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+              <Form.Label style={{ color: '#a8a8b8' }}>Danh mục *</Form.Label>
+              <select 
+                ref={el => formRefs.current.category = el}
+                className={`admin-food-select w-100 ${formErrors.category ? 'border border-danger' : ''}`} 
+                value={form.category} 
+                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+              >
+                <option value="">-- Chọn danh mục --</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
               </select>
+              {formErrors.category && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.category}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
               <Form.Label style={{ color: '#a8a8b8' }}>Giá cơ bản (đ) *</Form.Label>
-              <input className="admin-food-input" type="number" value={form.basePrice} onChange={e => setForm(f => ({ ...f, basePrice: e.target.value }))} placeholder="45000" />
+              <input 
+                ref={el => formRefs.current.basePrice = el}
+                className={`admin-food-input ${formErrors.basePrice ? 'border border-danger' : ''}`} 
+                type="text" 
+                value={form.basePrice} 
+                onChange={e => setForm(f => ({ ...f, basePrice: e.target.value }))} 
+                placeholder="45000" 
+              />
+              {formErrors.basePrice && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.basePrice}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
-              <Form.Label style={{ color: '#a8a8b8' }}>Tồn kho</Form.Label>
-              <input className="admin-food-input" type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} placeholder="100" />
+              <Form.Label style={{ color: '#a8a8b8' }}>Tồn kho *</Form.Label>
+              <input 
+                ref={el => formRefs.current.stock = el}
+                className={`admin-food-input ${formErrors.stock ? 'border border-danger' : ''}`} 
+                type="text" 
+                value={form.stock} 
+                onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} 
+                placeholder="100" 
+              />
+              {formErrors.stock && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.stock}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group style={{ gridColumn: '1 / -1' }}>
-              <Form.Label style={{ color: '#a8a8b8' }}>URL ảnh</Form.Label>
-              <input className="admin-food-input" value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://..." />
+              <Form.Label style={{ color: '#a8a8b8' }}>URL ảnh *</Form.Label>
+              <input 
+                ref={el => formRefs.current.imageUrl = el}
+                className={`admin-food-input ${formErrors.imageUrl ? 'border border-danger' : ''}`} 
+                value={form.imageUrl} 
+                onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} 
+                placeholder="https://..." 
+              />
+              {formErrors.imageUrl && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.imageUrl}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group style={{ gridColumn: '1 / -1' }}>
-              <Form.Label style={{ color: '#a8a8b8' }}>Mô tả</Form.Label>
-              <textarea className="admin-food-input" rows={2} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả sản phẩm..." />
+              <Form.Label style={{ color: '#a8a8b8' }}>Mô tả *</Form.Label>
+              <textarea 
+                ref={el => formRefs.current.description = el}
+                className={`admin-food-input ${formErrors.description ? 'border border-danger' : ''}`} 
+                rows={2} 
+                value={form.description} 
+                onChange={e => setForm(f => ({ ...f, description: e.target.value }))} 
+                placeholder="Mô tả sản phẩm..." 
+              />
+              {formErrors.description && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.description}</Form.Control.Feedback>}
             </Form.Group>
             <Form.Group>
-              <Form.Label style={{ color: '#a8a8b8' }}>Trạng thái hiển thị</Form.Label>
-              <select className="admin-food-select w-100" value={form.isAvailable ? 'true' : 'false'} onChange={e => setForm(f => ({ ...f, isAvailable: e.target.value === 'true' }))}>
+              <Form.Label style={{ color: '#a8a8b8' }}>Trạng thái hiển thị *</Form.Label>
+              <select 
+                ref={el => formRefs.current.isAvailable = el}
+                className={`admin-food-select w-100 ${formErrors.isAvailable ? 'border border-danger' : ''}`} 
+                value={form.isAvailable ? 'true' : 'false'} 
+                onChange={e => setForm(f => ({ ...f, isAvailable: e.target.value === 'true' }))}
+              >
                 <option value="true">Đang bán</option>
                 <option value="false">Tạm ngưng</option>
               </select>
+              {formErrors.isAvailable && <Form.Control.Feedback type="invalid" className="d-block mt-1">{formErrors.isAvailable}</Form.Control.Feedback>}
             </Form.Group>
           </div>
 
           {/* Sizes */}
           <div className="mt-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <Form.Label style={{ color: '#a8a8b8', marginBottom: 0 }}>Sizes (M/L/XL kèm giá)</Form.Label>
+              <Form.Label style={{ color: '#a8a8b8', marginBottom: 0 }}>Sizes (M/L/XL kèm giá) *</Form.Label>
               <button className="admin-food-btn-sm" onClick={addSize}>+ Thêm size</button>
             </div>
+            {formErrors.sizes && <Form.Control.Feedback type="invalid" className="d-block mb-2">{formErrors.sizes}</Form.Control.Feedback>}
             {form.sizes.map((s, idx) => (
-              <div key={idx} className="d-flex gap-2 mb-2 align-items-center">
-                <input className="admin-food-input" style={{ width: 80 }} placeholder="L" value={s.label} onChange={e => updateSize(idx, 'label', e.target.value)} />
-                <input className="admin-food-input" type="number" placeholder="65000" value={s.price} onChange={e => updateSize(idx, 'price', e.target.value)} />
-                <button className="admin-action-btn delete" onClick={() => removeSize(idx)}>✕</button>
+              <div key={idx} className="mb-2">
+                <div className="d-flex gap-2 align-items-center">
+                  <input 
+                    ref={el => formRefs.current[`sizeLabel_${idx}`] = el}
+                    className={`admin-food-input ${formErrors[`sizeLabel_${idx}`] ? 'border border-danger' : ''}`} 
+                    style={{ width: 80 }} 
+                    placeholder="L" 
+                    value={s.label} 
+                    onChange={e => updateSize(idx, 'label', e.target.value)} 
+                  />
+                  <input 
+                    ref={el => formRefs.current[`sizePrice_${idx}`] = el}
+                    className={`admin-food-input ${formErrors[`sizePrice_${idx}`] ? 'border border-danger' : ''}`} 
+                    type="text" 
+                    placeholder="65000" 
+                    value={s.price} 
+                    onChange={e => updateSize(idx, 'price', e.target.value)} 
+                  />
+                  <button className="admin-action-btn delete" onClick={() => removeSize(idx)}>✕</button>
+                </div>
+                {(formErrors[`sizeLabel_${idx}`] || formErrors[`sizePrice_${idx}`]) && (
+                  <Form.Control.Feedback type="invalid" className="d-block mt-1">
+                    {formErrors[`sizeLabel_${idx}`] || formErrors[`sizePrice_${idx}`]}
+                  </Form.Control.Feedback>
+                )}
               </div>
             ))}
           </div>

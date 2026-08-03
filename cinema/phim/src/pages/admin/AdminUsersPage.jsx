@@ -37,6 +37,10 @@ export default function AdminUsersPage() {
   })
   const [saving, setSaving] = useState(false)
 
+  const [formErrors, setFormErrors] = useState({})
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const formRefs = useRef({})
+
   const [showDelete, setShowDelete] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
 
@@ -90,7 +94,7 @@ export default function AdminUsersPage() {
       role: 'admin', 
       status: 'active' 
     })
-    setEditingId(null); setError(''); setShowModal(true)
+    setEditingId(null); setError(''); setFormErrors({}); setHasSubmitted(false); setShowModal(true)
   }
   const handleOpenEdit = (u) => {
     setForm({ 
@@ -102,7 +106,7 @@ export default function AdminUsersPage() {
       role: u.role,
       status: u.status || 'active'
     })
-    setEditingId(u.id); setError(''); setShowModal(true)
+    setEditingId(u.id); setError(''); setFormErrors({}); setHasSubmitted(false); setShowModal(true)
   }
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -117,63 +121,80 @@ export default function AdminUsersPage() {
     return phoneRegex.test(phone)
   }
 
+  const validateForm = (formData) => {
+    const errors = {}
+
+    if (!formData.username?.trim()) {
+      errors.username = 'Tên đăng nhập không được để trống.'
+    } else {
+      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
+      if (!usernameRegex.test(formData.username.trim())) {
+        errors.username = 'Tên đăng nhập phải từ 3-20 ký tự, chỉ chứa chữ, số và dấu gạch dưới.'
+      }
+    }
+
+    if (!editingId) {
+      if (!formData.password?.trim()) {
+        errors.password = 'Mật khẩu không được để trống.'
+      } else if (formData.password.length < 6) {
+        errors.password = 'Mật khẩu phải có ít nhất 6 ký tự.'
+      } else if (formData.password.length > 50) {
+        errors.password = 'Mật khẩu không được quá 50 ký tự.'
+      }
+    }
+
+    if (!formData.fullName?.trim()) {
+      errors.fullName = 'Họ tên không được để trống.'
+    } else if (formData.fullName.trim().length < 2) {
+      errors.fullName = 'Họ tên phải có ít nhất 2 ký tự.'
+    } else if (formData.fullName.trim().length > 100) {
+      errors.fullName = 'Họ tên không được quá 100 ký tự.'
+    } else {
+      const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/
+      if (!nameRegex.test(formData.fullName.trim())) {
+        errors.fullName = 'Họ tên chỉ được chứa chữ cái và khoảng trắng.'
+      }
+    }
+
+    if (!['user', 'admin'].includes(formData.role)) {
+      errors.role = 'Vai trò không hợp lệ.'
+    }
+
+    if (!['active', 'banned', 'pending'].includes(formData.status)) {
+      errors.status = 'Trạng thái không hợp lệ.'
+    }
+
+    if (formData.email && !validateEmail(formData.email)) {
+      errors.email = 'Email không hợp lệ.'
+    }
+
+    if (formData.phone && !validatePhone(formData.phone)) {
+      errors.phone = 'Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0.'
+    }
+
+    return errors
+  }
+
+  useEffect(() => {
+    if (hasSubmitted) {
+      setFormErrors(validateForm(form))
+    }
+  }, [form, hasSubmitted, editingId])
+
   const handleSave = async (e) => {
     e.preventDefault()
     setError('')
+    setHasSubmitted(true)
 
-    if (!form.username?.trim()) {
-      setError('Tên đăng nhập không được để trống.'); return
-    }
-
-    // Chỉ validate password khi tạo mới (edit không có field password)
-    if (!editingId) {
-      if (!form.password?.trim()) {
-        setError('Mật khẩu không được để trống.'); return
+    const errors = validateForm(form)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      const firstErrorKey = Object.keys(errors)[0]
+      if (formRefs.current[firstErrorKey]) {
+        formRefs.current[firstErrorKey].scrollIntoView({ behavior: 'smooth', block: 'center' })
+        formRefs.current[firstErrorKey].focus()
       }
-      if (form.password.length < 6) {
-        setError('Mật khẩu phải có ít nhất 6 ký tự.'); return
-      }
-      if (form.password.length > 50) {
-        setError('Mật khẩu không được quá 50 ký tự.'); return
-      }
-    }
-
-    if (!form.fullName?.trim()) {
-      setError('Họ tên không được để trống.'); return
-    }
-
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
-    if (!usernameRegex.test(form.username.trim())) {
-      setError('Tên đăng nhập phải từ 3-20 ký tự, chỉ chứa chữ, số và dấu gạch dưới.'); return
-    }
-
-    if (form.fullName.trim().length < 2) {
-      setError('Họ tên phải có ít nhất 2 ký tự.'); return
-    }
-
-    if (form.fullName.trim().length > 100) {
-      setError('Họ tên không được quá 100 ký tự.'); return
-    }
-
-    const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/
-    if (!nameRegex.test(form.fullName.trim())) {
-      setError('Họ tên chỉ được chứa chữ cái và khoảng trắng.'); return
-    }
-
-    if (!['user', 'admin'].includes(form.role)) {
-      setError('Vai trò không hợp lệ.'); return
-    }
-
-    if (!['active', 'banned', 'pending'].includes(form.status)) {
-      setError('Trạng thái không hợp lệ.'); return
-    }
-
-    if (form.email && !validateEmail(form.email)) {
-      setError('Email không hợp lệ.'); return
-    }
-
-    if (form.phone && !validatePhone(form.phone)) {
-      setError('Số điện thoại phải có 10-11 chữ số.'); return
+      return
     }
 
     setSaving(true); setError('')
@@ -190,7 +211,12 @@ export default function AdminUsersPage() {
           try {
             const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
             if (emailCheck.data && emailCheck.data.id !== editingId) {
-              setError('Email đã được sử dụng bởi tài khoản khác.'); setSaving(false); return
+              setFormErrors(prev => ({ ...prev, email: 'Email đã được sử dụng bởi tài khoản khác.' }))
+              if (formRefs.current.email) {
+                formRefs.current.email.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                formRefs.current.email.focus()
+              }
+              setSaving(false); return
             }
           } catch (err) {
             if (err.response?.status !== 404) throw err
@@ -201,7 +227,12 @@ export default function AdminUsersPage() {
           try {
             const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
             if (phoneCheck.data && phoneCheck.data.id !== editingId) {
-              setError('Số điện thoại đã được sử dụng bởi tài khoản khác.'); setSaving(false); return
+              setFormErrors(prev => ({ ...prev, phone: 'Số điện thoại đã được sử dụng bởi tài khoản khác.' }))
+              if (formRefs.current.phone) {
+                formRefs.current.phone.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                formRefs.current.phone.focus()
+              }
+              setSaving(false); return
             }
           } catch (err) {
             if (err.response?.status !== 404) throw err
@@ -215,7 +246,12 @@ export default function AdminUsersPage() {
         // Create new user
         try {
           await axios.get(`http://localhost:8080/api/users/username/${form.username.trim()}`)
-          setError('❌ Tên đăng nhập đã tồn tại.'); setSaving(false); return
+          setFormErrors(prev => ({ ...prev, username: 'Tên đăng nhập đã tồn tại.' }))
+          if (formRefs.current.username) {
+            formRefs.current.username.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            formRefs.current.username.focus()
+          }
+          setSaving(false); return
         } catch (err) {
           if (err.response?.status !== 404) throw err
         }
@@ -223,7 +259,12 @@ export default function AdminUsersPage() {
         if (form.email) {
           try {
             await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
-            setError('Email đã được sử dụng.'); setSaving(false); return
+            setFormErrors(prev => ({ ...prev, email: 'Email đã được sử dụng.' }))
+            if (formRefs.current.email) {
+              formRefs.current.email.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              formRefs.current.email.focus()
+            }
+            setSaving(false); return
           } catch (err) {
             if (err.response?.status !== 404) throw err
           }
@@ -232,7 +273,12 @@ export default function AdminUsersPage() {
         if (form.phone) {
           try {
             await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
-            setError('Số điện thoại đã được sử dụng.'); setSaving(false); return
+            setFormErrors(prev => ({ ...prev, phone: 'Số điện thoại đã được sử dụng.' }))
+            if (formRefs.current.phone) {
+              formRefs.current.phone.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              formRefs.current.phone.focus()
+            }
+            setSaving(false); return
           } catch (err) {
             if (err.response?.status !== 404) throw err
           }
@@ -610,40 +656,55 @@ export default function AdminUsersPage() {
             <Form.Group className="mb-3">
               <Form.Label>Tên đăng nhập <span style={{ color: 'var(--admin-danger)' }}>*</span></Form.Label>
               <Form.Control
+                ref={el => formRefs.current.username = el}
                 id="user-username" name="username" value={form.username}
                 onChange={handleChange} placeholder="username" disabled={!!editingId}
+                isInvalid={!!formErrors.username}
               />
+              <Form.Control.Feedback type="invalid">{formErrors.username}</Form.Control.Feedback>
             </Form.Group>
             {/* Chỉ hiện field mật khẩu khi TẠO MỚI, không cho sửa khi edit */}
             {!editingId && (
               <Form.Group className="mb-3">
                 <Form.Label>Mật khẩu <span style={{ color: 'var(--admin-danger)' }}>*</span></Form.Label>
                 <Form.Control
+                  ref={el => formRefs.current.password = el}
                   id="user-password" name="password" type="password"
                   value={form.password} onChange={handleChange} placeholder="Nhập mật khẩu"
+                  isInvalid={!!formErrors.password}
                 />
+                <Form.Control.Feedback type="invalid">{formErrors.password}</Form.Control.Feedback>
               </Form.Group>
             )}
             <Form.Group className="mb-3">
               <Form.Label>Họ tên <span style={{ color: 'var(--admin-danger)' }}>*</span></Form.Label>
               <Form.Control
+                ref={el => formRefs.current.fullName = el}
                 id="user-fullname" name="fullName" value={form.fullName}
                 onChange={handleChange} placeholder="Nguyễn Văn A"
+                isInvalid={!!formErrors.fullName}
               />
+              <Form.Control.Feedback type="invalid">{formErrors.fullName}</Form.Control.Feedback>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
+                ref={el => formRefs.current.email = el}
                 id="user-email" name="email" type="email" value={form.email}
                 onChange={handleChange} placeholder="example@email.com (tùy chọn)"
+                isInvalid={!!formErrors.email}
               />
+              <Form.Control.Feedback type="invalid">{formErrors.email}</Form.Control.Feedback>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Số điện thoại</Form.Label>
               <Form.Control
+                ref={el => formRefs.current.phone = el}
                 id="user-phone" name="phone" type="tel" value={form.phone}
                 onChange={handleChange} placeholder="0123456789 (tùy chọn)"
+                isInvalid={!!formErrors.phone}
               />
+              <Form.Control.Feedback type="invalid">{formErrors.phone}</Form.Control.Feedback>
             </Form.Group>
             <Row className="g-3">
               {/* Chỉ hiện dropdown Vai trò khi đang chỉnh sửa, không hiện khi thêm mới */}
@@ -652,13 +713,16 @@ export default function AdminUsersPage() {
                   <Form.Group>
                     <Form.Label>Vai trò</Form.Label>
                     <Form.Select 
+                      ref={el => formRefs.current.role = el}
                       name="role" 
                       value={form.role} 
                       onChange={handleChange}
                       disabled={editingId && isEditingSelf(editingId)}
+                      isInvalid={!!formErrors.role}
                     >
                       {ROLES.map(r => <option key={r} value={r}>{r === 'admin' ? '👑 Admin' : '👤 User'}</option>)}
                     </Form.Select>
+                    <Form.Control.Feedback type="invalid">{formErrors.role}</Form.Control.Feedback>
                     {editingId && isEditingSelf(editingId) && (
                       <Form.Text className="text-muted">
                         Không thể thay đổi vai trò của chính mình
@@ -689,10 +753,12 @@ export default function AdminUsersPage() {
                   {editingId ? (
                     // Khi sửa: cho chọn trạng thái (trừ chính mình)
                     <Form.Select
+                      ref={el => formRefs.current.status = el}
                       name="status"
                       value={form.status}
                       onChange={handleChange}
                       disabled={isEditingSelf(editingId)}
+                      isInvalid={!!formErrors.status}
                     >
                       {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s === 'active' ? '✅ Active' : s === 'banned' ? '❌ Banned' : '⏳ Pending'}</option>)}
                     </Form.Select>
@@ -705,6 +771,7 @@ export default function AdminUsersPage() {
                       style={{ background: 'rgba(25,135,84,0.1)', color: '#198754', fontWeight: '600', cursor: 'default' }}
                     />
                   )}
+                  {editingId ? <Form.Control.Feedback type="invalid">{formErrors.status}</Form.Control.Feedback> : null}
                   {editingId && isEditingSelf(editingId) && (
                     <Form.Text className="text-muted">
                       Không thể thay đổi trạng thái của chính mình
