@@ -178,10 +178,10 @@ export default function AdminMoviesPage() {
     const title = form.title?.trim() || ''
     if (!title) {
       errs.title = 'Tên phim không được để trống.'
-    } else if (title.length < 2) {
-      errs.title = 'Tên phim phải có ít nhất 2 ký tự.'
-    } else if (title.length > 200) {
-      errs.title = 'Tên phim không được quá 200 ký tự.'
+    } else if (title.length < 4) {
+      errs.title = 'Tên phim phải có ít nhất 4 ký tự.'
+    } else if (title.length > 50) {
+      errs.title = 'Tên phim không được quá 50 ký tự.'
     } else {
       // Kiểm tra tên phim trùng (bỏ qua chính nó khi edit)
       const duplicate = movies.find(m => 

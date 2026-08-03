@@ -29,7 +29,7 @@ const TAG_LABELS = {
 }
 
 const emptyForm = {
-  name: '', category: 'POPCORN', description: '', imageUrl: '',
+  name: '', category: '', description: '', imageUrl: '',
   basePrice: '', stock: '', isAvailable: true, isFeatured: false, tag: '',
   sizes: [],
 }
@@ -108,7 +108,7 @@ export default function AdminFoodPage() {
   const openEditModal = (item) => {
     setForm({
       name: item.name || '',
-      category: item.category || 'POPCORN',
+      category: item.category || '',
       description: item.description || '',
       imageUrl: item.imageUrl || '',
       basePrice: item.basePrice || '',
