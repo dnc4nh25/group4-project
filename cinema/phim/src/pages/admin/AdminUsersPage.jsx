@@ -682,6 +682,7 @@ export default function AdminUsersPage() {
                 ref={el => formRefs.current.fullName = el}
                 id="user-fullname" name="fullName" value={form.fullName}
                 onChange={handleChange} placeholder="Nguyễn Văn A"
+                disabled={!!editingId}
                 isInvalid={!!formErrors.fullName}
               />
               <Form.Control.Feedback type="invalid">{formErrors.fullName}</Form.Control.Feedback>
@@ -692,6 +693,7 @@ export default function AdminUsersPage() {
                 ref={el => formRefs.current.email = el}
                 id="user-email" name="email" type="email" value={form.email}
                 onChange={handleChange} placeholder="example@email.com (tùy chọn)"
+                disabled={!!editingId}
                 isInvalid={!!formErrors.email}
               />
               <Form.Control.Feedback type="invalid">{formErrors.email}</Form.Control.Feedback>
@@ -702,6 +704,7 @@ export default function AdminUsersPage() {
                 ref={el => formRefs.current.phone = el}
                 id="user-phone" name="phone" type="tel" value={form.phone}
                 onChange={handleChange} placeholder="0123456789 (tùy chọn)"
+                disabled={!!editingId}
                 isInvalid={!!formErrors.phone}
               />
               <Form.Control.Feedback type="invalid">{formErrors.phone}</Form.Control.Feedback>
