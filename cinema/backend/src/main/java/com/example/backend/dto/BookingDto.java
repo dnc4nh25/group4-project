@@ -19,6 +19,7 @@ public class BookingDto {
     private Long discount;
     private String voucherCode;
     private BookingStatus status;
+    private String bookingCode;
     private LocalDateTime createdAt;
     private LocalDateTime cancelledAt;
     private Long pointsEarned;

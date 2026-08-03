@@ -73,6 +73,7 @@ public class BookingController {
                             .discount(booking.getDiscount())
                             .voucherCode(booking.getVoucherCode())
                             .status(booking.getStatus())
+                            .bookingCode(booking.getBookingCode())
                             .createdAt(booking.getCreatedAt())
                             .pointsEarned(booking.getPointsEarned())
                             .pointsUsed(booking.getPointsUsed())
@@ -119,6 +120,49 @@ public class BookingController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/code/{bookingCode}")
+    public ResponseEntity<?> getByBookingCode(@PathVariable String bookingCode) {
+        return bookingRepository.findByBookingCode(bookingCode)
+                .map(booking -> {
+                    Showtime showtime = booking.getShowtime();
+                    com.example.backend.entity.Movie movie = showtime.getMovie();
+                    return ResponseEntity.ok(com.example.backend.dto.MyBookingResponse.builder()
+                            .id(booking.getId())
+                            .movieName(movie.getTitle())
+                            .moviePoster(movie.getPoster())
+                            .theaterName("CinemaXP")
+                            .roomName(showtime.getRoom())
+                            .showDate(showtime.getDate())
+                            .showTime(showtime.getTime())
+                            .seatNums(booking.getSeatNums())
+                            .totalPrice(booking.getTotalPrice())
+                            .status(booking.getStatus())
+                            .bookingCode(booking.getBookingCode())
+                            .createdAt(booking.getCreatedAt())
+                            .pointsEarned(booking.getPointsEarned())
+                            .pointsUsed(booking.getPointsUsed())
+                            .build());
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/{id}/checkin")
+    public ResponseEntity<?> checkIn(@PathVariable Long id) {
+        return bookingRepository.findById(id)
+                .map(booking -> {
+                    if (booking.getStatus() == com.example.backend.enums.BookingStatus.CANCELLED) {
+                        return ResponseEntity.badRequest().body("Vé đã bị hủy.");
+                    }
+                    if (booking.getStatus() == com.example.backend.enums.BookingStatus.CHECKED_IN) {
+                        return ResponseEntity.badRequest().body("Vé này đã được check-in rồi.");
+                    }
+                    booking.setStatus(com.example.backend.enums.BookingStatus.CHECKED_IN);
+                    bookingRepository.save(booking);
+                    return ResponseEntity.ok().body("Check-in thành công!");
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}/cancel")

@@ -188,12 +188,30 @@ export default function PaymentPage() {
   // ─── SUCCESS SCREEN ───────────────────────────────────────
   if (success) {
     const { selectedSeats, showtime, movie } = bookingData
+    const bookingCode = successData?.bookingCode
     return (
       <div className="pay-success-wrapper">
         <div className="pay-success-card">
           <div className="pay-success-icon">🎉</div>
           <h2>Thanh toán thành công!</h2>
-          <p className="pay-success-sub">Chúc bạn xem phim vui vẻ! Vé đã được ghi nhận.</p>
+          <p className="pay-success-sub">Chúc bạn xem phim vui vẻ! Xuất trình mã QR bên dưới khi vào rạp.</p>
+
+          {/* QR Code */}
+          {bookingCode && (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(bookingCode)}`}
+                alt={`QR vé ${bookingCode}`}
+                style={{ width: 180, height: 180, borderRadius: 12, border: '3px solid var(--primary, #f5a623)' }}
+              />
+              <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: 2, marginTop: 10, color: 'var(--primary, #f5a623)' }}>
+                {bookingCode}
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted, #a8a8b8)', marginTop: 6 }}>
+                🎫 Đưa mã QR này cho nhân viên tại cổng vào rạp
+              </p>
+            </div>
+          )}
 
           <div className="pay-ticket">
             <div className="pay-ticket-movie">{movie?.title}</div>

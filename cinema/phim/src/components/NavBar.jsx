@@ -8,6 +8,7 @@ const ADMIN_LINKS = [
   { to: '/admin/movies',     label: 'Quản lý Phim' },
   { to: '/admin/showtimes',  label: 'Quản lý Xuất chiếu' },
   { to: '/admin/bookings',   label: 'Quản lý Đặt vé' },
+  { to: '/admin/food',       label: 'Quản lý F&B' },
   { to: '/admin/vouchers',   label: 'Quản lý Voucher' },
   { to: '/admin/users',      label: 'Quản lý Người dùng' },
   { to: '/admin/feedbacks',  label: 'Phản hồi KH' },
@@ -126,11 +127,11 @@ export default function NavBar({ theme, onToggleTheme }) {
                   </Nav.Link>
                   <Nav.Link
                     as={Link}
-                    to="/offers"
-                    className={`animate-fade-in-up ${location.pathname === '/offers' ? 'nav-link-active' : ''}`}
+                    to="/food"
+                    className={`animate-fade-in-up ${location.pathname.startsWith('/food') ? 'nav-link-active' : ''}`}
                     style={{ animationDelay: '0.28s' }}
                   >
-                    Ưu đãi của tôi
+                    🍿 Đặt đồ ăn
                   </Nav.Link>
                   {currentUser && (
                     <Nav.Link

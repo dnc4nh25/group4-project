@@ -21,6 +21,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     
     boolean existsByUserIdAndVoucherCode(Long userId, String voucherCode);
     long countByUserId(Long userId);
+    java.util.Optional<Booking> findByBookingCode(String bookingCode);
 
     // Lấy các vé chưa gửi mail nhắc nhở, đã thanh toán theo ngày chiếu
     @Query("SELECT b FROM Booking b WHERE b.status = :status AND (b.reminderSent = false OR b.reminderSent IS NULL) AND b.showtime.date = :date")

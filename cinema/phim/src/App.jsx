@@ -30,6 +30,9 @@ import HelpCenterPage from './pages/user/HelpCenterPage'
 import ContactPage from './pages/user/ContactPage'
 import TermsPage from './pages/user/TermsPage'
 import PrivacyPage from './pages/user/PrivacyPage'
+import FoodPage from './pages/user/FoodPage'
+import FoodCheckoutPage from './pages/user/FoodCheckoutPage'
+import AdminFoodPage from './pages/admin/AdminFoodPage'
 
 function App() {
   const [theme, setTheme] = useState(() => {
@@ -104,6 +107,13 @@ function App() {
             <AdminRoute><AdminFeedbacksPage /></AdminRoute>
           } />
           <Route path="/offers" element={<OffersPage />} />
+          <Route path="/food" element={<FoodPage />} />
+          <Route path="/food/checkout" element={
+            <PrivateRoute><FoodCheckoutPage /></PrivateRoute>
+          } />
+          <Route path="/admin/food" element={
+            <AdminRoute><AdminFoodPage /></AdminRoute>
+          } />
           <Route path="/help" element={<HelpCenterPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/terms" element={<TermsPage />} />
