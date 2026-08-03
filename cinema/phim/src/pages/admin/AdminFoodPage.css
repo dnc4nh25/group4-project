@@ -236,6 +236,10 @@
   border-color: var(--primary, #f5a623);
 }
 
+.invalid-feedback {
+  text-align: left !important;
+}
+
 .admin-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

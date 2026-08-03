@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col, Badge } from 'react-bootstrap'
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
@@ -20,6 +20,10 @@ export default function ProfilePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showPasswordFields, setShowPasswordFields] = useState(false)
+
+  const [formErrors, setFormErrors] = useState({})
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const formRefs = useRef({})
 
   useEffect(() => {
     if (currentUser) {
@@ -46,8 +50,50 @@ export default function ProfilePage() {
     return phoneRegex.test(phone)
   }
 
+  const validateForm = (formData) => {
+    const errors = {}
+
+    if (!formData.fullName || !formData.fullName.trim()) {
+      errors.fullName = 'Họ và tên không được để trống.'
+    }
+
+    if (!formData.email || !formData.email.trim()) {
+      errors.email = 'Email không được để trống.'
+    } else if (!validateEmail(formData.email)) {
+      errors.email = 'Email không hợp lệ.'
+    }
+
+    if (!formData.phone || !formData.phone.trim()) {
+      errors.phone = 'Số điện thoại không được để trống.'
+    } else if (!validatePhone(formData.phone)) {
+      errors.phone = 'Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0.'
+    }
+
+    if (showPasswordFields) {
+      if (!formData.password) {
+        errors.password = 'Vui lòng nhập mật khẩu hiện tại.'
+      }
+
+      if (!formData.newPassword || formData.newPassword.length < 6) {
+        errors.newPassword = 'Mật khẩu mới phải có ít nhất 6 ký tự.'
+      }
+      
+      if (formData.newPassword !== formData.confirmPassword) {
+        errors.confirmPassword = 'Mật khẩu xác nhận không khớp.'
+      }
+    }
+
+    return errors
+  }
+
+  useEffect(() => {
+    if (hasSubmitted) {
+      setFormErrors(validateForm(form))
+    }
+  }, [form, hasSubmitted, showPasswordFields, currentUser])
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
     setError('')
     setSuccess('')
   }
@@ -56,39 +102,17 @@ export default function ProfilePage() {
     e.preventDefault()
     setError('')
     setSuccess('')
+    setHasSubmitted(true)
 
-    if (!form.fullName || !form.email || !form.phone) {
-      setError('Vui lòng điền đầy đủ thông tin bắt buộc.')
+    const errors = validateForm(form)
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      const firstErrorKey = Object.keys(errors)[0]
+      if (formRefs.current[firstErrorKey]) {
+        formRefs.current[firstErrorKey].scrollIntoView({ behavior: 'smooth', block: 'center' })
+        formRefs.current[firstErrorKey].focus()
+      }
       return
-    }
-
-    if (!validateEmail(form.email)) {
-      setError('Email không hợp lệ.')
-      return
-    }
-
-    if (!validatePhone(form.phone)) {
-      setError('Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0.')
-      return
-    }
-
-    if (showPasswordFields) {
-      if (!form.password) {
-        setError('Vui lòng nhập mật khẩu hiện tại.')
-        return
-      }
-      if (!form.newPassword || form.newPassword.length < 6) {
-        setError('Mật khẩu mới phải có ít nhất 6 ký tự.')
-        return
-      }
-      if (form.newPassword !== form.confirmPassword) {
-        setError('Mật khẩu xác nhận không khớp.')
-        return
-      }
-      if (form.password !== currentUser.password) {
-        setError('Mật khẩu hiện tại không đúng.')
-        return
-      }
     }
 
     setLoading(true)
@@ -98,7 +122,11 @@ export default function ProfilePage() {
         try {
           const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
           if (emailCheck.data && emailCheck.data.id !== currentUser.id) {
-            setError('Email đã được sử dụng bởi tài khoản khác.')
+            setFormErrors(prev => ({ ...prev, email: 'Email đã được sử dụng bởi tài khoản khác.' }))
+            if (formRefs.current.email) {
+              formRefs.current.email.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              formRefs.current.email.focus()
+            }
             setLoading(false)
             return
           }
@@ -112,7 +140,11 @@ export default function ProfilePage() {
         try {
           const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
           if (phoneCheck.data && phoneCheck.data.id !== currentUser.id) {
-            setError('Số điện thoại đã được sử dụng bởi tài khoản khác.')
+            setFormErrors(prev => ({ ...prev, phone: 'Số điện thoại đã được sử dụng bởi tài khoản khác.' }))
+            if (formRefs.current.phone) {
+              formRefs.current.phone.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              formRefs.current.phone.focus()
+            }
             setLoading(false)
             return
           }
@@ -121,14 +153,32 @@ export default function ProfilePage() {
         }
       }
 
-      const updateData = {
-        fullName: form.fullName,
-        email: form.email,
-        phone: form.phone
+      // Change Password if requested
+      if (showPasswordFields && form.newPassword) {
+        try {
+          await axios.post(`http://localhost:8080/api/users/${currentUser.id}/change-password`, {
+            currentPassword: form.password,
+            newPassword: form.newPassword
+          })
+        } catch (err) {
+          if (err.response?.status === 401) {
+            setFormErrors(prev => ({ ...prev, password: 'Mật khẩu hiện tại không đúng.' }))
+            if (formRefs.current.password) {
+              formRefs.current.password.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              formRefs.current.password.focus()
+            }
+            setLoading(false)
+            return
+          }
+          throw err;
+        }
       }
 
-      if (showPasswordFields && form.newPassword) {
-        updateData.password = form.newPassword
+      // Update basic information
+      const updateData = {
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim()
       }
 
       const response = await axios.put(`http://localhost:8080/api/users/${currentUser.id}`, updateData)
@@ -138,13 +188,15 @@ export default function ProfilePage() {
       setSuccess('Cập nhật thông tin thành công!')
 
       if (showPasswordFields) {
-        setForm({
-          ...form,
+        setForm(f => ({
+          ...f,
           password: '',
           newPassword: '',
           confirmPassword: ''
-        })
+        }))
         setShowPasswordFields(false)
+        setHasSubmitted(false)
+        setFormErrors({})
       }
     } catch (err) {
       setError('Có lỗi xảy ra khi cập nhật thông tin.')
@@ -238,18 +290,22 @@ export default function ProfilePage() {
                         Họ và tên <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
+                        ref={el => formRefs.current.fullName = el}
                         name="fullName"
                         type="text"
                         placeholder="Nguyễn Văn A"
                         value={form.fullName}
                         onChange={handleChange}
-                        required
+                        isInvalid={!!formErrors.fullName}
                         style={{
                           background: 'var(--bg-surface)',
-                          border: '1px solid var(--border)',
+                          borderColor: formErrors.fullName ? 'var(--bs-danger)' : 'var(--border)',
                           color: 'var(--text-light)'
                         }}
                       />
+                      <Form.Control.Feedback type="invalid">
+                        {formErrors.fullName}
+                      </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -271,18 +327,22 @@ export default function ProfilePage() {
                         )}
                       </Form.Label>
                       <Form.Control
+                        ref={el => formRefs.current.email = el}
                         name="email"
                         type="email"
                         placeholder="example@email.com"
                         value={form.email}
                         onChange={handleChange}
-                        required
+                        isInvalid={!!formErrors.email}
                         style={{
                           background: 'var(--bg-surface)',
-                          border: '1px solid var(--border)',
+                          borderColor: formErrors.email ? 'var(--bs-danger)' : 'var(--border)',
                           color: 'var(--text-light)'
                         }}
                       />
+                      <Form.Control.Feedback type="invalid">
+                        {formErrors.email}
+                      </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
@@ -294,18 +354,22 @@ export default function ProfilePage() {
                         )}
                       </Form.Label>
                       <Form.Control
+                        ref={el => formRefs.current.phone = el}
                         name="phone"
                         type="tel"
                         placeholder="0123456789"
                         value={form.phone}
                         onChange={handleChange}
-                        required
+                        isInvalid={!!formErrors.phone}
                         style={{
                           background: 'var(--bg-surface)',
-                          border: '1px solid var(--border)',
+                          borderColor: formErrors.phone ? 'var(--bs-danger)' : 'var(--border)',
                           color: 'var(--text-light)'
                         }}
                       />
+                      <Form.Control.Feedback type="invalid">
+                        {formErrors.phone}
+                      </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -320,7 +384,7 @@ export default function ProfilePage() {
                   <Button
                     variant="outline-warning"
                     size="sm"
-                    onClick={() => setShowPasswordFields(!showPasswordFields)}
+                    onClick={() => { setShowPasswordFields(!showPasswordFields); setFormErrors({}); setHasSubmitted(false); }}
                   >
                     {showPasswordFields ? 'Hủy đổi mật khẩu' : 'Đổi mật khẩu'}
                   </Button>
@@ -332,51 +396,66 @@ export default function ProfilePage() {
                       <Form.Group>
                         <Form.Label className="text-light">Mật khẩu hiện tại</Form.Label>
                         <Form.Control
+                          ref={el => formRefs.current.password = el}
                           name="password"
                           type="password"
                           placeholder="Nhập mật khẩu hiện tại"
                           value={form.password}
                           onChange={handleChange}
+                          isInvalid={!!formErrors.password}
                           style={{
                             background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
+                            borderColor: formErrors.password ? 'var(--bs-danger)' : 'var(--border)',
                             color: 'var(--text-light)'
                           }}
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {formErrors.password}
+                        </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label className="text-light">Mật khẩu mới</Form.Label>
                         <Form.Control
+                          ref={el => formRefs.current.newPassword = el}
                           name="newPassword"
                           type="password"
                           placeholder="Ít nhất 6 ký tự"
                           value={form.newPassword}
                           onChange={handleChange}
+                          isInvalid={!!formErrors.newPassword}
                           style={{
                             background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
+                            borderColor: formErrors.newPassword ? 'var(--bs-danger)' : 'var(--border)',
                             color: 'var(--text-light)'
                           }}
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {formErrors.newPassword}
+                        </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label className="text-light">Xác nhận mật khẩu mới</Form.Label>
                         <Form.Control
+                          ref={el => formRefs.current.confirmPassword = el}
                           name="confirmPassword"
                           type="password"
                           placeholder="Nhập lại mật khẩu mới"
                           value={form.confirmPassword}
                           onChange={handleChange}
+                          isInvalid={!!formErrors.confirmPassword}
                           style={{
                             background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
+                            borderColor: formErrors.confirmPassword ? 'var(--bs-danger)' : 'var(--border)',
                             color: 'var(--text-light)'
                           }}
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {formErrors.confirmPassword}
+                        </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
                   </Row>
