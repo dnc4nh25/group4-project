@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
   const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: otp + new password
   const [forgotError, setForgotError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [forgotSuccess, setForgotSuccess] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
@@ -61,9 +62,11 @@ export default function LoginPage() {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setForgotError("");
+    setFieldErrors({});
     setForgotSuccess("");
     if (!forgotEmail) {
-      setForgotError("Vui lòng nhập email.");
+      setFieldErrors({ email: "Vui lòng nhập email." });
+      document.getElementById('forgotEmail')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     setForgotLoading(true);
@@ -74,11 +77,9 @@ export default function LoginPage() {
       setForgotSuccess("Mã OTP đã được gửi đến email của bạn.");
       setForgotStep(2);
     } catch (err) {
-      if (err.response && err.response.data) {
-        setForgotError(err.response.data);
-      } else {
-        setForgotError("Không thể gửi yêu cầu. Vui lòng thử lại.");
-      }
+      const errorMsg = err.response && err.response.data ? err.response.data : "Không thể gửi yêu cầu. Vui lòng thử lại.";
+      setFieldErrors({ email: errorMsg });
+      document.getElementById('forgotEmail')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } finally {
       setForgotLoading(false);
     }
@@ -87,17 +88,28 @@ export default function LoginPage() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setForgotError("");
+    setFieldErrors({});
     setForgotSuccess("");
-    if (!forgotOtp || !forgotNewPassword || !forgotConfirmPassword) {
-      setForgotError("Vui lòng nhập đầy đủ thông tin.");
-      return;
-    }
-    if (forgotNewPassword.length < 6) {
-      setForgotError("Mật khẩu mới phải có ít nhất 6 ký tự.");
-      return;
-    }
-    if (forgotNewPassword !== forgotConfirmPassword) {
-      setForgotError("Mật khẩu xác nhận không khớp.");
+    
+    let newErrors = {};
+    if (!forgotOtp) newErrors.otp = "Vui lòng nhập mã OTP.";
+    else if (forgotOtp.length !== 6) newErrors.otp = "Mã OTP phải gồm 6 chữ số.";
+
+    if (!forgotNewPassword) newErrors.newPassword = "Vui lòng nhập mật khẩu mới.";
+    else if (forgotNewPassword.length < 6) newErrors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+    
+    if (!forgotConfirmPassword) newErrors.confirmPassword = "Vui lòng xác nhận mật khẩu mới.";
+    else if (forgotNewPassword !== forgotConfirmPassword) newErrors.confirmPassword = "Mật khẩu xác nhận không khớp.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
+      const firstErrorKey = Object.keys(newErrors)[0];
+      const fieldIdMap = {
+        otp: 'forgotOtp',
+        newPassword: 'forgotNewPassword',
+        confirmPassword: 'forgotConfirmPassword'
+      };
+      document.getElementById(fieldIdMap[firstErrorKey])?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     setForgotLoading(true);
@@ -118,10 +130,19 @@ export default function LoginPage() {
         setForgotStep(1);
         setForgotSuccess("");
         setForgotError("");
+        setFieldErrors({});
       }, 2000);
     } catch (err) {
-      if (err.response && err.response.data) {
-        setForgotError(err.response.data);
+      const errorMsg = err.response && err.response.data ? err.response.data : "Đã xảy ra lỗi. Vui lòng thử lại.";
+      if (typeof errorMsg === 'string') {
+        const lowerMsg = errorMsg.toLowerCase();
+        if (lowerMsg.includes("mật khẩu")) {
+          setFieldErrors({ newPassword: errorMsg });
+          document.getElementById('forgotNewPassword')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          setFieldErrors({ otp: errorMsg });
+          document.getElementById('forgotOtp')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       } else {
         setForgotError("Đã xảy ra lỗi. Vui lòng thử lại.");
       }
@@ -163,6 +184,7 @@ export default function LoginPage() {
                   <span
                     onClick={() => {
                       setForgotError("");
+                      setFieldErrors({});
                       setForgotSuccess("");
                       setForgotStep(1);
                       setShowForgotModal(true);
@@ -217,13 +239,17 @@ export default function LoginPage() {
               <Form.Group className="mb-3">
                 <Form.Label>Email đăng ký</Form.Label>
                 <Form.Control
+                  id="forgotEmail"
                   type="email"
                   placeholder="name@example.com"
                   value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  className="form-input-custom"
-                  required
+                  onChange={(e) => {
+                    setForgotEmail(e.target.value);
+                    if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: null });
+                  }}
+                  className={`form-input-custom ${fieldErrors.email ? 'is-invalid' : ''}`}
                 />
+                {fieldErrors.email && <div className="text-danger mt-1 small">{fieldErrors.email}</div>}
               </Form.Group>
               <Button
                 type="submit"
@@ -236,46 +262,58 @@ export default function LoginPage() {
           ) : (
             <Form onSubmit={handleResetPassword}>
               <p className="text-muted small mb-3">
-                Mã xác thực đã được gửi đến: <strong className="text-dark">{forgotEmail}</strong>. Vui lòng nhập mã OTP và mật khẩu mới của bạn.
+                Mã xác thực đã được gửi đến: <strong className="text-white fw-bold">{forgotEmail}</strong>. Vui lòng nhập mã OTP và mật khẩu mới của bạn.
               </p>
               <Form.Group className="mb-3">
                 <Form.Label>Mã OTP</Form.Label>
                 <Form.Control
+                  id="forgotOtp"
                   type="text"
                   placeholder="Nhập 6 chữ số OTP"
                   value={forgotOtp}
-                  onChange={(e) => setForgotOtp(e.target.value)}
-                  className="form-input-custom"
-                  required
+                  onChange={(e) => {
+                    setForgotOtp(e.target.value);
+                    if (fieldErrors.otp) setFieldErrors({ ...fieldErrors, otp: null });
+                  }}
+                  className={`form-input-custom ${fieldErrors.otp ? 'is-invalid' : ''}`}
                 />
+                {fieldErrors.otp && <div className="text-danger mt-1 small">{fieldErrors.otp}</div>}
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Mật khẩu mới</Form.Label>
                 <Form.Control
+                  id="forgotNewPassword"
                   type="password"
                   placeholder="Tối thiểu 6 ký tự"
                   value={forgotNewPassword}
-                  onChange={(e) => setForgotNewPassword(e.target.value)}
-                  className="form-input-custom"
-                  required
+                  onChange={(e) => {
+                    setForgotNewPassword(e.target.value);
+                    if (fieldErrors.newPassword) setFieldErrors({ ...fieldErrors, newPassword: null });
+                  }}
+                  className={`form-input-custom ${fieldErrors.newPassword ? 'is-invalid' : ''}`}
                 />
+                {fieldErrors.newPassword && <div className="text-danger mt-1 small">{fieldErrors.newPassword}</div>}
               </Form.Group>
               <Form.Group className="mb-4">
                 <Form.Label>Xác nhận mật khẩu mới</Form.Label>
                 <Form.Control
+                  id="forgotConfirmPassword"
                   type="password"
                   placeholder="Nhập lại mật khẩu mới"
                   value={forgotConfirmPassword}
-                  onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                  className="form-input-custom"
-                  required
+                  onChange={(e) => {
+                    setForgotConfirmPassword(e.target.value);
+                    if (fieldErrors.confirmPassword) setFieldErrors({ ...fieldErrors, confirmPassword: null });
+                  }}
+                  className={`form-input-custom ${fieldErrors.confirmPassword ? 'is-invalid' : ''}`}
                 />
+                {fieldErrors.confirmPassword && <div className="text-danger mt-1 small">{fieldErrors.confirmPassword}</div>}
               </Form.Group>
               <div className="d-flex gap-2">
                 <Button
                   type="button"
                   variant="outline-secondary"
-                  className="w-50 border-secondary text-dark"
+                  className="w-50 border-secondary text-white fw-bold"
                   onClick={() => setForgotStep(1)}
                   disabled={forgotLoading}
                 >
