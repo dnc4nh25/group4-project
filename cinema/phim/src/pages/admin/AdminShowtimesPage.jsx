@@ -116,6 +116,89 @@ export default function AdminShowtimesPage() {
     return data
   }, [filteredShowtimes])
 
+  const formatTime = (mins) => {
+    if (mins >= 24 * 60) return '23:59'
+    const h = Math.floor(mins / 60)
+    const m = mins % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+  }
+
+  const suggestionText = useMemo(() => {
+    if (!form.movieId || !form.date || !form.room) return null;
+    
+    const selectedMovie = movies.find(m => String(m.id) === String(form.movieId));
+    if (!selectedMovie) return null;
+    
+    const duration = parseInt(selectedMovie.duration) || 120;
+    
+    const roomShowtimes = showtimes.filter(st => 
+      st.date === form.date && 
+      st.room === form.room && 
+      st.id !== editingId
+    );
+    
+    if (roomShowtimes.length === 0) {
+      return (
+        <div className="mt-0" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245,158,11,0.12)', color: '#fbbf24', padding: '10px 14px', borderRadius: '6px', fontSize: '0.92rem' }}>
+          <span style={{ color: '#f59e0b' }}>💡</span> Phòng chưa có lịch chiếu trong ngày này. Hãy chọn thời gian cho xuất chiếu.
+        </div>
+      );
+    }
+    
+    const parsedShowtimes = roomShowtimes.map(st => {
+      const movie = movies.find(m => String(m.id) === String(st.movieId));
+      const dur = movie ? parseInt(movie.duration) || 120 : 120;
+      const [h, m] = st.time.split(':').map(Number);
+      const startMins = h * 60 + m;
+      const endMins = startMins + dur;
+      return { start: startMins, end: endMins };
+    }).sort((a, b) => a.start - b.start);
+    
+    const suggestions = [];
+    
+    let currentTime = 8 * 60; // Bắt đầu ngày từ 08:00 sáng
+    const endOfDay = 24 * 60; // Kết thúc ngày lúc 24:00
+    
+    parsedShowtimes.forEach(st => {
+      // Khoảng thời gian trống trước suất chiếu này
+      const gapEnd = st.start - 30; // Trừ 30p dọn phòng trước suất chiếu
+      
+      if (gapEnd - currentTime >= duration) {
+        const maxStart = gapEnd - duration;
+        suggestions.push(`Từ ${formatTime(currentTime)} đến ${formatTime(gapEnd)} (Bắt đầu trễ nhất: ${formatTime(maxStart)})`);
+      }
+      
+      // Cập nhật thời gian bắt đầu của khoảng trống tiếp theo (sau 30p dọn phòng)
+      currentTime = st.end + 30;
+    });
+    
+    // Kiểm tra khoảng trống sau suất chiếu cuối cùng đến cuối ngày
+    if (endOfDay - currentTime >= duration) {
+      // Nếu thời gian cuối là 24:00 thì hiển thị 23:59 cho thân thiện
+      const maxStart = endOfDay - duration;
+      suggestions.push(`Từ ${formatTime(currentTime)} đến 23:59 (Bắt đầu trễ nhất: ${formatTime(maxStart)})`);
+    }
+    
+    if (suggestions.length === 0) {
+      return (
+        <div className="mt-0" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245,158,11,0.12)', color: '#fbbf24', padding: '10px 14px', borderRadius: '6px', fontSize: '0.92rem' }}>
+          <strong>⚠ Không có khoảng thời gian trống nào đủ {duration} phút để thêm xuất chiếu trong ngày này.</strong>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="mt-0" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245,158,11,0.12)', color: '#fbbf24', padding: '10px 14px', borderRadius: '6px', fontSize: '0.92rem' }}>
+        <span style={{ color: '#f59e0b' }}>💡</span> Khoảng thời gian trống khả dụng (đủ {duration} phút):<br />
+        <ul className="mb-0 mt-1" style={{ paddingLeft: '20px' }}>
+          {suggestions.map((s, idx) => (
+            <li key={idx}>{s}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }, [form.movieId, form.date, form.room, showtimes, editingId, movies]);
+
   const handleOpenAdd = () => {
     setForm({ ...EMPTY_FORM, bookedSeatNums: [] })
     setEditingId(null); setError(''); setFieldErrors({}); setShowModal(true)
@@ -637,28 +720,8 @@ export default function AdminShowtimesPage() {
                 />
                 {fieldErrors.date && <div className="field-error-msg">⚠ {fieldErrors.date}</div>}
               </div>
-              <div className="col-md-6">
-                <Form.Label>Giờ chiếu <span className="text-danger">*</span></Form.Label>
-                <Form.Control
-                  name="time"
-                  type="time"
-                  value={form.time}
-                  onChange={handleChange}
-                  className={fieldErrors.time ? 'field-invalid' : ''}
-                />
-                {fieldErrors.time && <div className="field-error-msg">⚠ {fieldErrors.time}</div>}
-              </div>
-            </div>
-
-            {/* Lỗi trùng lịch từ backend */}
-            {fieldErrors.schedule && (
-              <div className="field-error-banner mb-3" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245,158,11,0.12)', color: '#fbbf24', padding: '10px 14px', borderRadius: '6px', fontSize: '0.92rem' }}>
-                ⏰ {fieldErrors.schedule}
-              </div>
-            )}
-
-            {/* Phòng chiếu */}
-            <Form.Group className="mb-3">
+                 {/* Phòng chiếu */}
+            <Form.Group className="col-md-6">
               <Form.Label>Phòng chiếu <span className="text-danger">*</span></Form.Label>
               <Form.Select
                 name="room"
@@ -678,6 +741,7 @@ export default function AdminShowtimesPage() {
                 : <Form.Text className="text-muted"></Form.Text>
               }
             </Form.Group>
+            </div>
 
             {/* Tổng ghế + Đã đặt */}
             <div className="row g-3 mb-3">
@@ -709,6 +773,29 @@ export default function AdminShowtimesPage() {
                   }
                 </div>
               )}
+            </div>
+
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                  <Form.Label>Giờ chiếu <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    name="time"
+                    type="time"
+                    value={form.time}
+                    onChange={handleChange}
+                    className={fieldErrors.time ? 'field-invalid' : ''}
+                  />
+                  {fieldErrors.time && <div className="field-error-msg">⚠ {fieldErrors.time}</div>}
+              </div>
+              <div className="col-md-12">
+                {fieldErrors.schedule ? (
+                  <div className="mt-0" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245,158,11,0.12)', color: '#fbbf24', padding: '10px 14px', borderRadius: '6px', fontSize: '0.92rem' }}>
+                    ⏰ {fieldErrors.schedule}
+                  </div>
+                ) : (
+                  suggestionText
+                )}
+              </div>
             </div>
 
             {/* Giá vé cơ bản */}
