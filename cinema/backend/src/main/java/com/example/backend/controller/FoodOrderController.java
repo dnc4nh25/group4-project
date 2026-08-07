@@ -186,21 +186,10 @@ public class FoodOrderController {
                     if (order.getStatus() == FoodOrderStatus.CANCELLED) {
                         return ResponseEntity.badRequest().body("Đơn hàng đã hủy trước đó.");
                     }
-                    if (order.getStatus() == FoodOrderStatus.COMPLETED || order.getStatus() == FoodOrderStatus.READY) {
-                        return ResponseEntity.badRequest().body("Không thể hủy đơn hàng đã hoàn tất hoặc sẵn sàng lấy.");
-                    }
-                    
-                    // Kiểm tra thời gian (không cho hủy trước 1 tiếng)
-                    if (order.getPickupDate() != null && order.getPickupTime() != null) {
-                        try {
-                            java.time.LocalTime pt = java.time.LocalTime.parse(order.getPickupTime());
-                            java.time.LocalDateTime pickupDateTime = java.time.LocalDateTime.of(order.getPickupDate(), pt);
-                            if (LocalDateTime.now().plusHours(1).isAfter(pickupDateTime)) {
-                                return ResponseEntity.badRequest().body("Không thể hủy đơn trước 1 tiếng so với giờ nhận đồ.");
-                            }
-                        } catch (Exception e) {
-                            // Bỏ qua nếu lỗi parse time
-                        }
+                    if (order.getStatus() == FoodOrderStatus.PREPARING
+                            || order.getStatus() == FoodOrderStatus.COMPLETED
+                            || order.getStatus() == FoodOrderStatus.READY) {
+                        return ResponseEntity.badRequest().body("Không thể hủy đơn khi đang chuẩn bị hoặc đã hoàn tất.");
                     }
 
                     // Hoàn lại stock

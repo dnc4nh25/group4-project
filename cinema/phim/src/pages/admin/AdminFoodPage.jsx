@@ -8,11 +8,11 @@ const CATEGORIES = ['POPCORN', 'DRINK', 'COMBO', 'SNACK']
 const CATEGORY_LABELS = { POPCORN: '🍿 Bỏng ngô', DRINK: '🥤 Nước', COMBO: '🎁 Combo', SNACK: '🌭 Snack' }
 
 const STATUS_FLOW = {
-  PENDING: { label: 'Chờ xử lý', next: 'PREPARING', nextLabel: '▶ Bắt đầu chuẩn bị' },
-  PREPARING: { label: 'Chuẩn bị', next: 'READY', nextLabel: '✅ Sẵn sàng lấy' },
-  READY: { label: 'Sẵn lấy', next: 'COMPLETED', nextLabel: '🎉 Hoàn tất' },
-  COMPLETED: { label: 'Đã hoàn tất', next: null, nextLabel: null },
-  CANCELLED: { label: 'Đã hủy', next: null, nextLabel: null },
+  PENDING: { label: 'Chờ xử lý' },
+  PREPARING: { label: 'Chuẩn bị' },
+  READY: { label: 'Sẵn lấy' },
+  COMPLETED: { label: 'Đã hoàn tất' },
+  CANCELLED: { label: 'Đã hủy' },
 }
 
 const STATUS_BADGE = {
@@ -66,7 +66,7 @@ export default function AdminFoodPage() {
 
   // ─── Order Detail Modal ───────────────────────────────────
   const [orderDetailModal, setOrderDetailModal] = useState({ show: false, order: null })
-  const [statusUpdating, setStatusUpdating] = useState(null)
+
 
   // ─── Toast ────────────────────────────────────────────────
   const [toast, setToast] = useState({ show: false, message: '', type: '' })
@@ -340,18 +340,6 @@ export default function AdminFoodPage() {
   }
 
   // ─── Order Actions ────────────────────────────────────────
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    setStatusUpdating(orderId)
-    try {
-      await foodOrderApi.updateStatus(orderId, newStatus)
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
-      if (orderDetailModal.order?.id === orderId) {
-        setOrderDetailModal(m => ({ ...m, order: { ...m.order, status: newStatus } }))
-      }
-      showToast('Cập nhật trạng thái thành công!')
-    } catch (e) { showToast('Lỗi cập nhật', 'error') }
-    finally { setStatusUpdating(null) }
-  }
 
   const handleSearchOrder = async () => {
     if (!searchCode.trim()) return
@@ -551,9 +539,7 @@ export default function AdminFoodPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredOrders.map(order => {
-                          const sf = STATUS_FLOW[order.status]
-                          return (
+                        {filteredOrders.map(order => (
                             <tr key={order.id}>
                               <td>
                                 <div className="fw-bold font-monospace" style={{ color: '#f5a623', fontSize: '0.85rem' }}>
@@ -588,18 +574,10 @@ export default function AdminFoodPage() {
                                     onClick={() => setOrderDetailModal({ show: true, order })}
                                     title="Xem chi tiết"
                                   >👁️</Button>
-                                  {sf?.next && (
-                                    <Button size="sm" variant="outline-success" className="action-btn"
-                                      onClick={() => handleUpdateStatus(order.id, sf.next)}
-                                      disabled={statusUpdating === order.id}
-                                      title={sf.nextLabel}
-                                    >▶</Button>
-                                  )}
                                 </div>
                               </td>
                             </tr>
-                          )
-                        })}
+                          ))}
                       </tbody>
                     </Table>
                     {filteredOrders.length === 0 && (
@@ -808,15 +786,7 @@ export default function AdminFoodPage() {
               <div className="mt-3" style={{ color: '#a8a8b8', fontSize: '0.85rem' }}>
                 📅 Pickup: {orderDetailModal.order.pickupTime} — {orderDetailModal.order.pickupDate && new Date(orderDetailModal.order.pickupDate).toLocaleDateString('vi-VN')}
               </div>
-              {STATUS_FLOW[orderDetailModal.order.status]?.next && (
-                <button
-                  className="admin-food-btn-primary w-100 mt-3"
-                  onClick={() => handleUpdateStatus(orderDetailModal.order.id, STATUS_FLOW[orderDetailModal.order.status].next)}
-                  disabled={statusUpdating === orderDetailModal.order.id}
-                >
-                  {statusUpdating === orderDetailModal.order.id ? <Spinner size="sm" /> : STATUS_FLOW[orderDetailModal.order.status].nextLabel}
-                </button>
-              )}
+
             </>
           )}
         </Modal.Body>

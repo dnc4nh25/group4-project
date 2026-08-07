@@ -147,10 +147,10 @@ export default function MyBookingsPage() {
     } catch (e) { return false }
   }
 
-  const getCancelFoodStatus = (order) => {
-    if (order.status !== 'PENDING') return { canCancel: false }
-    return { canCancel: true }
+  const canCancelFoodOrder = (order) => {
+    return order.status === 'PENDING'
   }
+
 
   if (loading) {
     return (
@@ -472,28 +472,14 @@ export default function MyBookingsPage() {
                                 📱 Xem QR
                               </Button>
                             )}
-                            {(() => {
-                              const cancelStatus = getCancelFoodStatus(order)
-                              if (!cancelStatus.canCancel && !cancelStatus.isTimeRestricted) return null
-
-                              if (cancelStatus.isTimeRestricted) {
-                                return (
-                                  <div className="py-1 px-2" style={{ fontSize: '0.8rem', backgroundColor: 'rgba(255,193,7,0.15)', borderRadius: '6px', borderLeft: '3px solid #ffc107', marginTop: 'auto', marginBottom: 'auto' }}>
-                                    <span className="me-2">⏰</span>
-                                    <small style={{ color: '#ffd966' }}>Không thể hủy (dưới 1h)</small>
-                                  </div>
-                                )
-                              }
-
-                              return (
-                                <Button
-                                  size="sm" variant="outline-danger"
-                                  onClick={() => setCancelFoodModal({ show: true, orderId: order.id })}
-                                >
-                                  🗑 Hủy đơn
-                                </Button>
-                              )
-                            })()}
+                            {canCancelFoodOrder(order) && (
+                              <Button
+                                size="sm" variant="outline-danger"
+                                onClick={() => setCancelFoodModal({ show: true, orderId: order.id })}
+                              >
+                                🗑 Hủy đơn
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </Card>
