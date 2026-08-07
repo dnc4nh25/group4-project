@@ -551,6 +551,34 @@
   font-size: 0.95rem;
 }
 
+.food-cart-qty-input {
+  background: var(--bg-dark, #0d0d0d);
+  border: 1px solid var(--border-light, #3a3a5a);
+  color: var(--text-light, #f0f0f0);
+  border-radius: 6px;
+  width: 48px;
+  height: 28px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.food-cart-qty-input:focus {
+  border-color: var(--primary, #f5a623);
+}
+
+/* Ẩn mũi tên spin của input number */
+.food-cart-qty-input::-webkit-inner-spin-button,
+.food-cart-qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.food-cart-qty-input[type=number] {
+  -moz-appearance: textfield;
+}
+
 .food-cart-remove {
   margin-left: auto;
   background: transparent !important;

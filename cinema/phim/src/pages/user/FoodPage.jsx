@@ -79,6 +79,33 @@ export default function FoodPage() {
     })
   }
 
+  // ─── Nhập trực tiếp số lượng ───────────────────────────
+  const handleQtyInput = (idx, val) => {
+    const num = parseInt(val, 10)
+    setCart(prev => {
+      const updated = [...prev]
+      if (isNaN(num) || val === '') {
+        updated[idx] = { ...updated[idx], quantity: '' }
+      } else if (num <= 0) {
+        updated.splice(idx, 1)
+      } else {
+        updated[idx] = { ...updated[idx], quantity: Math.min(num, 99) }
+      }
+      return updated
+    })
+  }
+
+  const handleQtyBlur = (idx) => {
+    setCart(prev => {
+      const updated = [...prev]
+      if (!updated[idx]) return updated
+      if (!updated[idx].quantity || updated[idx].quantity === '') {
+        updated[idx] = { ...updated[idx], quantity: 1 }
+      }
+      return updated
+    })
+  }
+
   const handleRemoveFromCart = (idx) => {
     setCart(prev => prev.filter((_, i) => i !== idx))
   }
@@ -237,7 +264,15 @@ export default function FoodPage() {
                       </div>
                       <div className="food-cart-qty">
                         <button onClick={() => handleQtyChange(idx, -1)}>−</button>
-                        <span>{c.quantity}</span>
+                        <input
+                          type="number"
+                          className="food-cart-qty-input"
+                          value={c.quantity}
+                          min={1}
+                          max={99}
+                          onChange={e => handleQtyInput(idx, e.target.value)}
+                          onBlur={() => handleQtyBlur(idx)}
+                        />
                         <button onClick={() => handleQtyChange(idx, +1)}>+</button>
                         <button className="food-cart-remove" onClick={() => handleRemoveFromCart(idx)}>🗑</button>
                       </div>
