@@ -189,10 +189,7 @@ export default function AdminFoodPage() {
     } else {
       try {
         new URL(imageUrlStr)
-        const hasExt = /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(imageUrlStr);
-        if (!hasExt && !/cdn|firebasestorage|cloudinary/i.test(imageUrlStr)) {
-          errors.imageUrl = 'URL ảnh không đúng định dạng (jpg, jpeg, png, webp, gif hoặc URL CDN hợp lệ)'
-        }
+        // Chỉ cần URL hợp lệ, không bắt buộc phải có đuôi file ảnh
       } catch (_) {
         errors.imageUrl = 'URL ảnh không đúng định dạng'
       }
