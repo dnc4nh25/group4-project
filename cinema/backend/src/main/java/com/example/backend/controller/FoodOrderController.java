@@ -203,15 +203,18 @@ public class FoodOrderController {
                     order.setStatus(FoodOrderStatus.CANCELLED);
                     foodOrderRepository.save(order);
 
-                    // Hoàn lại điểm
-                    if (order.getPointsUsed() != null && order.getPointsUsed() > 0) {
-                        User user = order.getUser();
-                        Long currentPoints = user.getPoints() != null ? user.getPoints() : 0L;
-                        user.setPoints(currentPoints + order.getPointsUsed());
-                        userRepository.save(user);
-                    }
+                    // Hoàn điểm khi hủy: tương đương giá trị đơn bỏ ra + điểm đã dùng
+                    // (giống logic bên vé: refund = totalPrice + pointsUsed - pointsEarned)
+                    // F&B không tích pointsEarned nên: refund = totalAmount + pointsUsed
+                    User user = order.getUser();
+                    Long pointsUsed = order.getPointsUsed() != null ? order.getPointsUsed() : 0L;
+                    Long totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : 0L;
+                    Long pointsRefund = totalAmount + pointsUsed;
+                    long currentPoints = user.getPoints() != null ? user.getPoints() : 0L;
+                    user.setPoints(currentPoints + pointsRefund);
+                    userRepository.save(user);
 
-                    return ResponseEntity.ok().body("Hủy đơn hàng thành công. Đã hoàn lại kho.");
+                    return ResponseEntity.ok().body("Hủy đơn hàng thành công. Đã hoàn " + pointsRefund + " điểm vào tài khoản.");
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

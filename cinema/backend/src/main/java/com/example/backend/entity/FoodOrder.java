@@ -60,4 +60,9 @@ public class FoodOrder {
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Trạng thái đã gửi email nhắc nhở lấy đồ hay chưa
+    @Column(name = "reminder_sent")
+    @Builder.Default
+    private Boolean reminderSent = false;
 }

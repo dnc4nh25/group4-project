@@ -68,4 +68,35 @@ public class EmailUtil {
             throw e;
         }
     }
+
+    public void sendFoodReminderEmail(String to, String userName, String orderCode,
+                                      String pickupDate, String pickupTime,
+                                      String itemsSummary) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("Nhắc lấy đồ ăn - Đơn hàng " + orderCode + " sắp đến giờ nhận");
+
+            String text = String.format(
+                    "Xin chào %s,\n\n" +
+                    "Đây là thông báo nhắc nhở về đơn đặt đồ ăn của bạn tại CinemaXP.\n\n" +
+                    "Thông tin đơn hàng:\n" +
+                    "- Mã đơn: %s\n" +
+                    "- Ngày nhận: %s\n" +
+                    "- Giờ nhận: %s\n" +
+                    "- Món ăn: %s\n\n" +
+                    "Đơn hàng của bạn sẽ sẵn sàng sau khoảng 1 giờ nữa.\n" +
+                    "Vui lòng đến quầy F&B của rạp CinemaXP đúng giờ để nhận đồ.\n\n" +
+                    "Cảm ơn bạn đã sử dụng dịch vụ CinemaXP!",
+                    userName, orderCode, pickupDate, pickupTime, itemsSummary
+            );
+
+            message.setText(text);
+            mailSender.send(message);
+            log.info("Đã gửi email nhắc lấy đồ F&B thành công đến: {}", to);
+        } catch (Exception e) {
+            log.error("Lỗi khi gửi email nhắc F&B đến: {}", to, e);
+            throw e;
+        }
+    }
 }
