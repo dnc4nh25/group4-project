@@ -187,7 +187,7 @@ export default function BookingPage() {
               <Card.Body className="p-3 p-md-4">
                 <h5 className="fw-bold mb-3">Sơ đồ ghế ngồi</h5>
                 <p className="text-muted small mb-3">
-                  Còn trống: <strong className="text-success">{available} ghế</strong> · Tối đa chọn {available} ghế
+                  Còn trống: <strong className="text-success">{available}/{showtime?.totalSeats} ghế</strong> · Tối đa chọn {available} ghế
                 </p>
                 <SeatMap
                   totalSeats={showtime?.totalSeats || 0}

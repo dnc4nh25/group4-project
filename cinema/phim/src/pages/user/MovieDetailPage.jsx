@@ -1,4 +1,4 @@
-﻿import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Container, Row, Col, Badge, Button, Spinner, Alert, Card } from 'react-bootstrap'
 import { useFetch } from '../../hooks/useFetch'
 import { useAuth } from '../../contexts/AuthContext'
@@ -194,7 +194,7 @@ export default function MovieDetailPage() {
                         </div>
                         <div className="small mb-2">
                           {available > 0 ? (
-                            <span className="text-success fw-semibold">{available} ghế trống</span>
+                            <span className="text-success fw-semibold">{available}/{st.totalSeats} ghế trống</span>
                           ) : (
                             <span className="text-danger fw-semibold">Hết ghế</span>
                           )}

@@ -93,6 +93,14 @@ export default function MyBookingsPage() {
     try {
       await foodOrderApi.cancel(orderId)
       setFoodOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
+
+      // Cập nhật điểm ngay (giống logic backend: refund = totalAmount + pointsUsed)
+      const targetOrder = foodOrders.find(o => o.id === orderId)
+      if (targetOrder && updateUser && currentUser) {
+        const pointsRefund = (targetOrder.totalAmount || 0) + (targetOrder.pointsUsed || 0)
+        updateUser({ points: (currentUser.points || 0) + pointsRefund })
+      }
+
       showToast('Đã hủy đơn hàng thành công.', 'success')
     } catch (err) {
       const msg = err.response?.data || 'Không thể hủy đơn. Vui lòng thử lại.'
