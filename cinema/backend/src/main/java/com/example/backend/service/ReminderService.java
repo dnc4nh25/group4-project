@@ -32,20 +32,19 @@ public class ReminderService {
         log.info("Bắt đầu tiến trình gửi email nhắc nhở suất chiếu...");
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime targetStart = now.plusHours(1).withSecond(0).withNano(0);
-        LocalDateTime targetEnd = targetStart.plusMinutes(5).minusSeconds(1);
+        LocalDateTime targetTime = now.plusHours(1);
 
-        log.info("Tìm kiếm các Booking chưa gửi mail, suất chiếu từ {} đến {}", targetStart, targetEnd);
+        log.info("Tìm kiếm các Booking chưa gửi mail, có suất chiếu từ {} đến {}", now, targetTime);
 
-        List<Booking> allBookings = bookingRepository.findBookingsForReminderByDate(BookingStatus.CONFIRMED, targetStart.toLocalDate());
-        if (!targetStart.toLocalDate().equals(targetEnd.toLocalDate())) {
-            allBookings.addAll(bookingRepository.findBookingsForReminderByDate(BookingStatus.CONFIRMED, targetEnd.toLocalDate()));
+        List<Booking> allBookings = bookingRepository.findBookingsForReminderByDate(BookingStatus.CONFIRMED, now.toLocalDate());
+        if (!now.toLocalDate().equals(targetTime.toLocalDate())) {
+            allBookings.addAll(bookingRepository.findBookingsForReminderByDate(BookingStatus.CONFIRMED, targetTime.toLocalDate()));
         }
 
-        // Lọc giờ trong Java để tìm chính xác suất chiếu bắt đầu sau đúng 1 tiếng
+        // Lọc những suất chiếu sẽ bắt đầu trong vòng 1 tiếng tới
         List<Booking> bookings = allBookings.stream().filter(b -> {
             LocalDateTime showtimeDateTime = LocalDateTime.of(b.getShowtime().getDate(), b.getShowtime().getTime());
-            return !showtimeDateTime.isBefore(targetStart) && !showtimeDateTime.isAfter(targetEnd);
+            return !showtimeDateTime.isBefore(now) && !showtimeDateTime.isAfter(targetTime);
         }).toList();
 
         if (bookings.isEmpty()) {
@@ -90,25 +89,25 @@ public class ReminderService {
         log.info("Bắt đầu tiến trình gửi email nhắc nhở lấy đồ F&B...");
 
         LocalDateTime now = LocalDateTime.now();
-        // Cửa sổ pickupTime: 1h tới trong khoảng 5 phút
-        LocalTime targetStart = now.plusHours(1).toLocalTime().withSecond(0).withNano(0);
-        LocalTime targetEnd = targetStart.plusMinutes(5).minusSeconds(1);
-        LocalDate targetDate = now.plusHours(1).toLocalDate();
+        LocalDateTime targetTime = now.plusHours(1);
 
-        log.info("Tìm kiếm đơn F&B chưa gửi mail, pickupDate={}, pickupTime từ {} đến {}",
-                targetDate, targetStart, targetEnd);
+        log.info("Tìm kiếm đơn F&B chưa gửi mail, pickupTime từ {} đến {}", now, targetTime);
 
-        List<FoodOrder> candidates = foodOrderRepository.findFoodOrdersForReminderByDate(targetDate);
+        List<FoodOrder> candidates = foodOrderRepository.findFoodOrdersForReminderByDate(now.toLocalDate());
+        if (!now.toLocalDate().equals(targetTime.toLocalDate())) {
+            candidates.addAll(foodOrderRepository.findFoodOrdersForReminderByDate(targetTime.toLocalDate()));
+        }
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        // Lọc đúng khoảng pickupTime
+        // Lọc những đơn có giờ lấy đồ trong vòng 1 tiếng tới
         List<FoodOrder> orders = candidates.stream().filter(fo -> {
             if (fo.getPickupTime() == null) return false;
             try {
                 LocalTime pt = LocalTime.parse(fo.getPickupTime(), timeFormatter);
-                return !pt.isBefore(targetStart) && !pt.isAfter(targetEnd);
+                LocalDateTime pickupDateTime = LocalDateTime.of(fo.getPickupDate(), pt);
+                return !pickupDateTime.isBefore(now) && !pickupDateTime.isAfter(targetTime);
             } catch (Exception e) {
                 return false;
             }

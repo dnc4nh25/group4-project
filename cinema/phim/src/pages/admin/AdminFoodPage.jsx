@@ -67,6 +67,8 @@ export default function AdminFoodPage() {
   // ─── Order Detail Modal ───────────────────────────────────
   const [orderDetailModal, setOrderDetailModal] = useState({ show: false, order: null })
 
+  // ─── Delete Modal ─────────────────────────────────────────
+  const [deleteModal, setDeleteModal] = useState({ show: false, itemId: null })
 
   // ─── Toast ────────────────────────────────────────────────
   const [toast, setToast] = useState({ show: false, message: '', type: '' })
@@ -297,13 +299,14 @@ export default function AdminFoodPage() {
     }
   }
 
-  const handleDeleteItem = async (id) => {
-    if (!window.confirm('Xóa sản phẩm này?')) return
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.itemId) return
     try {
-      await foodItemApi.delete(id)
+      await foodItemApi.delete(deleteModal.itemId)
       showToast('Đã xóa sản phẩm')
       loadItems()
     } catch (e) { showToast('Lỗi xóa sản phẩm', 'error') }
+    finally { setDeleteModal({ show: false, itemId: null }) }
   }
 
   const handleToggle = async (item) => {
@@ -485,7 +488,7 @@ export default function AdminFoodPage() {
                             <td>
                               <div className="action-buttons d-flex gap-1 flex-wrap">
                                 <Button size="sm" variant="outline-primary" className="action-btn" onClick={() => openEditModal(item)} title="Chỉnh sửa">✏️</Button>
-                                <Button size="sm" variant="outline-danger" className="action-btn" onClick={() => handleDeleteItem(item.id)} title="Xóa">🗑</Button>
+                                <Button size="sm" variant="outline-danger" className="action-btn" onClick={() => setDeleteModal({ show: true, itemId: item.id })} title="Xóa">🗑</Button>
                               </div>
                             </td>
                           </tr>
@@ -789,6 +792,22 @@ export default function AdminFoodPage() {
         </Modal.Body>
         <Modal.Footer className="cancel-modal-footer border-0">
           <Button variant="outline-light" onClick={() => setOrderDetailModal({ show: false, order: null })}>Đóng</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ─── Delete Confirmation Modal ─────────────────────── */}
+      <Modal show={deleteModal.show} onHide={() => setDeleteModal({ show: false, itemId: null })} centered contentClassName="cancel-modal-content">
+        <Modal.Header className="cancel-modal-header border-0">
+          <Modal.Title className="text-white">⚠️ Xác nhận xóa</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="cancel-modal-body">
+          <p style={{ color: '#a8a8b8' }}>Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không thể hoàn tác.</p>
+        </Modal.Body>
+        <Modal.Footer className="cancel-modal-footer border-0">
+          <Button variant="outline-secondary" onClick={() => setDeleteModal({ show: false, itemId: null })}>Hủy</Button>
+          <Button variant="danger" style={{ fontWeight: 700 }} onClick={handleConfirmDelete}>
+            🗑 Xóa
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

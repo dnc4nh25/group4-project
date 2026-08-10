@@ -7,7 +7,7 @@ import './AdminCommon.css'
 import './AdminProfessional.css'
 
 const ROLES = ['user', 'admin']
-const STATUS_OPTIONS = ['active', 'banned', 'pending']
+const STATUS_OPTIONS = ['active', 'banned']
 
 export default function AdminUsersPage() {
   const { currentUser } = useAuth()
@@ -160,7 +160,7 @@ export default function AdminUsersPage() {
       errors.role = 'Vai trò không hợp lệ.'
     }
 
-    if (!['active', 'banned', 'pending'].includes(formData.status)) {
+    if (!['active', 'banned'].includes(formData.status)) {
       errors.status = 'Trạng thái không hợp lệ.'
     }
 
@@ -451,7 +451,6 @@ export default function AdminUsersPage() {
                     <option value="">Tất cả trạng thái</option>
                     <option value="active">✅ Active</option>
                     <option value="banned">❌ Banned</option>
-                    <option value="pending">⏳ Pending</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -763,7 +762,7 @@ export default function AdminUsersPage() {
                       disabled={isEditingSelf(editingId)}
                       isInvalid={!!formErrors.status}
                     >
-                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s === 'active' ? '✅ Active' : s === 'banned' ? '❌ Banned' : '⏳ Pending'}</option>)}
+                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s === 'active' ? '✅ Active' : '❌ Banned'}</option>)}
                     </Form.Select>
                   ) : (
                     // Khi tạo mới: cố định Active

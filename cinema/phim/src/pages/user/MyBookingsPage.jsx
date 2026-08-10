@@ -150,7 +150,7 @@ export default function MyBookingsPage() {
       const [year, month, day] = booking.showDate.split('-').map(Number)
       const [hour, minute] = booking.showTime.split(':').map(Number)
       const showtimeStart = new Date(year, month - 1, day, hour, minute)
-      const cancelDeadline = new Date(showtimeStart.getTime() - 6 * 60 * 60 * 1000)
+      const cancelDeadline = new Date(showtimeStart.getTime() - 1 * 60 * 60 * 1000)
       return new Date() <= cancelDeadline
     } catch (e) { return false }
   }
@@ -284,7 +284,7 @@ export default function MyBookingsPage() {
                 <div>
                   <h6 className="fw-bold mb-2" style={{ color: '#17a2b8' }}>Chính sách hủy vé</h6>
                   <p className="mb-0" style={{ fontSize: '0.95rem', color: '#e0e0e0' }}>
-                    Chỉ được hủy trước <strong style={{ color: '#ffc107' }}>6 giờ</strong> so với giờ chiếu phim.
+                    Chỉ được hủy trước <strong style={{ color: '#ffc107' }}>1 giờ</strong> so với giờ chiếu phim.
                   </p>
                 </div>
               </div>
@@ -392,7 +392,7 @@ export default function MyBookingsPage() {
                               <div className="mt-2">
                                 <div className="py-2 px-3" style={{ fontSize: '0.85rem', backgroundColor: 'rgba(255,193,7,0.15)', borderRadius: '6px', borderLeft: '3px solid #ffc107' }}>
                                   <span className="me-2">⏰</span>
-                                  <small style={{ color: '#ffd966' }}>Không thể hủy (đã quá 6 giờ trước suất chiếu)</small>
+                                  <small style={{ color: '#ffd966' }}>Không thể hủy (đã quá 1 giờ trước suất chiếu)</small>
                                 </div>
                               </div>
                             )}

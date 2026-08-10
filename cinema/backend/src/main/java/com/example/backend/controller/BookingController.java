@@ -174,15 +174,15 @@ public class BookingController {
                         return ResponseEntity.badRequest().body("Vé đã được hủy trước đó.");
                     }
 
-                    // Kiểm tra thời gian hủy vé: phải còn ít nhất 6 giờ trước suất chiếu
+                    // Kiểm tra thời gian hủy vé: phải còn ít nhất 1 giờ trước suất chiếu
                     Showtime showtime = booking.getShowtime();
                     LocalDateTime showtimeStart = LocalDateTime.of(showtime.getDate(), showtime.getTime());
                     LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime cancelDeadline = showtimeStart.minusHours(6);
+                    LocalDateTime cancelDeadline = showtimeStart.minusHours(1);
                     
                     if (now.isAfter(cancelDeadline)) {
                         return ResponseEntity.badRequest().body(
-                            "Không thể hủy vé. Chỉ được phép hủy vé trước suất chiếu ít nhất 6 giờ."
+                            "Không thể hủy vé. Chỉ được phép hủy vé trước suất chiếu ít nhất 1 giờ."
                         );
                     }
 
