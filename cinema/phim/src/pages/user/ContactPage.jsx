@@ -28,7 +28,7 @@ export default function ContactPage() {
     setLoadingFeedbacks(true)
     try {
       console.log('🔍 Fetching all contactMessages, will filter by userId:', currentUser.id)
-      const res = await axios.get('http://localhost:8080/api/contact-messages')
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/contact-messages`)
       console.log('📦 Raw response (total):', res.data.length, 'items')
 
       const userMessages = res.data.filter(msg =>
@@ -77,7 +77,7 @@ export default function ContactPage() {
 
       console.log('📤 Sending feedback:', newMessage)
       console.log('👤 Current User ID:', currentUser?.id)
-      const response = await axios.post('http://localhost:8080/api/contact-messages', newMessage)
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/contact-messages`, newMessage)
       console.log('✅ Feedback saved:', response.data)
 
       setShowAlert(true)

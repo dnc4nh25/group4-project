@@ -40,9 +40,9 @@ export default function AdminShowtimesPage() {
     setLoading(true)
     try {
       const [stRes, mvRes, bookingsRes] = await Promise.all([
-        axios.get('http://localhost:8080/api/showtimes'),
-        axios.get('http://localhost:8080/api/movies'),
-        axios.get('http://localhost:8080/api/bookings')
+        axios.get(`${import.meta.env.VITE_API_URL}/showtimes`),
+        axios.get(`${import.meta.env.VITE_API_URL}/movies`),
+        axios.get(`${import.meta.env.VITE_API_URL}/bookings`)
       ])
       setShowtimes(stRes.data)
       setMovies(mvRes.data)
@@ -357,9 +357,9 @@ export default function AdminShowtimesPage() {
         bookedSeatNums: form.bookedSeatNums || []
       }
       if (editingId) {
-        await axios.put(`http://localhost:8080/api/showtimes/${editingId}`, payload)
+        await axios.put(`${import.meta.env.VITE_API_URL}/showtimes/${editingId}`, payload)
       } else {
-        await axios.post('http://localhost:8080/api/showtimes', payload)
+        await axios.post(`${import.meta.env.VITE_API_URL}/showtimes`, payload)
       }
       setShowModal(false); load()
     } catch (err) {
@@ -381,7 +381,7 @@ export default function AdminShowtimesPage() {
   }
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:8080/api/showtimes/${deletingId}`)
+      await axios.delete(`${import.meta.env.VITE_API_URL}/showtimes/${deletingId}`)
       setShowDeleteConfirm(false)
       load()
     } catch (err) {

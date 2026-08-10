@@ -180,7 +180,7 @@ export default function RegisterPage() {
     setFieldErrors({});
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/register", {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
         username: form.username.trim(),
         password: form.password,
         fullName: form.fullName.trim(),

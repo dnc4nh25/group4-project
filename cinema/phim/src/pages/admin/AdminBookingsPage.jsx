@@ -416,10 +416,10 @@ export default function AdminBookingsPage() {
     setError('')
     try {
       const [bookingsRes, usersRes, moviesRes, showtimesRes] = await Promise.all([
-        axios.get('http://localhost:8080/api/bookings'),
-        axios.get('http://localhost:8080/api/users'),
-        axios.get('http://localhost:8080/api/movies'),
-        axios.get('http://localhost:8080/api/showtimes')
+        axios.get(`${import.meta.env.VITE_API_URL}/bookings`),
+        axios.get(`${import.meta.env.VITE_API_URL}/users`),
+        axios.get(`${import.meta.env.VITE_API_URL}/movies`),
+        axios.get(`${import.meta.env.VITE_API_URL}/showtimes`)
       ])
       setBookings(Array.isArray(bookingsRes.data) ? bookingsRes.data : [])
       // API /api/users trả về Page<UserDto> có dạng { content: [...] }, cần lấy .content
@@ -550,7 +550,7 @@ export default function AdminBookingsPage() {
   const handleConfirmDelete = async () => {
     try {
       const booking = bookings.find(b => b.id === deletingId)
-      await axios.put(`http://localhost:8080/api/bookings/${deletingId}`, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/bookings/${deletingId}`, {
         ...booking,
         status: 'CANCELLED',
         cancelledAt: new Date().toISOString()
@@ -572,7 +572,7 @@ export default function AdminBookingsPage() {
           
           const currentBooked = showtime.bookedSeatNums || []
           const newBookedSeatNums = currentBooked.filter(s => !seatNumsToRestore.includes(s))
-          await axios.patch(`http://localhost:8080/api/showtimes/${booking.showtimeId}`, {
+          await axios.patch(`${import.meta.env.VITE_API_URL}/showtimes/${booking.showtimeId}`, {
             bookedSeats: newBookedSeatNums.length,
             bookedSeatNums: newBookedSeatNums
           })
@@ -643,7 +643,7 @@ export default function AdminBookingsPage() {
     setCheckinError('')
     setCheckinResult(null)
     try {
-      const res = await axios.get(`http://localhost:8080/api/bookings/code/${checkinCode.trim().toUpperCase()}`)
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/bookings/code/${checkinCode.trim().toUpperCase()}`)
       setCheckinResult(res.data)
     } catch (err) {
       setCheckinError('Không tìm thấy vé với mã này.')
@@ -656,7 +656,7 @@ export default function AdminBookingsPage() {
     if (!checkinResult) return
     setCheckinUpdating(true)
     try {
-      await axios.patch(`http://localhost:8080/api/bookings/${checkinResult.id}/checkin`)
+      await axios.patch(`${import.meta.env.VITE_API_URL}/bookings/${checkinResult.id}/checkin`)
       setCheckinResult(r => ({ ...r, status: 'CHECKED_IN' }))
       load() // Tải lại danh sách ngầm
       alert('Soát vé thành công! Khách có thể vào rạp.')

@@ -16,7 +16,7 @@ import {
 import axios from "axios";
 import "./AdminCommon.css";
 
-const API = "http://localhost:8080/api";
+const API = `${import.meta.env.VITE_API_URL}`;
 
 // Số ghế tối đa trong hệ thống (phòng lớn nhất)
 const MAX_SEATS_IN_SYSTEM = 100;

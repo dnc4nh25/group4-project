@@ -12,7 +12,7 @@ export default function MovieDetailPage() {
   const { id } = useParams()
   const { currentUser } = useAuth()
   const navigate = useNavigate()
-  const { data: movie, loading: loadingMovie, error } = useFetch(`http://localhost:8080/api/movies/${id}`)
+  const { data: movie, loading: loadingMovie, error } = useFetch(`${import.meta.env.VITE_API_URL}/movies/${id}`)
 
   const [showtimes, setShowtimes] = useState([])
   const [loadingShowtimes, setLoadingShowtimes] = useState(true)
@@ -20,7 +20,7 @@ export default function MovieDetailPage() {
   const [showTrailerModal, setShowTrailerModal] = useState(false)
   useEffect(() => {
     console.log('Fetching showtimes for movie:', id)
-    axios.get('http://localhost:8080/api/showtimes')
+    axios.get(`${import.meta.env.VITE_API_URL}/showtimes`)
       .then(res => {
         console.log('All showtimes:', res.data)
 

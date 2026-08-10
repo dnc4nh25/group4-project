@@ -23,7 +23,7 @@ export default function BookingPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const stRes = await axios.get(`http://localhost:8080/api/showtimes/${showtimeId}`)
+        const stRes = await axios.get(`${import.meta.env.VITE_API_URL}/showtimes/${showtimeId}`)
         const showtimeData = stRes.data
 
         const showtimeDateTime = new Date(`${showtimeData.date}T${showtimeData.time}`)
@@ -37,7 +37,7 @@ export default function BookingPage() {
         }
 
         setShowtime(showtimeData)
-        const mvRes = await axios.get(`http://localhost:8080/api/movies/${showtimeData.movieId}`)
+        const mvRes = await axios.get(`${import.meta.env.VITE_API_URL}/movies/${showtimeData.movieId}`)
         setMovie(mvRes.data)
       } catch {
         setError('Không tìm thấy suất chiếu.')

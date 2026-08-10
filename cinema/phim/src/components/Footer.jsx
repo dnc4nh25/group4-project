@@ -64,7 +64,7 @@ export default function Footer() {
   const loadFooterData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/footer-settings/1",
+        `${import.meta.env.VITE_API_URL}/footer-settings/1`,
       );
       setFooterData(response.data);
     } catch (error) {

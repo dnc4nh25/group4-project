@@ -16,8 +16,8 @@ export default function AdminFeedbacksPage() {
     setLoading(true)
     try {
       const [feedbacksRes, usersRes] = await Promise.all([
-        axios.get('http://localhost:8080/api/contact-messages'),
-        axios.get('http://localhost:8080/api/users')
+        axios.get(`${import.meta.env.VITE_API_URL}/contact-messages`),
+        axios.get(`${import.meta.env.VITE_API_URL}/users`)
       ])
       // Sort on client side since backend doesn't support _sort
       const sortedFeedbacks = feedbacksRes.data.sort((a, b) => 
@@ -58,7 +58,7 @@ export default function AdminFeedbacksPage() {
     }
     setIsSubmitting(true)
     try {
-      await axios.patch(`http://localhost:8080/api/contact-messages/${selectedFeedback.id}`, {
+      await axios.patch(`${import.meta.env.VITE_API_URL}/contact-messages/${selectedFeedback.id}`, {
         status: 'replied',
         adminReply: replyContent,
         repliedAt: new Date().toISOString()

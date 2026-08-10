@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Link } from 'react-router-dom'
 import './ReviewSection.css'
 
-const API = 'http://localhost:8080/api'
+const API = `${import.meta.env.VITE_API_URL}`
 
 function StarInput({ value, onChange }) {
   const [hover, setHover] = useState(0)

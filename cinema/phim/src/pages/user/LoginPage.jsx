@@ -35,7 +35,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         username,
         password
       });
@@ -71,7 +71,7 @@ export default function LoginPage() {
     }
     setForgotLoading(true);
     try {
-      await axios.post("http://localhost:8080/api/auth/forgot-password", {
+      await axios.post(`${import.meta.env.VITE_API_URL}/auth/forgot-password`, {
         email: forgotEmail
       });
       setForgotSuccess("Mã OTP đã được gửi đến email của bạn.");
@@ -114,7 +114,7 @@ export default function LoginPage() {
     }
     setForgotLoading(true);
     try {
-      await axios.post("http://localhost:8080/api/auth/reset-password", {
+      await axios.post(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
         email: forgotEmail,
         otp: forgotOtp,
         newPassword: forgotNewPassword

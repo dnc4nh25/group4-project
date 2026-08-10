@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
       if (filterStatus)    params.append('status', filterStatus)
       params.append('page', pg)
       params.append('size', pageSize)
-      const res = await axios.get(`http://localhost:8080/api/users?${params}`)
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/users?${params}`)
       setUsers(res.data.content || [])
       setTotalPages(res.data.totalPages || 0)
       setTotalElements(res.data.totalElements || 0)
@@ -209,7 +209,7 @@ export default function AdminUsersPage() {
         // Update existing user (không gửi password)
         if (form.email) {
           try {
-            const emailCheck = await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
+            const emailCheck = await axios.get(`${import.meta.env.VITE_API_URL}/users/email/${form.email}`)
             if (emailCheck.data && emailCheck.data.id !== editingId) {
               setFormErrors(prev => ({ ...prev, email: 'Email đã được sử dụng bởi tài khoản khác.' }))
               if (formRefs.current.email) {
@@ -225,7 +225,7 @@ export default function AdminUsersPage() {
 
         if (form.phone) {
           try {
-            const phoneCheck = await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
+            const phoneCheck = await axios.get(`${import.meta.env.VITE_API_URL}/users/phone/${form.phone}`)
             if (phoneCheck.data && phoneCheck.data.id !== editingId) {
               setFormErrors(prev => ({ ...prev, phone: 'Số điện thoại đã được sử dụng bởi tài khoản khác.' }))
               if (formRefs.current.phone) {
@@ -241,11 +241,11 @@ export default function AdminUsersPage() {
 
         // Loại bỏ password khỏi payload khi update
         const { password: _pw, ...updatePayload } = form
-        await axios.put(`http://localhost:8080/api/users/${editingId}`, updatePayload)
+        await axios.put(`${import.meta.env.VITE_API_URL}/users/${editingId}`, updatePayload)
       } else {
         // Create new user
         try {
-          await axios.get(`http://localhost:8080/api/users/username/${form.username.trim()}`)
+          await axios.get(`${import.meta.env.VITE_API_URL}/users/username/${form.username.trim()}`)
           setFormErrors(prev => ({ ...prev, username: 'Tên đăng nhập đã tồn tại.' }))
           if (formRefs.current.username) {
             formRefs.current.username.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -258,7 +258,7 @@ export default function AdminUsersPage() {
         
         if (form.email) {
           try {
-            await axios.get(`http://localhost:8080/api/users/email/${form.email}`)
+            await axios.get(`${import.meta.env.VITE_API_URL}/users/email/${form.email}`)
             setFormErrors(prev => ({ ...prev, email: 'Email đã được sử dụng.' }))
             if (formRefs.current.email) {
               formRefs.current.email.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -272,7 +272,7 @@ export default function AdminUsersPage() {
         
         if (form.phone) {
           try {
-            await axios.get(`http://localhost:8080/api/users/phone/${form.phone}`)
+            await axios.get(`${import.meta.env.VITE_API_URL}/users/phone/${form.phone}`)
             setFormErrors(prev => ({ ...prev, phone: 'Số điện thoại đã được sử dụng.' }))
             if (formRefs.current.phone) {
               formRefs.current.phone.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -284,7 +284,7 @@ export default function AdminUsersPage() {
           }
         }
         
-        await axios.post('http://localhost:8080/api/users', payload)
+        await axios.post(`${import.meta.env.VITE_API_URL}/users`, payload)
       }
       setShowModal(false); load(page)
     } catch (err) { 
@@ -297,7 +297,7 @@ export default function AdminUsersPage() {
   const handleDeleteClick = (id) => { setDeletingId(id); setShowDelete(true) }
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:8080/api/users/${deletingId}`)
+      await axios.delete(`${import.meta.env.VITE_API_URL}/users/${deletingId}`)
       setShowDelete(false); load(page)
     } catch { setError('Xóa thất bại.') }
   }
@@ -307,14 +307,14 @@ export default function AdminUsersPage() {
     setLoadingDetail(true)
     setShowUserDetail(true)
     try {
-      const bookingsRes = await axios.get('http://localhost:8080/api/bookings')
+      const bookingsRes = await axios.get(`${import.meta.env.VITE_API_URL}/bookings`)
       const userBookingsData = bookingsRes.data.filter(b => b.userId === user.id)
       
       const enriched = await Promise.all(userBookingsData.map(async (b) => {
-        const stRes = await axios.get(`http://localhost:8080/api/showtimes/${b.showtimeId}`).catch(() => ({ data: null }))
+        const stRes = await axios.get(`${import.meta.env.VITE_API_URL}/showtimes/${b.showtimeId}`).catch(() => ({ data: null }))
         let movie = null
         if (stRes.data?.movieId) {
-          const mvRes = await axios.get(`http://localhost:8080/api/movies/${stRes.data.movieId}`).catch(() => ({ data: null }))
+          const mvRes = await axios.get(`${import.meta.env.VITE_API_URL}/movies/${stRes.data.movieId}`).catch(() => ({ data: null }))
           movie = mvRes.data
         }
         return { ...b, showtime: stRes.data, movie }

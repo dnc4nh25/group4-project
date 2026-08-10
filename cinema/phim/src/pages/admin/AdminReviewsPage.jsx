@@ -4,7 +4,7 @@ import axios from 'axios'
 import './AdminCommon.css'
 import './AdminReviewsPage.css'
 
-const API = 'http://localhost:8080/api'
+const API = `${import.meta.env.VITE_API_URL}`
 
 function StarDisplay({ value }) {
   return (
