@@ -21,17 +21,17 @@ public class FoodItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(200)")
+    @Column(nullable = false, length = 200)
     private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private FoodCategory category;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "image_url", columnDefinition = "NVARCHAR(500)")
+    @Column(name = "image_url", length = 500)
     private String imageUrl;
 
     // Giá cơ bản (dùng khi không có sizes, hoặc size đầu tiên)
@@ -63,7 +63,7 @@ public class FoodItem {
     private Boolean isFeatured = false;
 
     // Tag: "bestseller", "new", null
-    @Column(length = 50, columnDefinition = "NVARCHAR(50)")
+    @Column(length = 50)
     private String tag;
 
     @Column(name = "created_at")

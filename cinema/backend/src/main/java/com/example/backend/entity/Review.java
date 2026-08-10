@@ -31,7 +31,7 @@ public class Review {
     @Column(nullable = false)
     private Integer rating;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "TEXT")
     private String comment;
 
     // Admin ẩn review vi phạm

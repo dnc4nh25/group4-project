@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class FoodItemSize {
 
-    @Column(name = "size_label", length = 10, columnDefinition = "NVARCHAR(10)")
+    @Column(name = "size_label", length = 10)
     private String label; // M, L, XL
 
     @Column(name = "size_price")

@@ -23,7 +23,7 @@ public class FoodOrder {
     private Long id;
 
     // Mã đơn hàng: FO-20260802-00001
-    @Column(name = "order_code", unique = true, length = 30, columnDefinition = "NVARCHAR(30)")
+    @Column(name = "order_code", unique = true, length = 30)
     private String orderCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,10 +51,10 @@ public class FoodOrder {
     private LocalDate pickupDate;
 
     // Giờ lấy: "14:00"
-    @Column(name = "pickup_time", length = 5, columnDefinition = "NVARCHAR(5)")
+    @Column(name = "pickup_time", length = 5)
     private String pickupTime;
 
-    @Column(name = "payment_method", length = 20, columnDefinition = "NVARCHAR(20)")
+    @Column(name = "payment_method", length = 20)
     private String paymentMethod;
 
     @Column(name = "created_at")

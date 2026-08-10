@@ -19,14 +19,14 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 200, columnDefinition = "NVARCHAR(200)")
+    @Column(nullable = false, length = 200)
     private String title;
 
     // Thể loại lưu dạng JSON string, ví dụ: ["Hành động", "Viễn tưởng"]
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "TEXT")
     private String genres;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private Double rating;
@@ -35,26 +35,26 @@ public class Movie {
     private Integer duration;
 
     // Ảnh poster có thể là URL hoặc chuỗi Base64 cực kỳ dài
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "TEXT")
     private String poster;
 
-    @Column(length = 200, columnDefinition = "NVARCHAR(200)")
+    @Column(length = 200)
     private String director;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "\"cast\"", columnDefinition = "TEXT")
     private String cast;
 
-    @Column(length = 50, columnDefinition = "NVARCHAR(50)")
+    @Column(length = 50)
     private String language;
 
     @Column(name = "release_date")
     private LocalDate releaseDate;
 
     // T13, T16, T18, P
-    @Column(name = "age_rating", length = 10, columnDefinition = "NVARCHAR(10)")
+    @Column(name = "age_rating", length = 10)
     private String ageRating;
 
-    @Column(name = "trailer_url", length = 500, columnDefinition = "NVARCHAR(500)")
+    @Column(name = "trailer_url", length = 500)
     private String trailerUrl;
 
     @Column(length = 20)

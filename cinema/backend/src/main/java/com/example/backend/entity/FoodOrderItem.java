@@ -25,7 +25,7 @@ public class FoodOrderItem {
     private FoodItem foodItem;
 
     // Size đã chọn (M/L/XL), null nếu không có size
-    @Column(name = "size_label", length = 10, columnDefinition = "NVARCHAR(10)")
+    @Column(name = "size_label", length = 10)
     private String sizeLabel;
 
     @Column(nullable = false)
